@@ -1,4 +1,3 @@
-
 import { 
   Calendar, 
   ClipboardList, 
@@ -83,7 +82,7 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
         )}
         asChild
       >
-        <a href={href}>
+        <a href={href} onClick={closeSidebar}>
           <Icon className={cn("h-5 w-5", isActive ? "text-secondary-foreground" : "text-muted-foreground")} />
           <span>{title}</span>
         </a>
@@ -103,17 +102,9 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
       
       {/* Sidebar */}
       <aside className={cn(
-        "fixed top-0 bottom-0 left-0 z-40 w-64 bg-sidebar border-r transition-transform duration-300 md:translate-x-0 flex flex-col",
+        "fixed top-14 bottom-0 left-0 z-40 w-64 bg-sidebar border-r transition-transform duration-300 md:translate-x-0 flex flex-col",
         isOpen ? "translate-x-0" : "-translate-x-full"
       )}>
-        <div className="p-4 flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold">
-            Z
-          </div>
-          <h2 className="text-xl font-bold zencora-gradient-text">Zencora Noma</h2>
-        </div>
-        
-        <Separator className="mb-4" />
         
         <nav className="flex-1 px-3 py-2">
           <div className="space-y-1">

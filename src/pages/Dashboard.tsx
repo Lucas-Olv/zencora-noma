@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import StatsCard from "@/components/dashboard/StatsCard";
 import RecentOrders from "@/components/dashboard/RecentOrders";
@@ -48,9 +47,13 @@ const Dashboard = () => {
         />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-4">
-        <RecentOrders />
-        <DeliveryCalendar />
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-4">
+        <div className="lg:col-span-3">
+          <RecentOrders />
+        </div>
+        <div className="lg:col-span-1">
+          <DeliveryCalendar />
+        </div>
       </div>
     </div>
   );

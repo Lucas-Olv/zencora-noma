@@ -1,10 +1,10 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { ThemeProvider } from "next-themes";
 import Layout from "./components/layout/Layout";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
@@ -60,31 +60,33 @@ const App = () => {
   }
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={session ? <Navigate to="/dashboard" /> : <Login />} />
-            
-            <Route path="/" element={session ? <Layout /> : <Navigate to="/" />}>
-              <Route path="dashboard" element={<Dashboard />} />
-              <Route path="orders" element={<Orders />} />
-              <Route path="orders/new" element={<NewOrder />} />
-              <Route path="orders/:id" element={<OrderDetail />} />
-              <Route path="production" element={<Production />} />
-              <Route path="reports" element={<Reports />} />
-              <Route path="calendar" element={<Calendar />} />
-              <Route path="profile" element={<Profile />} />
-              <Route path="settings" element={<Settings />} />
-            </Route>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={session ? <Navigate to="/dashboard" /> : <Login />} />
+              
+              <Route path="/" element={session ? <Layout /> : <Navigate to="/" />}>
+                <Route path="dashboard" element={<Dashboard />} />
+                <Route path="orders" element={<Orders />} />
+                <Route path="orders/new" element={<NewOrder />} />
+                <Route path="orders/:id" element={<OrderDetail />} />
+                <Route path="production" element={<Production />} />
+                <Route path="reports" element={<Reports />} />
+                <Route path="calendar" element={<Calendar />} />
+                <Route path="profile" element={<Profile />} />
+                <Route path="settings" element={<Settings />} />
+              </Route>
 
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
   );
 };
 

@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -55,7 +54,7 @@ const getStatusColor = (status: string) => {
     case "concluído":
       return "bg-green-100 text-green-800 hover:bg-green-200";
     default:
-      return "bg-gray-100 text-gray-800 hover:bg-gray-200";
+      return "bg-muted text-text-primary hover:bg-accent";
   }
 };
 
