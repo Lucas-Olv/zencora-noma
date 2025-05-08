@@ -11,20 +11,8 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { getOrders, Order } from "@/lib/api";
 import { LoadingState } from "@/components/ui/loading-state";
-import { cn } from "@/lib/utils";
+import { cn, formatDate, parseDate } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
-
-const formatDate = (date: string) => {
-  try {
-    const parsedDate = new Date(date);
-    if (isNaN(parsedDate.getTime())) {
-      return "Data inválida";
-    }
-    return parsedDate.toLocaleDateString("pt-BR");
-  } catch (error) {
-    return "Data inválida";
-  }
-};
 
 const getStatusDisplay = (status: string | null) => {
   switch (status) {
@@ -60,13 +48,11 @@ export function ProductionView() {
   });
   const navigate = useNavigate();
 
-  const pendingOrders = orders?.filter(
-    (order) => order.status === "pending" || order.status === "production"
-  ) || [];
+  const pendingOrders = orders?.filter((order) => order.status === "pending")
+    .sort((a, b) => parseDate(a.due_date).getTime() - parseDate(b.due_date).getTime()) || [];
 
-  const completedOrders = orders?.filter(
-    (order) => order.status === "done"
-  ) || [];
+  const completedOrders = orders?.filter((order) => order.status === "done")
+    .sort((a, b) => parseDate(a.due_date).getTime() - parseDate(b.due_date).getTime()) || [];
 
   const handleToggleReady = async (id: string) => {
     try {
@@ -151,7 +137,9 @@ export function ProductionView() {
                     className="flex flex-col sm:flex-row sm:items-center justify-between rounded-lg border p-4 gap-4"
                   >
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium">{order.clientName}</p>
+                      <h3 className="font-semibold">
+                        {order.client_name}
+                      </h3>
                       <p className="text-sm text-muted-foreground">
                         {order.description}
                       </p>
@@ -169,9 +157,7 @@ export function ProductionView() {
                         </Badge>
                         <span className="text-sm text-muted-foreground">
                           Entrega: <span className="font-semibold">
-                            {order.createdAt ? format(new Date(order.createdAt), "dd 'de' MMMM", {
-                              locale: ptBR,
-                            }) : "Data não definida"}
+                            {order.due_date ? formatDate(order.due_date, "dd 'de' MMMM") : "Sem data"}
                           </span>
                         </span>
                       </div>
@@ -214,7 +200,9 @@ export function ProductionView() {
                     className="flex items-center justify-between rounded-lg border p-4"
                   >
                     <div>
-                      <p className="font-medium">{order.clientName}</p>
+                      <h3 className="font-semibold">
+                        {order.client_name}
+                      </h3>
                       <p className="text-sm text-muted-foreground">
                         {order.description}
                       </p>
@@ -227,9 +215,7 @@ export function ProductionView() {
                         </Badge>
                         <span className="text-sm text-muted-foreground">
                           Concluído em{" "}
-                          {order.createdAt ? format(new Date(order.createdAt), "dd/MM/yyyy", {
-                            locale: ptBR,
-                          }) : "Data não definida"}
+                          {order.due_date ? formatDate(order.due_date, "dd/MM/yyyy") : "Sem data"}
                         </span>
                       </div>
                     </div>

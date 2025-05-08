@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, Eye, Plus, Search, X, Loader2, Package, Pencil } from "lucide-react";
-import { format } from "date-fns";
+import { formatDate, parseDate } from "@/lib/utils";
 import { ptBR } from "date-fns/locale";
 import { supabaseService, OrderType } from "@/services/supabaseService";
 
@@ -196,7 +196,7 @@ const OrderList = () => {
                         <TableRow key={order.id}>
                           <TableCell className="font-medium">{order.client_name}</TableCell>
                           <TableCell>
-                            {format(new Date(order.due_date), "dd 'de' MMMM", { locale: ptBR })}
+                            {formatDate(order.due_date)}
                           </TableCell>
                           <TableCell>
                             R$ {order.price.toFixed(2).replace('.', ',')}
@@ -277,7 +277,7 @@ const OrderList = () => {
                             <div>
                               <h3 className="font-medium">{order.client_name}</h3>
                               <p className="text-sm text-muted-foreground">
-                                {format(new Date(order.due_date), "dd 'de' MMMM", { locale: ptBR })}
+                                {formatDate(order.due_date)}
                               </p>
                             </div>
                             <Badge variant="outline" className={statusDisplay.className}>

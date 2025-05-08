@@ -40,7 +40,7 @@ const Landing = () => {
                   </Button> */}
                 </div>
               </div>
-              <div className="rounded-lg overflow-hidden shadow-xl bg-gradient-to-br from-card to-secondary/5 p-4 md:p-6 relative h-[250px] sm:h-[300px] md:h-[400px]">
+              <div className="rounded-lg overflow-hidden shadow-xl bg-gradient-to-br from-card to-secondary/5 p-4 md:p-6 relative h-[25dvh] sm:h-[30dvh] md:h-[40dvh]">
                 <svg className="w-full h-full" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
                   {/* Background shapes */}
                   <rect x="10" y="20" width="380" height="200" rx="8" fill="#f3f4f6" opacity="0.4" />

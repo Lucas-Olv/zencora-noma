@@ -5,6 +5,7 @@ import DeliveryCalendar from "@/components/dashboard/DeliveryCalendar";
 import { Calendar, ClipboardList, FileText, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
+import { formatDate, parseDate } from "@/lib/utils";
 
 type Order = Tables<"orders">;
 
@@ -55,28 +56,30 @@ const Dashboard = () => {
         if (error) throw error;
 
         const activeOrders = orders?.filter(order => 
-          order.status !== "concluído" && order.status !== "cancelado"
+          order.status !== "done" && order.status !== "canceled"
         ).length || 0;
 
         const inProduction = orders?.filter(order => 
-          order.status === "produção"
+          order.status === "production"
         ).length || 0;
 
-        const scheduled = orders?.filter(order => 
-          new Date(order.due_date) > today
-        ).length || 0;
+        const scheduled = orders?.filter(order => {
+          const dueDate = parseDate(order.due_date);
+          return dueDate && dueDate > today;
+        }).length || 0;
 
-        const todayDeliveries = orders?.filter(order => 
-          new Date(order.due_date).toDateString() === today.toDateString()
-        ).length || 0;
+        const todayDeliveries = orders?.filter(order => {
+          const dueDate = parseDate(order.due_date);
+          return dueDate && dueDate.toDateString() === today.toDateString();
+        }).length || 0;
 
         const monthlyRevenue = orders?.reduce((sum, order) => 
           sum + (order.price || 0), 0
         ) || 0;
 
         const weeklyRevenue = orders?.filter(order => {
-          const orderDate = new Date(order.created_at || "");
-          return orderDate >= startOfWeek && orderDate <= endOfWeek;
+          const orderDate = parseDate(order.created_at);
+          return orderDate && orderDate >= startOfWeek && orderDate <= endOfWeek;
         }).reduce((sum, order) => sum + (order.price || 0), 0) || 0;
 
         setStats({

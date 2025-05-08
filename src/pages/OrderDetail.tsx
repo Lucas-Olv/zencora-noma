@@ -5,6 +5,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { formatDate, parseDate } from "@/lib/utils";
 import { ArrowLeft, Calendar, CheckCircle, Clock, DollarSign, Edit, Trash, Package } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/components/ui/use-toast";
@@ -15,9 +16,10 @@ interface OrderWithCollaborator extends OrderType {
   collaborator?: {
     name: string | null;
   } | null;
+  status: "done" | "pending" | "production";
 }
 
-const getStatusDisplay = (status: string | null) => {
+const getStatusDisplay = (status: "done" | "pending" | "production" | null) => {
   switch (status) {
     case "pending":
       return { 
@@ -59,7 +61,22 @@ const OrderDetail = () => {
         const { data, error } = await supabaseService.orders.getOrderById(id);
 
         if (error) throw error;
-        setOrder(data);
+        if (!data) {
+          toast({
+            title: "Encomenda não encontrada",
+            description: "A encomenda solicitada não existe ou foi removida.",
+            variant: "destructive"
+          });
+          navigate("/orders");
+          return;
+        }
+
+        // Garante que o status seja um dos valores permitidos
+        const orderData = {
+          ...data,
+          status: (data.status || "pending") as "pending" | "production" | "done"
+        };
+        setOrder(orderData);
       } catch (error: any) {
         toast({
           title: "Erro ao carregar encomenda",
@@ -72,7 +89,7 @@ const OrderDetail = () => {
     };
 
     fetchOrderDetails();
-  }, [id, toast]);
+  }, [id, toast, navigate]);
 
   const updateOrderStatus = async (newStatus: "pending" | "production" | "done") => {
     if (!id || !order) return;
@@ -128,7 +145,7 @@ const OrderDetail = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="flex items-center justify-center min-h-[60dvh]">
         <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
       </div>
     );
@@ -214,7 +231,7 @@ const OrderDetail = () => {
               <Calendar className="h-5 w-5 text-primary" />
               <div>
                 <p className="text-sm text-muted-foreground">Data de Entrega</p>
-                <p className="font-medium">{format(new Date(order.due_date), "dd 'de' MMMM, yyyy", { locale: ptBR })}</p>
+                <p className="font-medium">{formatDate(order.due_date, "dd 'de' MMMM, yyyy")}</p>
               </div>
             </div>
             
@@ -230,7 +247,7 @@ const OrderDetail = () => {
               <Clock className="h-5 w-5 text-complementary" />
               <div>
                 <p className="text-sm text-muted-foreground">Criada em</p>
-                <p className="font-medium">{format(new Date(order.created_at), "dd/MM/yyyy")}</p>
+                <p className="font-medium">{formatDate(order.created_at, "dd/MM/yyyy")}</p>
               </div>
             </div>
           </div>

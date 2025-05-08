@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { Calendar } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { cn, formatDate, parseDate } from "@/lib/utils"
 
 import { getOrders } from "@/lib/api"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -18,8 +18,8 @@ function DeliveryCalendar() {
   const today = new Date()
   const todayOrders = orders?.filter(
     (order) =>
-      format(new Date(order.createdAt), "dd/MM/yyyy") ===
-      format(today, "dd/MM/yyyy")
+      formatDate(order.created_at, "dd/MM/yyyy") ===
+      formatDate(today.toISOString(), "dd/MM/yyyy")
   ) || []
 
   return (
@@ -41,7 +41,7 @@ function DeliveryCalendar() {
                 className="flex items-center justify-between rounded-lg border p-4"
               >
                 <div>
-                  <p className="font-medium">{order.clientName}</p>
+                  <p className="font-medium">{order.client_name}</p>
                   <p className="text-sm text-muted-foreground">
                     {order.description}
                   </p>

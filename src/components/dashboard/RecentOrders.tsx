@@ -3,7 +3,7 @@ import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { Calendar, FileText } from "lucide-react"
 import { Link } from "react-router-dom"
-import { cn } from "@/lib/utils"
+import { cn, formatDate, parseDate } from "@/lib/utils"
 
 import { getOrders } from "@/lib/api"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -16,7 +16,7 @@ function RecentOrders() {
     queryFn: getOrders,
   })
 
-  const recentOrders = orders?.slice(0, 5) || []
+  const recentOrders = orders?.slice(0, 5) || [];
 
   return (
     <Card>
@@ -39,7 +39,7 @@ function RecentOrders() {
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium">{order.clientName}</p>
+                    <p className="font-medium">{order.client_name}</p>
                     <p className="text-sm text-muted-foreground">
                       {order.description}
                     </p>
@@ -54,9 +54,7 @@ function RecentOrders() {
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Calendar className="h-4 w-4" />
                       <span>
-                        {format(new Date(order.createdAt), "dd/MM/yyyy", {
-                          locale: ptBR,
-                        })}
+                        {formatDate(order.due_date, "dd/MM/yyyy")}
                       </span>
                     </div>
                   </div>

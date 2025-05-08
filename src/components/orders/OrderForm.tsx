@@ -270,7 +270,7 @@ const OrderForm = ({ mode = "create", orderId }: OrderFormProps) => {
           description: "A encomenda foi atualizada com sucesso.",
         });
         
-        navigate(`/orders/${orderId}`);
+        navigate(-1);
       } else {
         const { error } = await supabaseService.orders.createOrder(orderData);
         if (error) throw error;
@@ -388,7 +388,7 @@ const OrderForm = ({ mode = "create", orderId }: OrderFormProps) => {
           <Button 
             variant="outline" 
             type="button" 
-            onClick={() => navigate(mode === "edit" ? `/orders/${orderId}` : "/orders")}
+            onClick={() => navigate(-1)}
           >
             Cancelar
           </Button>
