@@ -162,7 +162,7 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
                   variant="ghost" 
                   className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-100 dark:hover:bg-red-900/20 my-1"
                 >
-                  <LogOut className="mr-2 h-4 w-4" />
+                  <LogOut className="h-4 w-4" />
                   Sair
                 </Button>
               </AlertDialogTrigger>

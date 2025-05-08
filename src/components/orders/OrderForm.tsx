@@ -134,7 +134,7 @@ const OrderForm = ({ mode = "create", orderId }: OrderFormProps) => {
     if (!formData.deliveryDate) {
       newErrors.deliveryDate = "Data de entrega é obrigatória";
     } else {
-      const deliveryDate = new Date(formData.deliveryDate);
+      const deliveryDate = new Date(formData.deliveryDate + 'T00:00:00');
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       

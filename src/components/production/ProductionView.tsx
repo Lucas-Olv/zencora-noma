@@ -48,8 +48,15 @@ export function ProductionView() {
   });
   const navigate = useNavigate();
 
-  const pendingOrders = orders?.filter((order) => order.status === "pending")
-    .sort((a, b) => parseDate(a.due_date).getTime() - parseDate(b.due_date).getTime()) || [];
+  const pendingOrders = orders?.filter((order) => order.status === "pending" || order.status === "production")
+    .sort((a, b) => {
+      // Primeiro, ordena por status (production vem antes de pending)
+      if (a.status === "production" && b.status !== "production") return -1;
+      if (a.status !== "production" && b.status === "production") return 1;
+      
+      // Se o status for igual, ordena por data de entrega
+      return parseDate(a.due_date).getTime() - parseDate(b.due_date).getTime();
+    }) || [];
 
   const completedOrders = orders?.filter((order) => order.status === "done")
     .sort((a, b) => parseDate(a.due_date).getTime() - parseDate(b.due_date).getTime()) || [];

@@ -127,11 +127,18 @@ export const productsService = {
   
   // Obtém um produto pelo código
   getProductByCode: async (code: string) => {
-    return await supabase
+    console.log('Buscando produto com código:', code);
+    const { data, error } = await supabase
       .from('products')
       .select('*')
       .eq('code', code)
-      .single();
+      .limit(1);
+
+    console.log('Resultado da busca:', { data, error });
+    return {
+      data: data?.[0] || null,
+      error
+    };
   }
 };
 

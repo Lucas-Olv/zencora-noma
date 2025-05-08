@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { supabaseService } from "@/services/supabaseService";
+import { supabase } from "@/integrations/supabase/client";
 
 const LoginForm = () => {
   const { toast } = useToast();
@@ -24,6 +25,7 @@ const LoginForm = () => {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [activeTab, setActiveTab] = useState("login");
   
   const getErrorMessage = (error: any) => {
     const errorMessages: { [key: string]: string } = {
@@ -49,42 +51,77 @@ const LoginForm = () => {
       
       if (authError) throw authError;
       
-      if (authData.user) {
-        // Criar o registro na tabela users
-        const { error: userError } = await supabaseService.users.createUserRecord(
-          authData.user.id,
-          name,
-          email
-        );
-          
-        if (userError) throw userError;
+      if (!authData.user) {
+        throw new Error("Erro ao criar usuário na autenticação");
+      }
+
+      // Criar o registro na tabela users usando o ID do usuário já criado
+      const { error: userError } = await supabaseService.users.createUserRecord(
+        authData.user.id,
+        name,
+        email
+      );
         
-        // Buscar o produto Noma
-        const { data: productData, error: productError } = await supabaseService.products.getProductByCode('noma');
+      if (userError) throw userError;
+
+      // Buscar o produto Noma
+      console.log('Iniciando busca do produto Noma...');
+      const { data: productData, error: productError } = await supabase
+        .from('products')
+        .select('*')
+        .eq('code', 'noma')
+        .single();
+      
+      console.log('Resultado da busca do produto:', { productData, productError });
+      
+      if (productError) {
+        console.error('Erro ao buscar produto:', productError);
+        throw productError;
+      }
         
-        if (productError) throw productError;
-          
-        if (productData) {
-          const expiryDate = new Date();
-          expiryDate.setDate(expiryDate.getDate() + 14); // 14 dias de trial
-          
-          await supabaseService.subscriptions.createSubscription(
-            authData.user.id,
-            productData.id,
-            'free',
-            'trial',
-            expiryDate.toISOString()
-          );
-        }
-        
+      if (!productData) {
+        console.error('Produto Noma não encontrado');
+        throw new Error("Produto Noma não encontrado");
+      }
+
+      console.log('Produto encontrado:', productData);
+
+      const expiryDate = new Date();
+      expiryDate.setDate(expiryDate.getDate() + 14); // 14 dias de trial
+      
+      const { error: subscriptionError } = await supabase
+        .from('subscriptions')
+        .insert({
+          user_id: authData.user.id,
+          product_id: productData.id,
+          plan: 'free',
+          status: 'trial',
+          expires_at: expiryDate.toISOString()
+        });
+
+      if (subscriptionError) {
+        console.error('Erro ao criar assinatura:', subscriptionError);
+        throw subscriptionError;
+      }
+      
+      // Verificar se o email precisa ser confirmado
+      if (authData.session === null) {
         toast({
           title: "Conta criada com sucesso!",
-          description: "Bem-vindo ao Zencora Noma.",
+          description: "Por favor, verifique seu email para confirmar sua conta antes de fazer login.",
         });
-        
-        navigate("/dashboard");
+        setActiveTab("login");
+        return;
       }
+      
+      toast({
+        title: "Conta criada com sucesso!",
+        description: "Bem-vindo ao Zencora Noma.",
+      });
+      
+      navigate("/dashboard");
     } catch (error: any) {
+      console.error("Erro ao criar conta:", error);
       toast({
         title: "Erro ao criar conta",
         description: getErrorMessage(error),
@@ -121,7 +158,7 @@ const LoginForm = () => {
   };
 
   return (
-    <Tabs defaultValue="login" className="w-full max-w-md mx-auto">
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full max-w-md mx-auto">
       <TabsList className="grid w-full grid-cols-2">
         <TabsTrigger value="login">Entrar</TabsTrigger>
         <TabsTrigger value="register">Criar Conta</TabsTrigger>
