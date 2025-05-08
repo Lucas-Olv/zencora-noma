@@ -149,7 +149,7 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
           </div>
         </nav>
 
-        <div className="p-3">
+        <div className="p-3 mt-auto">
           <Separator className="my-2" />
           <div className="space-y-1">
             {bottomNavItems.map((item) => (
@@ -158,21 +158,24 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
             
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="ghost" className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-100 dark:hover:bg-red-900/20">
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-100 dark:hover:bg-red-900/20 my-1"
+                >
                   <LogOut className="mr-2 h-4 w-4" />
                   Sair
                 </Button>
               </AlertDialogTrigger>
-              <AlertDialogContent>
+              <AlertDialogContent className="w-[calc(100%-2rem)] max-w-[400px] mx-auto rounded-xl">
                 <AlertDialogHeader>
                   <AlertDialogTitle>Confirmar saída</AlertDialogTitle>
                   <AlertDialogDescription>
                     Tem certeza que deseja sair? Você precisará fazer login novamente para acessar o sistema.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleLogout} className="bg-red-600 hover:bg-red-700">
+                <AlertDialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
+                  <AlertDialogCancel className="w-full sm:w-auto">Cancelar</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleLogout} className="w-full sm:w-auto bg-red-600 hover:bg-red-700">
                     Sair
                   </AlertDialogAction>
                 </AlertDialogFooter>

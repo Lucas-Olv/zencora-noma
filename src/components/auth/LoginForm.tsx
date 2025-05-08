@@ -25,6 +25,20 @@ const LoginForm = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   
+  const getErrorMessage = (error: any) => {
+    const errorMessages: { [key: string]: string } = {
+      "Invalid login credentials": "Credenciais de login inválidas",
+      "Email not confirmed": "Email não confirmado",
+      "User not found": "Usuário não encontrado",
+      "Invalid email or password": "Email ou senha inválidos",
+      "Email already registered": "Email já cadastrado",
+      "Password should be at least 6 characters": "A senha deve ter pelo menos 6 caracteres",
+      "Invalid email": "Email inválido",
+    };
+
+    return errorMessages[error.message] || error.message || "Ocorreu um erro. Por favor, tente novamente.";
+  };
+  
   const handleSignUp = async (e: FormEvent) => {
     e.preventDefault();
     try {
@@ -73,7 +87,7 @@ const LoginForm = () => {
     } catch (error: any) {
       toast({
         title: "Erro ao criar conta",
-        description: error.message,
+        description: getErrorMessage(error),
         variant: "destructive",
       });
     } finally {
@@ -98,7 +112,7 @@ const LoginForm = () => {
     } catch (error: any) {
       toast({
         title: "Erro ao fazer login",
-        description: error.message,
+        description: getErrorMessage(error),
         variant: "destructive",
       });
     } finally {

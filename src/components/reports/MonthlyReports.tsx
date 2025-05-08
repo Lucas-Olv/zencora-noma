@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Calendar, Download, FileText, Loader2 } from "lucide-react";
+import { Calendar, Download, FileText, Loader2, Check, Clock } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -351,184 +351,222 @@ const MonthlyReports = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h2 className="text-3xl font-bold tracking-tight">Relatórios</h2>
-        <div className="flex items-center gap-3">
-          <Select value={selectedMonth} onValueChange={handleMonthChange}>
-            <SelectTrigger className="w-[180px]">
-              <Calendar className="mr-2 h-4 w-4" />
-              <SelectValue placeholder="Selecionar mês" />
-            </SelectTrigger>
-            <SelectContent>
-              {months.map((month) => (
-                <SelectItem key={month} value={month}>
-                  {month.charAt(0).toUpperCase() + month.slice(1)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <DateRangePicker
-            value={dateRange}
-            onChange={setDateRange}
-          />
-          <Button variant="outline" size="icon" onClick={handleDownloadPDF}>
-            <Download className="h-4 w-4" />
-          </Button>
+    <div className="w-full max-w-full overflow-x-hidden h-[calc(100vh-3.5rem)]">
+      <div className="space-y-2 px-2 sm:space-y-4 sm:px-6 h-full overflow-y-auto pb-2">
+        {/* Header */}
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sticky top-0 bg-background z-10 py-1">
+          <h2 className="text-2xl font-bold tracking-tight text-center sm:text-left sm:text-3xl">Relatórios</h2>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <Select value={selectedMonth} onValueChange={handleMonthChange}>
+                <SelectTrigger className="w-full sm:w-[180px] h-9">
+                  <Calendar className="mr-2 h-4 w-4" />
+                  <SelectValue placeholder="Selecionar mês" />
+                </SelectTrigger>
+                <SelectContent>
+                  {months.map((month) => (
+                    <SelectItem key={month} value={month}>
+                      {month.charAt(0).toUpperCase() + month.slice(1)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <div className="flex items-center gap-2">
+                <DateRangePicker
+                  value={dateRange}
+                  onChange={setDateRange}
+                  className="w-full sm:w-auto"
+                />
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={handleDownloadPDF}
+                  className="shrink-0 h-9 w-9"
+                >
+                  <Download className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <ReportItem
-          title="Total de Encomendas"
-          value={reportData.totalOrders}
-          icon={<FileText className="h-5 w-5 text-primary" />}
-          className="bg-white dark:bg-card border"
-        />
-        <ReportItem
-          title="Faturamento"
-          value={formatCurrency(reportData.totalRevenue)}
-          icon={<FileText className="h-5 w-5 text-green-600" />}
-          className="bg-white dark:bg-card border"
-        />
-        <ReportItem
-          title="Concluídas"
-          value={`${reportData.completedOrders} (${completionRate}%)`}
-          icon={<FileText className="h-5 w-5 text-secondary" />}
-          className="bg-white dark:bg-card border"
-        />
-        <ReportItem
-          title="Pendentes"
-          value={reportData.pendingOrders}
-          icon={<FileText className="h-5 w-5 text-amber-500" />}
-          className="bg-white dark:bg-card border"
-        />
-      </div>
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 gap-2 sm:gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <ReportItem
+            title="Total de Encomendas"
+            value={reportData.totalOrders}
+            icon={<FileText className="h-4 w-4" />}
+            className="bg-primary/5"
+          />
+          <ReportItem
+            title="Faturamento Total"
+            value={formatCurrency(reportData.totalRevenue)}
+            icon={<Calendar className="h-4 w-4" />}
+            className="bg-secondary/5"
+          />
+          <ReportItem
+            title="Encomendas Concluídas"
+            value={`${reportData.completedOrders} (${completionRate}%)`}
+            icon={<Check className="h-4 w-4" />}
+            className="bg-green-500/5"
+          />
+          <ReportItem
+            title="Encomendas Pendentes"
+            value={reportData.pendingOrders}
+            icon={<Clock className="h-4 w-4" />}
+            className="bg-yellow-500/5"
+          />
+        </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Receita Diária</CardTitle>
-            <CardDescription>Faturamento ao longo do período</CardDescription>
+        {/* Reports Card */}
+        <Card className="overflow-hidden">
+          <CardHeader className="p-3 sm:p-4">
+            <CardTitle>Relatórios</CardTitle>
+            <CardDescription>
+              Acompanhe o desempenho do seu negócio
+            </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart
-                  data={reportData.dailyRevenue}
-                  margin={{
-                    top: 5,
-                    right: 5,
-                    left: 5,
-                    bottom: 5,
-                  }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                  <XAxis dataKey="day" />
-                  <YAxis 
-                    tickFormatter={(value) => `R$ ${value}`}
-                    width={isMobile ? 40 : 60}
-                  />
-                  <Tooltip 
-                    formatter={(value: number) => [`R$ ${value}`, "Receita"]}
-                    labelFormatter={(label) => `Dia ${label}`}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="value"
-                    stroke="hsl(var(--primary))"
-                    strokeWidth={2}
-                    activeDot={{ r: 8 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+          <CardContent className="space-y-3 p-3 sm:space-y-4 sm:p-4">
+            {/* Daily Revenue Section */}
+            <div className="space-y-2 sm:space-y-3">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold">Receita Diária</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Evolução da receita ao longo do período
+                  </p>
+                </div>
+                <DateRangePicker
+                  value={dateRange}
+                  onChange={setDateRange}
+                  className="w-full sm:w-auto"
+                />
+              </div>
+              
+              <div className="w-full overflow-x-auto">
+                <div className="min-w-[280px] h-[200px] sm:min-w-[600px] sm:h-[250px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={reportData.dailyRevenue}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis 
+                        dataKey="day" 
+                        tick={{ fontSize: 12 }}
+                        interval="preserveStartEnd"
+                      />
+                      <YAxis 
+                        tick={{ fontSize: 12 }}
+                        tickFormatter={(value) => formatCurrency(value)}
+                      />
+                      <Tooltip 
+                        formatter={(value: number) => formatCurrency(value)}
+                        labelStyle={{ fontSize: 12 }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="value"
+                        stroke="hsl(var(--primary))"
+                        strokeWidth={2}
+                        dot={{ r: 4 }}
+                        activeDot={{ r: 6 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+
+            {/* Category Distribution Section */}
+            <div className="space-y-2 sm:space-y-3">
+              <div>
+                <h3 className="text-lg font-semibold">Distribuição por Categoria</h3>
+                <p className="text-sm text-muted-foreground">
+                  Encomendas por categoria no período
+                </p>
+              </div>
+              
+              <div className="w-full overflow-x-auto">
+                <div className="min-w-[280px] h-[200px] sm:min-w-[600px] sm:h-[250px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={reportData.categoryData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis 
+                        dataKey="name" 
+                        tick={{ fontSize: 12 }}
+                        interval="preserveStartEnd"
+                      />
+                      <YAxis 
+                        tick={{ fontSize: 12 }}
+                      />
+                      <Tooltip 
+                        labelStyle={{ fontSize: 12 }}
+                      />
+                      <Bar
+                        dataKey="value"
+                        fill="hsl(var(--primary))"
+                        radius={[4, 4, 0, 0]}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Encomendas por Categoria</CardTitle>
-            <CardDescription>Distribuição de produtos</CardDescription>
+        {/* Orders List Card */}
+        <Card className="overflow-hidden">
+          <CardHeader className="p-3 sm:p-4">
+            <CardTitle>Encomendas do Período</CardTitle>
+            <CardDescription>Lista de todas as encomendas no período selecionado</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={reportData.categoryData}
-                  margin={{
-                    top: 5,
-                    right: 5,
-                    left: 5,
-                    bottom: 5,
-                  }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="value" fill="hsl(var(--primary))" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Encomendas do Período</CardTitle>
-          <CardDescription>Lista de todas as encomendas no período selecionado</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="flex items-center justify-center h-32">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : orders.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-32 text-center">
-              <FileText className="h-12 w-12 text-muted-foreground mb-2" />
-              <p className="text-muted-foreground">Nenhuma encomenda encontrada</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {orders.map((order) => (
-                <div
-                  key={order.id}
-                  className="flex items-center justify-between p-4 rounded-lg bg-card hover:bg-accent/50 transition-colors border"
-                >
-                  <div className="flex items-center space-x-4">
-                    <div>
+          <CardContent className="p-3 sm:p-4">
+            {loading ? (
+              <div className="flex items-center justify-center h-24">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : orders.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-24 text-center">
+                <FileText className="h-12 w-12 text-muted-foreground mb-2" />
+                <p className="text-muted-foreground">Nenhuma encomenda encontrada</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {orders.map((order) => (
+                  <div
+                    key={order.id}
+                    className="flex flex-col gap-2 p-2 rounded-lg bg-card hover:bg-accent/50 transition-colors border sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:p-3"
+                  >
+                    <div className="flex-1 min-w-0">
                       <div className="font-medium">{order.client_name}</div>
                       <div className="text-sm text-muted-foreground">
                         {order.description || "Sem descrição"}
                       </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <div className="font-medium">{formatCurrency(order.price)}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {format(new Date(order.created_at), "dd/MM/yyyy")}
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+                      <div className="text-left sm:text-right">
+                        <div className="font-medium">{formatCurrency(order.price)}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {format(new Date(order.created_at), "dd/MM/yyyy")}
+                        </div>
                       </div>
+                      <Badge variant="outline" className={cn(
+                        "whitespace-nowrap",
+                        order.status === "pending" && "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50",
+                        order.status === "production" && "bg-purple-100/80 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200 hover:bg-purple-200 dark:hover:bg-purple-900/50",
+                        order.status === "done" && "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50"
+                      )}>
+                        {order.status === "pending" && "Pendente"}
+                        {order.status === "production" && "Em produção"}
+                        {order.status === "done" && "Concluído"}
+                      </Badge>
                     </div>
-                    <Badge variant="outline" className={cn(
-                      "whitespace-nowrap",
-                      order.status === "pending" && "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50",
-                      order.status === "production" && "bg-purple-100/80 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200 hover:bg-purple-200 dark:hover:bg-purple-900/50",
-                      order.status === "done" && "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50"
-                    )}>
-                      {order.status === "pending" && "Pendente"}
-                      {order.status === "production" && "Em produção"}
-                      {order.status === "done" && "Concluído"}
-                    </Badge>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

@@ -2,19 +2,28 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Check, Clock, FileText, Loader2 } from "lucide-react";
+import { Check, Clock, FileText, Loader2, Pencil } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { getOrders } from "@/lib/api";
+import { getOrders, Order } from "@/lib/api";
 import { LoadingState } from "@/components/ui/loading-state";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 
 const formatDate = (date: string) => {
-  return new Date(date).toLocaleDateString("pt-BR");
+  try {
+    const parsedDate = new Date(date);
+    if (isNaN(parsedDate.getTime())) {
+      return "Data inválida";
+    }
+    return parsedDate.toLocaleDateString("pt-BR");
+  } catch (error) {
+    return "Data inválida";
+  }
 };
 
 const getStatusDisplay = (status: string | null) => {
@@ -49,6 +58,7 @@ export function ProductionView() {
     queryKey: ["orders"],
     queryFn: getOrders,
   });
+  const navigate = useNavigate();
 
   const pendingOrders = orders?.filter(
     (order) => order.status === "pending" || order.status === "production"
@@ -138,14 +148,14 @@ export function ProductionView() {
                 {pendingOrders.map((order) => (
                   <div
                     key={order.id}
-                    className="flex items-center justify-between rounded-lg border p-4"
+                    className="flex flex-col sm:flex-row sm:items-center justify-between rounded-lg border p-4 gap-4"
                   >
-                    <div>
+                    <div className="flex-1 min-w-0">
                       <p className="font-medium">{order.clientName}</p>
                       <p className="text-sm text-muted-foreground">
                         {order.description}
                       </p>
-                      <div className="mt-2 flex items-center gap-2">
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
                         <Badge
                           variant="outline"
                           className={cn(
@@ -158,10 +168,11 @@ export function ProductionView() {
                             : "Pendente"}
                         </Badge>
                         <span className="text-sm text-muted-foreground">
-                          Criado em{" "}
-                          {format(new Date(order.createdAt), "dd/MM/yyyy", {
-                            locale: ptBR,
-                          })}
+                          Entrega: <span className="font-semibold">
+                            {order.createdAt ? format(new Date(order.createdAt), "dd 'de' MMMM", {
+                              locale: ptBR,
+                            }) : "Data não definida"}
+                          </span>
                         </span>
                       </div>
                     </div>
@@ -216,9 +227,9 @@ export function ProductionView() {
                         </Badge>
                         <span className="text-sm text-muted-foreground">
                           Concluído em{" "}
-                          {format(new Date(order.createdAt), "dd/MM/yyyy", {
+                          {order.createdAt ? format(new Date(order.createdAt), "dd/MM/yyyy", {
                             locale: ptBR,
-                          })}
+                          }) : "Data não definida"}
                         </span>
                       </div>
                     </div>

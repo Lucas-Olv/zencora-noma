@@ -196,7 +196,7 @@ const OrderList = () => {
                         <TableRow key={order.id}>
                           <TableCell className="font-medium">{order.client_name}</TableCell>
                           <TableCell>
-                            {format(new Date(order.due_date), "dd 'de' MMM", { locale: ptBR })}
+                            {format(new Date(order.due_date), "dd 'de' MMMM", { locale: ptBR })}
                           </TableCell>
                           <TableCell>
                             R$ {order.price.toFixed(2).replace('.', ',')}
@@ -214,6 +214,7 @@ const OrderList = () => {
                                 onClick={() => handleStatusChange(order.id, "pending")}
                                 title="Marcar como pendente"
                                 disabled={order.status === "pending"}
+                                className="flex items-center justify-center"
                               >
                                 <X className="h-4 w-4" />
                               </Button>
@@ -223,6 +224,7 @@ const OrderList = () => {
                                 onClick={() => handleStatusChange(order.id, "production")}
                                 title="Marcar como em produção"
                                 disabled={order.status === "production"}
+                                className="flex items-center justify-center"
                               >
                                 <Package className="h-4 w-4" />
                               </Button>
@@ -232,6 +234,7 @@ const OrderList = () => {
                                 onClick={() => handleStatusChange(order.id, "done")}
                                 title="Marcar como concluída"
                                 disabled={order.status === "done"}
+                                className="flex items-center justify-center"
                               >
                                 <CheckCircle2 className="h-4 w-4" />
                               </Button>
@@ -240,6 +243,7 @@ const OrderList = () => {
                                 size="icon"
                                 onClick={() => navigate(`/orders/edit/${order.id}`)}
                                 title="Editar encomenda"
+                                className="flex items-center justify-center"
                               >
                                 <Pencil className="h-4 w-4" />
                               </Button>
@@ -248,6 +252,7 @@ const OrderList = () => {
                                 size="icon"
                                 onClick={() => navigate(`/orders/${order.id}`)}
                                 title="Ver detalhes"
+                                className="flex items-center justify-center"
                               >
                                 <Eye className="h-4 w-4" />
                               </Button>
@@ -272,7 +277,7 @@ const OrderList = () => {
                             <div>
                               <h3 className="font-medium">{order.client_name}</h3>
                               <p className="text-sm text-muted-foreground">
-                                {format(new Date(order.due_date), "dd 'de' MMM", { locale: ptBR })}
+                                {format(new Date(order.due_date), "dd 'de' MMMM", { locale: ptBR })}
                               </p>
                             </div>
                             <Badge variant="outline" className={statusDisplay.className}>
