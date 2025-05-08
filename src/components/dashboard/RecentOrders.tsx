@@ -1,112 +1,89 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+import { useQuery } from "@tanstack/react-query"
+import { format } from "date-fns"
+import { ptBR } from "date-fns/locale"
+import { Calendar, FileText } from "lucide-react"
+import { Link } from "react-router-dom"
+import { cn } from "@/lib/utils"
 
-// Sample data for recent orders
-const orders = [
-  {
-    id: "1",
-    customer: "Maria Silva",
-    product: "Bolo de Chocolate",
-    date: "12/05/2025",
-    value: "R$ 120,00",
-    status: "pendente",
-    initials: "MS",
-  },
-  {
-    id: "2",
-    customer: "João Oliveira",
-    product: "Docinhos para festa",
-    date: "15/05/2025",
-    value: "R$ 250,00",
-    status: "confirmado",
-    initials: "JO",
-  },
-  {
-    id: "3",
-    customer: "Ana Costa",
-    product: "Kit festa infantil",
-    date: "18/05/2025",
-    value: "R$ 350,00",
-    status: "produção",
-    initials: "AC",
-  },
-  {
-    id: "4",
-    customer: "Pedro Santos",
-    product: "Torta salgada",
-    date: "20/05/2025",
-    value: "R$ 85,00",
-    status: "concluído",
-    initials: "PS",
-  },
-];
+import { getOrders } from "@/lib/api"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { LoadingState } from "@/components/ui/loading-state"
+import { Badge } from "@/components/ui/badge"
 
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case "pendente":
-      return "bg-yellow-100 text-yellow-800 hover:bg-yellow-200";
-    case "confirmado":
-      return "bg-blue-100 text-blue-800 hover:bg-blue-200";
-    case "produção":
-      return "bg-purple-100 text-purple-800 hover:bg-purple-200";
-    case "concluído":
-      return "bg-green-100 text-green-800 hover:bg-green-200";
-    default:
-      return "bg-muted text-text-primary hover:bg-accent";
-  }
-};
+function RecentOrders() {
+  const { data: orders, isLoading } = useQuery({
+    queryKey: ["orders"],
+    queryFn: getOrders,
+  })
 
-const RecentOrders = () => {
+  const recentOrders = orders?.slice(0, 5) || []
+
   return (
-    <Card className="col-span-3">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-          <CardTitle>Encomendas Recentes</CardTitle>
-          <CardDescription>
-            Veja as últimas encomendas registradas
-          </CardDescription>
-        </div>
-        <Button variant="outline" size="sm" asChild>
-          <a href="/orders">Ver todas</a>
-        </Button>
+    <Card>
+      <CardHeader>
+        <CardTitle>Encomendas Recentes</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          {orders.map((order) => (
-            <div
-              key={order.id}
-              className="flex items-center justify-between p-3 rounded-lg bg-card hover:bg-accent/50 transition-colors border"
-            >
-              <div className="flex items-center space-x-3">
-                <Avatar className="h-9 w-9">
-                  <AvatarFallback className="bg-primary/10 text-primary">
-                    {order.initials}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <div className="font-medium">{order.customer}</div>
-                  <div className="text-sm text-muted-foreground line-clamp-1">
-                    {order.product}
+        <LoadingState
+          loading={isLoading}
+          empty={!recentOrders.length}
+          emptyText="Nenhuma encomenda recente"
+          emptyIcon={<FileText className="h-12 w-12 text-muted-foreground" />}
+        >
+          <div className="space-y-4">
+            {recentOrders.map((order) => (
+              <Link
+                key={order.id}
+                to={`/orders/${order.id}`}
+                className="block rounded-lg border p-4 transition-colors hover:bg-muted/50"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium">{order.clientName}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {order.description}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium">
+                      {new Intl.NumberFormat("pt-BR", {
+                        style: "currency",
+                        currency: "BRL",
+                      }).format(order.price)}
+                    </p>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Calendar className="h-4 w-4" />
+                      <span>
+                        {format(new Date(order.createdAt), "dd/MM/yyyy", {
+                          locale: ptBR,
+                        })}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="text-sm text-right">
-                  <div className="font-medium">{order.value}</div>
-                  <div className="text-muted-foreground">Entrega: {order.date}</div>
+                <div className="mt-2 flex items-center gap-2">
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      order.status === "pending" && "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50",
+                      order.status === "production" && "bg-purple-100/80 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200 hover:bg-purple-200 dark:hover:bg-purple-900/50",
+                      order.status === "done" && "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50"
+                    )}
+                  >
+                    {order.status === "done"
+                      ? "Concluído"
+                      : order.status === "production"
+                      ? "Em produção"
+                      : "Pendente"}
+                  </Badge>
                 </div>
-                <Badge variant="outline" className={getStatusColor(order.status)}>
-                  {order.status}
-                </Badge>
-              </div>
-            </div>
-          ))}
-        </div>
+              </Link>
+            ))}
+          </div>
+        </LoadingState>
       </CardContent>
     </Card>
-  );
-};
+  )
+}
 
-export default RecentOrders;
+export default RecentOrders

@@ -107,14 +107,14 @@ const LoginForm = () => {
   };
 
   return (
-    <Tabs defaultValue="login" className="w-full">
+    <Tabs defaultValue="login" className="w-full max-w-md mx-auto">
       <TabsList className="grid w-full grid-cols-2">
         <TabsTrigger value="login">Entrar</TabsTrigger>
         <TabsTrigger value="register">Criar Conta</TabsTrigger>
       </TabsList>
       
-      <TabsContent value="login">
-        <Card>
+      <TabsContent value="login" className="flex items-start">
+        <Card className="w-full">
           <form onSubmit={handleSignIn}>
             <CardHeader>
               <CardTitle>Login</CardTitle>
@@ -175,8 +175,8 @@ const LoginForm = () => {
         </Card>
       </TabsContent>
       
-      <TabsContent value="register">
-        <Card>
+      <TabsContent value="register" className="flex items-start">
+        <Card className="w-full">
           <form onSubmit={handleSignUp}>
             <CardHeader>
               <CardTitle>Criar Conta</CardTitle>

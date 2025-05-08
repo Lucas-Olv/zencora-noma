@@ -1,71 +1,72 @@
+import { useQuery } from "@tanstack/react-query"
+import { format } from "date-fns"
+import { ptBR } from "date-fns/locale"
+import { Calendar } from "lucide-react"
+import { cn } from "@/lib/utils"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { getOrders } from "@/lib/api"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { LoadingState } from "@/components/ui/loading-state"
+import { Badge } from "@/components/ui/badge"
 
-// Sample delivery data
-const deliveries = [
-  { 
-    id: 1, 
-    date: "Hoje", 
-    items: [
-      { title: "Bolo de Chocolate", customer: "Maria Silva" },
-      { title: "Cupcakes", customer: "Fernanda Lopes" }
-    ] 
-  },
-  { 
-    id: 2, 
-    date: "Amanhã", 
-    items: [
-      { title: "Kit festa infantil", customer: "Ana Costa" }
-    ] 
-  },
-  { 
-    id: 3, 
-    date: "08/05/2025", 
-    items: [
-      { title: "Torta salgada", customer: "Pedro Santos" },
-      { title: "Bolo de aniversário", customer: "Lucas Mendes" }
-    ] 
-  },
-];
+function DeliveryCalendar() {
+  const { data: orders, isLoading } = useQuery({
+    queryKey: ["orders"],
+    queryFn: getOrders,
+  })
 
-const DeliveryCalendar = () => {
+  const today = new Date()
+  const todayOrders = orders?.filter(
+    (order) =>
+      format(new Date(order.createdAt), "dd/MM/yyyy") ===
+      format(today, "dd/MM/yyyy")
+  ) || []
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Próximas Entregas</CardTitle>
-        <CardDescription>
-          Entregas programadas para os próximos dias
-        </CardDescription>
+        <CardTitle>Entregas do Dia</CardTitle>
       </CardHeader>
-      <CardContent className="p-0">
-        <div className="divide-y">
-          {deliveries.map((delivery) => (
-            <div key={delivery.id} className="p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="font-semibold">{delivery.date}</h4>
-                <Badge variant="outline" className={
-                  delivery.date === "Hoje" 
-                    ? "bg-primary/10 text-primary hover:bg-primary/20"
-                    : "bg-muted"
-                }>
-                  {delivery.items.length} entregas
+      <CardContent>
+        <LoadingState
+          loading={isLoading}
+          empty={!todayOrders.length}
+          emptyText="Nenhuma entrega programada"
+          emptyIcon={<Calendar className="h-12 w-12 text-muted-foreground" />}
+        >
+          <div className="space-y-4">
+            {todayOrders.map((order) => (
+              <div
+                key={order.id}
+                className="flex items-center justify-between rounded-lg border p-4"
+              >
+                <div>
+                  <p className="font-medium">{order.clientName}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {order.description}
+                  </p>
+                </div>
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    order.status === "pending" && "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50",
+                    order.status === "production" && "bg-purple-100/80 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200 hover:bg-purple-200 dark:hover:bg-purple-900/50",
+                    order.status === "done" && "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50"
+                  )}
+                >
+                  {order.status === "done"
+                    ? "Concluído"
+                    : order.status === "production"
+                    ? "Em produção"
+                    : "Pendente"}
                 </Badge>
               </div>
-              <div className="space-y-2">
-                {delivery.items.map((item, idx) => (
-                  <div key={idx} className="flex flex-col p-2 rounded-md bg-accent/40">
-                    <span className="font-medium">{item.title}</span>
-                    <span className="text-sm text-muted-foreground">{item.customer}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </LoadingState>
       </CardContent>
     </Card>
-  );
-};
+  )
+}
 
-export default DeliveryCalendar;
+export default DeliveryCalendar

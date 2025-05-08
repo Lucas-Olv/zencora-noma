@@ -12,9 +12,8 @@ const Login = () => {
       <div className="absolute top-4 right-4">
         <ThemeToggle />
       </div>
-      
-      <div className="flex-1 flex flex-col items-center justify-center px-4 py-12">
-        <div className="w-full max-w-md text-center mb-8">
+      <div className="flex-1 flex flex-col items-center pt-12 px-4 gap-8">
+        <div className="w-full max-w-md text-center">
           <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold text-2xl mx-auto mb-4">
             Z
           </div>

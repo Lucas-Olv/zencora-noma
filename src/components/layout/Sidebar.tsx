@@ -11,7 +11,20 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useToast } from "@/components/ui/use-toast";
+import { supabaseService } from "@/services/supabaseService";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -67,7 +80,29 @@ const bottomNavItems: NavItem[] = [
 
 const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabaseService.auth.signOut();
+      if (error) throw error;
+
+      toast({
+        title: "Logout realizado",
+        description: "Você foi desconectado com sucesso.",
+      });
+
+      navigate("/login");
+    } catch (error: any) {
+      toast({
+        title: "Erro ao fazer logout",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   const NavItem = ({ title, href, icon: Icon }: NavItem) => {
     const isActive = href === "/"
       ? location.pathname === href
@@ -121,12 +156,28 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
               <NavItem key={item.href} {...item} />
             ))}
             
-            <Button variant="ghost" className="w-full justify-start gap-2 my-1 hover:bg-destructive/10 hover:text-destructive group" asChild>
-              <a href="/">
-                <LogOut className="h-5 w-5 text-muted-foreground group-hover:text-destructive" />
-                <span>Sair</span>
-              </a>
-            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="ghost" className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-100 dark:hover:bg-red-900/20">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sair
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Confirmar saída</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Tem certeza que deseja sair? Você precisará fazer login novamente para acessar o sistema.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleLogout} className="bg-red-600 hover:bg-red-700">
+                    Sair
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </div>
       </aside>

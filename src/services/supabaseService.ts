@@ -1,10 +1,24 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
 import { Session, User } from "@supabase/supabase-js";
 
 // Tipos
-export type OrderType = Database['public']['Tables']['orders']['Row'];
+export type OrderType = {
+  id: string;
+  created_at: string;
+  client_name: string;
+  description: string;
+  price: number;
+  due_date: string;
+  user_id: string;
+  collaborator_id: string | null;
+  status: "pending" | "production" | "done";
+  phone?: string;
+  product?: string;
+  collaborator?: {
+    name: string | null;
+  } | null;
+};
 export type CollaboratorType = Database['public']['Tables']['collaborators']['Row'];
 export type UserType = Database['public']['Tables']['users']['Row'];
 export type SubscriptionType = Database['public']['Tables']['subscriptions']['Row'];
@@ -207,12 +221,11 @@ export const ordersService = {
       .eq('id', id);
   },
   
-  // Alterna o status de uma encomenda (pendente/concluída)
-  toggleOrderStatus: async (id: string, currentStatus: string) => {
-    const newStatus = currentStatus === 'pending' ? 'done' : 'pending';
+  // Atualiza o status de uma encomenda
+  updateOrderStatus: async (id: string, status: "pending" | "production" | "done") => {
     return await supabase
       .from('orders')
-      .update({ status: newStatus })
+      .update({ status })
       .eq('id', id);
   }
 };

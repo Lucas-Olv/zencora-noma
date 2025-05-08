@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ArrowLeft, Calendar, CheckCircle, Clock, DollarSign, Edit, Trash } from "lucide-react";
+import { ArrowLeft, Calendar, CheckCircle, Clock, DollarSign, Edit, Trash, Package } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/components/ui/use-toast";
 import { supabaseService, OrderType } from "@/services/supabaseService";
@@ -17,6 +16,31 @@ interface OrderWithCollaborator extends OrderType {
     name: string | null;
   } | null;
 }
+
+const getStatusDisplay = (status: string | null) => {
+  switch (status) {
+    case "pending":
+      return { 
+        label: "Pendente", 
+        className: "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50" 
+      };
+    case "production":
+      return { 
+        label: "Em produção", 
+        className: "bg-purple-100/80 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200 hover:bg-purple-200 dark:hover:bg-purple-900/50" 
+      };
+    case "done":
+      return { 
+        label: "Concluído", 
+        className: "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50" 
+      };
+    default:
+      return { 
+        label: "Pendente", 
+        className: "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50" 
+      };
+  }
+};
 
 const OrderDetail = () => {
   const { id } = useParams();
@@ -50,21 +74,25 @@ const OrderDetail = () => {
     fetchOrderDetails();
   }, [id, toast]);
 
-  const handleStatusToggle = async () => {
+  const updateOrderStatus = async (newStatus: "pending" | "production" | "done") => {
     if (!id || !order) return;
     
     try {
-      const { error } = await supabaseService.orders.toggleOrderStatus(id, order.status || 'pending');
+      const { error } = await supabaseService.orders.updateOrderStatus(id, newStatus);
 
       if (error) throw error;
       
-      const newStatus = order.status === 'pending' ? 'done' : 'pending';
       setOrder(prev => prev ? { ...prev, status: newStatus } : null);
       
+      const statusLabels = {
+        pending: "pendente",
+        production: "em produção",
+        done: "concluída"
+      };
+      
       toast({
-        title: `Encomenda ${newStatus === 'done' ? 'concluída' : 'reaberta'}`,
+        title: `Encomenda ${statusLabels[newStatus]}`,
         description: `Status da encomenda atualizado com sucesso.`,
-        variant: "default"
       });
     } catch (error: any) {
       toast({
@@ -121,6 +149,8 @@ const OrderDetail = () => {
     );
   }
 
+  const statusDisplay = getStatusDisplay(order.status);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 justify-between">
@@ -168,9 +198,9 @@ const OrderDetail = () => {
               {order.collaborator?.name ? `Responsável: ${order.collaborator.name}` : "Sem responsável designado"}
             </p>
           </div>
-          <Badge variant={order.status === 'done' ? "success" : "outline"}>{
-            order.status === 'done' ? "Concluída" : "Pendente"
-          }</Badge>
+          <Badge variant="outline" className={statusDisplay.className}>
+            {statusDisplay.label}
+          </Badge>
         </CardHeader>
         
         <CardContent className="space-y-4">
@@ -206,23 +236,39 @@ const OrderDetail = () => {
           </div>
         </CardContent>
         
-        <CardFooter>
-          <Button 
-            variant={order.status === 'done' ? "outline" : "default"}
-            className={`w-full ${order.status === 'done' ? "" : "bg-green-600 hover:bg-green-700"}`}
-            onClick={handleStatusToggle}
-          >
-            {order.status === 'done' ? 
-              <>
-                <Clock className="h-4 w-4 mr-2" />
-                Marcar como Pendente
-              </> : 
-              <>
+        <CardFooter className="flex flex-col gap-2">
+          {order.status !== "pending" && (
+            <Button 
+              variant="outline"
+              className="w-full"
+              onClick={() => updateOrderStatus("pending")}
+            >
+              <Clock className="h-4 w-4 mr-2" />
+              Marcar como Pendente
+            </Button>
+          )}
+          <div className="flex flex-col gap-2 w-full">
+            {order.status !== "production" && (
+              <Button 
+                variant="outline"
+                className="w-full"
+                onClick={() => updateOrderStatus("production")}
+              >
+                <Package className="h-4 w-4 mr-2" />
+                Marcar como Em Produção
+              </Button>
+            )}
+            {order.status !== "done" && (
+              <Button 
+                variant="default"
+                className="w-full bg-green-600 hover:bg-green-700"
+                onClick={() => updateOrderStatus("done")}
+              >
                 <CheckCircle className="h-4 w-4 mr-2" />
                 Marcar como Concluída
-              </>
-            }
-          </Button>
+              </Button>
+            )}
+          </div>
         </CardFooter>
       </Card>
     </div>

@@ -1,209 +1,236 @@
-
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Check, Clock, FileText } from "lucide-react";
+import { Check, Clock, FileText, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { getOrders } from "@/lib/api";
+import { LoadingState } from "@/components/ui/loading-state";
+import { cn } from "@/lib/utils";
 
-// Sample production data
-const initialOrders = [
-  {
-    id: "1",
-    customer: "Maria Silva",
-    product: "Bolo de Chocolate",
-    date: "12/05/2025",
-    description: "Bolo de chocolate com cobertura de brigadeiro, decorado com morangos.",
-    isReady: false,
-  },
-  {
-    id: "2",
-    customer: "João Oliveira",
-    product: "Docinhos para festa",
-    date: "15/05/2025",
-    description: "100 unidades de brigadeiro, beijinho e cajuzinho (mix).",
-    isReady: false,
-  },
-  {
-    id: "3",
-    customer: "Ana Costa",
-    product: "Kit festa infantil",
-    date: "18/05/2025",
-    description: "Bolo de chocolate, 50 docinhos variados, 30 mini sanduíches e 20 mini quiches.",
-    isReady: false,
-  },
-  {
-    id: "4",
-    customer: "Fernanda Lopes",
-    product: "Cupcakes",
-    date: "10/05/2025",
-    description: "24 cupcakes de chocolate com cobertura de cream cheese.",
-    isReady: false,
-  },
-  {
-    id: "5",
-    customer: "Lucas Mendes",
-    product: "Bolo de aniversário",
-    date: "08/05/2025",
-    description: "Bolo de chocolate com recheio de brigadeiro e cobertura de pasta americana, tema super-heróis.",
-    isReady: false,
-  },
-];
+const formatDate = (date: string) => {
+  return new Date(date).toLocaleDateString("pt-BR");
+};
 
-const ProductionView = () => {
+const getStatusDisplay = (status: string | null) => {
+  switch (status) {
+    case "pending":
+      return { 
+        label: "Pendente", 
+        className: "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50" 
+      };
+    case "production":
+      return { 
+        label: "Em produção", 
+        className: "bg-purple-100/80 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200 hover:bg-purple-200 dark:hover:bg-purple-900/50" 
+      };
+    case "done":
+      return { 
+        label: "Concluído", 
+        className: "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50" 
+      };
+    default:
+      return { 
+        label: "Pendente", 
+        className: "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50" 
+      };
+  }
+};
+
+export function ProductionView() {
   const { toast } = useToast();
-  const [orders, setOrders] = useState(initialOrders);
-  const [activeTab, setActiveTab] = useState("pending");
+  const queryClient = useQueryClient();
+  const { data: orders, isLoading } = useQuery({
+    queryKey: ["orders"],
+    queryFn: getOrders,
+  });
 
-  const handleToggleReady = (id: string) => {
-    setOrders((prevOrders) =>
-      prevOrders.map((order) =>
-        order.id === id ? { ...order, isReady: !order.isReady } : order
-      )
-    );
-    
-    // Find the order to get its details
-    const order = orders.find(o => o.id === id);
-    
-    if (order) {
+  const pendingOrders = orders?.filter(
+    (order) => order.status === "pending" || order.status === "production"
+  ) || [];
+
+  const completedOrders = orders?.filter(
+    (order) => order.status === "done"
+  ) || [];
+
+  const handleToggleReady = async (id: string) => {
+    try {
+      const order = orders?.find((o) => o.id === id);
+      if (!order) return;
+
+      const newStatus =
+        order.status === "pending"
+          ? "production"
+          : order.status === "production"
+          ? "done"
+          : "pending";
+
+      const { error } = await supabase
+        .from("orders")
+        .update({ status: newStatus })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      // Invalidate and refetch the orders query
+      await queryClient.invalidateQueries({ queryKey: ["orders"] });
+
       toast({
-        title: order.isReady ? "Encomenda reaberta" : "Encomenda concluída",
-        description: order.isReady 
-          ? `A encomenda de ${order.customer} voltou para produção.` 
-          : `A encomenda de ${order.customer} foi marcada como pronta!`,
+        title: "Status atualizado",
+        description: "O status da encomenda foi atualizado com sucesso.",
+      });
+    } catch (error) {
+      console.error("Error updating order status:", error);
+      toast({
+        title: "Erro ao atualizar status",
+        description: "Não foi possível atualizar o status da encomenda.",
+        variant: "destructive",
       });
     }
   };
 
-  const pendingOrders = orders.filter(order => !order.isReady);
-  const readyOrders = orders.filter(order => order.isReady);
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-[calc(100vh-200px)]">
+        <div className="flex flex-col items-center gap-2">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Carregando encomendas...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight">Modo Produção</h2>
-        <p className="text-muted-foreground">
-          Visualize as encomendas pendentes e marque-as como prontas quando finalizadas.
-        </p>
-      </div>
-      
-      <Tabs defaultValue="pending" value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-2 mb-6">
-          <TabsTrigger value="pending" className="relative">
-            Pendentes
-            {pendingOrders.length > 0 && (
-              <Badge className="ml-2 bg-primary/90">{pendingOrders.length}</Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="ready">
-            Prontas
-            {readyOrders.length > 0 && (
-              <Badge className="ml-2 bg-green-600">{readyOrders.length}</Badge>
-            )}
-          </TabsTrigger>
-        </TabsList>
+    <Card>
+      <CardHeader>
+        <CardTitle>Encomendas em Produção</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Tabs defaultValue="pending" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="pending">
+              Em Produção
+              {pendingOrders.length > 0 && (
+                <Badge className="ml-2">{pendingOrders.length}</Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="completed">
+              Concluídas
+              {completedOrders.length > 0 && (
+                <Badge className="ml-2">{completedOrders.length}</Badge>
+              )}
+            </TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="pending" className="space-y-4">
-          {pendingOrders.length > 0 ? (
-            pendingOrders.map((order) => (
-              <Card key={order.id} className="overflow-hidden">
-                <div className="flex flex-col lg:flex-row">
-                  <div className="flex-1">
-                    <CardHeader>
-                      <div className="flex justify-between">
-                        <CardTitle className="text-xl flex items-center gap-2">
-                          {order.product}
-                          <Badge className="bg-primary/20 text-primary hover:bg-primary/30">
-                            <Clock className="h-3 w-3 mr-1" />
-                            {order.date}
-                          </Badge>
-                        </CardTitle>
+          <TabsContent value="pending">
+            <LoadingState
+              loading={isLoading}
+              empty={!pendingOrders.length}
+              emptyText="Nenhuma encomenda em produção"
+              emptyIcon={<FileText className="h-12 w-12 text-muted-foreground" />}
+            >
+              <div className="space-y-4">
+                {pendingOrders.map((order) => (
+                  <div
+                    key={order.id}
+                    className="flex items-center justify-between rounded-lg border p-4"
+                  >
+                    <div>
+                      <p className="font-medium">{order.clientName}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {order.description}
+                      </p>
+                      <div className="mt-2 flex items-center gap-2">
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            order.status === "pending" && "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50",
+                            order.status === "production" && "bg-purple-100/80 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200 hover:bg-purple-200 dark:hover:bg-purple-900/50"
+                          )}
+                        >
+                          {order.status === "production"
+                            ? "Em produção"
+                            : "Pendente"}
+                        </Badge>
+                        <span className="text-sm text-muted-foreground">
+                          Criado em{" "}
+                          {format(new Date(order.createdAt), "dd/MM/yyyy", {
+                            locale: ptBR,
+                          })}
+                        </span>
                       </div>
-                      <CardDescription className="flex items-center gap-1">
-                        Cliente: {order.customer}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-sm">
-                        <h4 className="font-semibold text-muted-foreground mb-1 flex items-center gap-1">
-                          <FileText className="h-4 w-4" /> Detalhes:
-                        </h4>
-                        <p>{order.description}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={order.status === "production"}
+                        onClick={() => handleToggleReady(order.id)}
+                      >
+                        Iniciar Produção
+                      </Button>
+                      <Button
+                        variant="default"
+                        size="sm"
+                        disabled={order.status === "pending"}
+                        onClick={() => handleToggleReady(order.id)}
+                      >
+                        Finalizar
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </LoadingState>
+          </TabsContent>
+
+          <TabsContent value="completed">
+            <LoadingState
+              loading={isLoading}
+              empty={!completedOrders.length}
+              emptyText="Nenhuma encomenda concluída"
+              emptyIcon={<FileText className="h-12 w-12 text-muted-foreground" />}
+            >
+              <div className="space-y-4">
+                {completedOrders.map((order) => (
+                  <div
+                    key={order.id}
+                    className="flex items-center justify-between rounded-lg border p-4"
+                  >
+                    <div>
+                      <p className="font-medium">{order.clientName}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {order.description}
+                      </p>
+                      <div className="mt-2 flex items-center gap-2">
+                        <Badge
+                          variant="outline"
+                          className="bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50"
+                        >
+                          Concluído
+                        </Badge>
+                        <span className="text-sm text-muted-foreground">
+                          Concluído em{" "}
+                          {format(new Date(order.createdAt), "dd/MM/yyyy", {
+                            locale: ptBR,
+                          })}
+                        </span>
                       </div>
-                    </CardContent>
+                    </div>
                   </div>
-                  
-                  <div className="p-4 flex items-center justify-center bg-accent/30 lg:flex-col lg:w-32">
-                    <Button
-                      variant="outline"
-                      className="w-full bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
-                      onClick={() => handleToggleReady(order.id)}
-                    >
-                      <Check className="mr-2 h-4 w-4" />
-                      Pronto
-                    </Button>
-                  </div>
-                </div>
-              </Card>
-            ))
-          ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              <p>Não há encomendas pendentes! 🎉</p>
-            </div>
-          )}
-        </TabsContent>
-        
-        <TabsContent value="ready" className="space-y-4">
-          {readyOrders.length > 0 ? (
-            readyOrders.map((order) => (
-              <Card key={order.id} className="overflow-hidden bg-green-50 dark:bg-green-950/10 border-green-200 dark:border-green-900/20">
-                <div className="flex flex-col lg:flex-row">
-                  <div className="flex-1">
-                    <CardHeader>
-                      <div className="flex justify-between">
-                        <CardTitle className="text-xl flex items-center gap-2">
-                          {order.product}
-                          <Badge className="bg-green-200 text-green-800 hover:bg-green-300">
-                            {order.date}
-                          </Badge>
-                        </CardTitle>
-                      </div>
-                      <CardDescription className="flex items-center gap-1">
-                        Cliente: {order.customer}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-sm">
-                        <h4 className="font-semibold text-muted-foreground mb-1 flex items-center gap-1">
-                          <FileText className="h-4 w-4" /> Detalhes:
-                        </h4>
-                        <p>{order.description}</p>
-                      </div>
-                    </CardContent>
-                  </div>
-                  
-                  <div className="p-4 flex items-center justify-center bg-green-100/50 lg:flex-col lg:w-32">
-                    <Button
-                      variant="outline"
-                      className="w-full"
-                      onClick={() => handleToggleReady(order.id)}
-                    >
-                      Reabrir
-                    </Button>
-                  </div>
-                </div>
-              </Card>
-            ))
-          ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              <p>Nenhuma encomenda finalizada ainda.</p>
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
-    </div>
+                ))}
+              </div>
+            </LoadingState>
+          </TabsContent>
+        </Tabs>
+      </CardContent>
+    </Card>
   );
-};
+}
 
 export default ProductionView;

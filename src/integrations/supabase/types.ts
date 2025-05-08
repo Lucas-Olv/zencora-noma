@@ -58,6 +58,7 @@ export type Database = {
           price: number
           status: string | null
           user_id: string | null
+          phone: string | null
         }
         Insert: {
           client_name: string
@@ -69,6 +70,7 @@ export type Database = {
           price: number
           status?: string | null
           user_id?: string | null
+          phone?: string | null
         }
         Update: {
           client_name?: string
@@ -80,6 +82,7 @@ export type Database = {
           price?: number
           status?: string | null
           user_id?: string | null
+          phone?: string | null
         }
         Relationships: [
           {

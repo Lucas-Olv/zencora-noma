@@ -19,6 +19,9 @@ import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import { supabaseService } from "./services/supabaseService";
 import { Session } from "@supabase/supabase-js";
+import Landing from "./pages/Landing";
+import Pricing from "./pages/Pricing";
+import EditOrder from "./pages/EditOrder";
 
 const queryClient = new QueryClient();
 
@@ -67,12 +70,17 @@ const App = () => {
           <Sonner />
           <BrowserRouter>
             <Routes>
-              <Route path="/" element={session ? <Navigate to="/dashboard" /> : <Login />} />
+              {/* Public Routes */}
+              <Route path="/" element={<Landing />} />
+              <Route path="/pricing" element={<Pricing />} />
+              <Route path="/login" element={session ? <Navigate to="/dashboard" /> : <Login />} />
               
-              <Route path="/" element={session ? <Layout /> : <Navigate to="/" />}>
+              {/* Protected Routes */}
+              <Route path="/" element={session ? <Layout /> : <Navigate to="/login" />}>
                 <Route path="dashboard" element={<Dashboard />} />
                 <Route path="orders" element={<Orders />} />
                 <Route path="orders/new" element={<NewOrder />} />
+                <Route path="orders/edit/:id" element={<EditOrder />} />
                 <Route path="orders/:id" element={<OrderDetail />} />
                 <Route path="production" element={<Production />} />
                 <Route path="reports" element={<Reports />} />
