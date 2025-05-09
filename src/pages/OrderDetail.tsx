@@ -191,7 +191,7 @@ const OrderDetail = () => {
                 Excluir
               </Button>
             </AlertDialogTrigger>
-            <AlertDialogContent>
+            <AlertDialogContent className="w-[calc(100%-2rem)] max-w-[400px] mx-auto rounded-xl">
               <AlertDialogHeader>
                 <AlertDialogTitle>Confirma exclusão?</AlertDialogTitle>
                 <AlertDialogDescription>
@@ -211,9 +211,9 @@ const OrderDetail = () => {
         <CardHeader className="flex flex-row items-start justify-between">
           <div>
             <CardTitle className="text-xl">{order.client_name}</CardTitle>
-            <p className="text-muted-foreground text-sm mt-1">
+            {/* <p className="text-muted-foreground text-sm mt-1">
               {order.collaborator?.name ? `Responsável: ${order.collaborator.name}` : "Sem responsável designado"}
-            </p>
+            </p> */}
           </div>
           <Badge variant="outline" className={statusDisplay.className}>
             {statusDisplay.label}

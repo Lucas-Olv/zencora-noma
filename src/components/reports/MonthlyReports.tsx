@@ -386,7 +386,7 @@ const MonthlyReports = () => {
               variant="outline" 
               size="icon" 
               onClick={handleDownloadPDF}
-              className="shrink-0 h-9 w-9"
+              className="shrink-0 h-10 w-10"
             >
               <Download className="h-4 w-4" />
             </Button>
