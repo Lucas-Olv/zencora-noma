@@ -47,7 +47,7 @@ const LoginForm = () => {
       setLoading(true);
       
       // Criar o usuário na autenticação
-      const { data: authData, error: authError } = await supabaseService.auth.signUpWithEmail(email, password, { name });
+      const { data: authData, error: authError } = await supabaseService.auth.signUpWithEmail(email, password, { name,  product: import.meta.env.VITE_PRODUCT_CODE });
       
       if (authError) throw authError;
       
@@ -55,46 +55,6 @@ const LoginForm = () => {
         throw new Error("Erro ao criar usuário na autenticação");
       }
 
-      // Buscar o produto Noma
-      console.log('Iniciando busca do produto Noma...');
-      const { data: productData, error: productError } = await supabase
-        .from('products')
-        .select('*')
-        .eq('code', 'noma')
-        .single();
-      
-      console.log('Resultado da busca do produto:', { productData, productError });
-      
-      if (productError) {
-        console.error('Erro ao buscar produto:', productError);
-        throw productError;
-      }
-        
-      if (!productData) {
-        console.error('Produto Noma não encontrado');
-        throw new Error("Produto Noma não encontrado");
-      }
-
-      console.log('Produto encontrado:', productData);
-
-      const expiryDate = new Date();
-      expiryDate.setDate(expiryDate.getDate() + 14); // 14 dias de trial
-      
-      const { error: subscriptionError } = await supabase
-        .from('subscriptions')
-        .insert({
-          user_id: authData.user.id,
-          product_id: productData.id,
-          plan: 'free',
-          status: 'trial',
-          expires_at: expiryDate.toISOString()
-        });
-
-      if (subscriptionError) {
-        console.error('Erro ao criar assinatura:', subscriptionError);
-        throw subscriptionError;
-      }
-      
       // Verificar se o email precisa ser confirmado
       if (authData.session === null) {
         toast({

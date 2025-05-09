@@ -168,10 +168,6 @@ const OrderList = () => {
                   <p className="text-muted-foreground mb-4">
                     Comece registrando sua primeira encomenda.
                   </p>
-                  <Button onClick={() => navigate("/orders/new")}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Nova Encomenda
-                  </Button>
                 </>
               )}
             </div>

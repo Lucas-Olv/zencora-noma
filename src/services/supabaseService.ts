@@ -43,7 +43,7 @@ export const authService = {
   },
   
   // Cadastro com email e senha
-  signUpWithEmail: async (email: string, password: string, userData: { name: string }) => {
+  signUpWithEmail: async (email: string, password: string, userData: { name: string, product: string }) => {
     return await supabase.auth.signUp({
       email,
       password,
