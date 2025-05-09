@@ -111,7 +111,7 @@ const MonthlyReports = () => {
           const days = eachDayOfInterval({ start: dateRange.from, end: dateRange.to });
           processedData.dailyRevenue = days.map(day => {
             const dayOrders = data?.filter(order => {
-              const orderDate = parseDate(order.created_at);
+              const orderDate = parseDate(order.due_date);
               if (!orderDate) return false;
               return orderDate.getDate() === day.getDate() &&
                      orderDate.getMonth() === day.getMonth() &&

@@ -115,7 +115,7 @@ const Dashboard = () => {
           value={loading ? "-" : stats.activeOrders.toString()}
           description={loading ? "Carregando..." : `${stats.todayDeliveries} para entrega hoje`}
           icon={<ClipboardList className="h-5 w-5 text-primary" />}
-          trend={loading ? undefined : { value: 10, isPositive: true }}
+          // trend={loading ? undefined : { value: 10, isPositive: true }}
         />
         <StatsCard
           title="Em Produção"
@@ -134,7 +134,7 @@ const Dashboard = () => {
           value={loading ? "-" : formatCurrency(stats.monthlyRevenue)}
           description={loading ? "Carregando..." : `${formatCurrency(stats.weeklyRevenue)} esta semana`}
           icon={<FileText className="h-5 w-5 text-green-600" />}
-          trend={loading ? undefined : { value: 5, isPositive: true }}
+          // trend={loading ? undefined : { value: 5, isPositive: true }}
         />
       </div>
 
