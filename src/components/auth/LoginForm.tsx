@@ -55,15 +55,6 @@ const LoginForm = () => {
         throw new Error("Erro ao criar usuário na autenticação");
       }
 
-      // Criar o registro na tabela users usando o ID do usuário já criado
-      const { error: userError } = await supabaseService.users.createUserRecord(
-        authData.user.id,
-        name,
-        email
-      );
-        
-      if (userError) throw userError;
-
       // Buscar o produto Noma
       console.log('Iniciando busca do produto Noma...');
       const { data: productData, error: productError } = await supabase
