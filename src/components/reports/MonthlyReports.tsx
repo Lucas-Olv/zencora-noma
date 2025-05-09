@@ -26,6 +26,7 @@ import { DateRange } from "react-day-picker";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { Badge } from "@/components/ui/badge";
+import { report } from "process";
 
 type Order = Tables<"orders">;
 
@@ -455,7 +456,7 @@ const MonthlyReports = () => {
       </div>
 
       <div className="grid gap-6 grid-cols-1 lg:grid-cols-4">
-        <div className="lg:col-span-3">
+        <div className="lg:col-span-4">
           <Card className="overflow-hidden">
             <CardHeader className="p-3 sm:p-4">
               <CardTitle>Análise de Desempenho</CardTitle>
@@ -508,8 +509,8 @@ const MonthlyReports = () => {
             </CardContent>
           </Card>
         </div>
-
-        <div className="lg:col-span-1">
+      </div>
+      <div className="lg:col-span-1">
           <Card className="overflow-hidden">
             <CardHeader className="p-3 sm:p-4">
               <CardTitle>Encomendas do Período</CardTitle>
@@ -563,7 +564,6 @@ const MonthlyReports = () => {
             </CardContent>
           </Card>
         </div>
-      </div>
     </div>
   );
 };
