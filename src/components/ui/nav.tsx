@@ -17,26 +17,49 @@ export const Nav = () => {
     }
   };
 
+  const handlePricingClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    const featuresSection = document.getElementById('pricing');
+    if (featuresSection) {
+      featuresSection.scrollIntoView({ behavior: 'smooth' });
+      setIsMenuOpen(false);
+    }
+  };
+  
+  const handleFaqClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    const featuresSection = document.getElementById('faq');
+    if (featuresSection) {
+      featuresSection.scrollIntoView({ behavior: 'smooth' });
+      setIsMenuOpen(false);
+    }
+  };
+
   return (
     <header className="sticky top-0 z-40 backdrop-blur-md bg-background/80 border-b">
       <div className="container flex h-16 items-center justify-between px-4">
         <div className="flex items-center gap-6">
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold">
-              Z
-            </div>
+            <img src="noma-logo.svg" alt="Zencora Noma Logo" className="w-10 h-10" />
             <span className="font-bold text-xl">Zencora Noma</span>
           </Link>
           <nav className="hidden md:flex gap-6">
-            <a 
-              href="/#features" 
+            <Link
+              to="/#features"
               onClick={handleFeatureClick}
               className="text-muted-foreground hover:text-foreground transition-colors"
             >
               Funcionalidades
-            </a>
-            <Link to="/pricing" className="text-muted-foreground hover:text-foreground transition-colors">
+            </Link>
+            <Link to="/#pricing"
+              onClick={handlePricingClick}
+              className="text-muted-foreground hover:text-foreground transition-colors">
               Preços
+            </Link>
+            <Link to="/#faq"
+              onClick={handleFaqClick}
+              className="text-muted-foreground hover:text-foreground transition-colors">
+              FAQ
             </Link>
           </nav>
         </div>
@@ -62,7 +85,7 @@ export const Nav = () => {
       </div>
 
       {/* Mobile Menu */}
-      <div 
+      <div
         className={cn(
           "md:hidden border-t transition-all duration-300 ease-in-out",
           isMenuOpen ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0 overflow-hidden"
@@ -70,17 +93,24 @@ export const Nav = () => {
       >
         <div className="container px-4 py-4 space-y-4">
           <nav className="flex flex-col gap-4">
-            <a
-              href="/#features"
+            <Link
+              to="/#features"
               onClick={handleFeatureClick}
               className="text-muted-foreground hover:text-foreground transition-colors"
             >
               Funcionalidades
-            </a>
+            </Link>
             <Link
-              to="/pricing"
+              to="/#pricing"
               className="text-muted-foreground hover:text-foreground transition-colors"
-              onClick={() => setIsMenuOpen(false)}
+              onClick={handlePricingClick}
+            >
+              Preços
+            </Link>
+            <Link
+              to="/#faq"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+              onClick={handleFaqClick}
             >
               Preços
             </Link>

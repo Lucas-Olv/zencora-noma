@@ -14,9 +14,8 @@ const Login = () => {
       </div>
       <div className="flex-1 flex flex-col items-center pt-12 px-4 gap-8">
         <div className="w-full max-w-md text-center">
-          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold text-2xl mx-auto mb-4">
-            Z
-          </div>
+          <img src="noma-logo.svg" alt="Zencora Noma Logo" className="w-20 h-20 mx-auto mb-2" />
+
           <h1 className="text-4xl font-extrabold tracking-tight zencora-gradient-text mb-2">
             Zencora Noma
           </h1>
@@ -24,7 +23,6 @@ const Login = () => {
             Simplifique o gerenciamento de suas encomendas criativas
           </p>
         </div>
-        
         <LoginForm />
       </div>
       

@@ -49,15 +49,15 @@ const ThemeToggle = () => {
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={() => setTheme("light")} className="flex items-center gap-2">
           <Sun className="h-4 w-4 text-text-primary" />
-          <span>Light</span>
+          <span>Claro</span>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setTheme("dark")} className="flex items-center gap-2">
           <Moon className="h-4 w-4 text-text-primary" />
-          <span>Dark</span>
+          <span>Escuro</span>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setTheme("system")} className="flex items-center gap-2">
           <Monitor className="h-4 w-4 text-text-primary" />
-          <span>System</span>
+          <span>Automático</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

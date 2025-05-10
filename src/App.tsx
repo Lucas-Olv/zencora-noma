@@ -20,7 +20,6 @@ import NotFound from "./pages/NotFound";
 import { supabaseService } from "./services/supabaseService";
 import { Session } from "@supabase/supabase-js";
 import Landing from "./pages/Landing";
-import Pricing from "./pages/Pricing";
 import EditOrder from "./pages/EditOrder";
 
 const queryClient = new QueryClient();
@@ -72,7 +71,6 @@ const App = () => {
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<Landing />} />
-              <Route path="/pricing" element={<Pricing />} />
               <Route path="/login" element={session ? <Navigate to="/dashboard" /> : <Login />} />
               
               {/* Protected Routes */}

@@ -34,14 +34,14 @@ const Navbar = ({ toggleSidebar }: NavbarProps) => {
         <div className="flex-1"></div>
         <div className="flex items-center justify-center gap-2">
           <ThemeToggle />
-          <Button variant="ghost" size="icon" className="rounded-full relative">
+          {/* <Button variant="ghost" size="icon" className="rounded-full relative">
             <Bell className="h-5 w-5" />
             <span className="absolute top-1 right-2 h-2 w-2 rounded-full bg-complementary"></span>
           </Button>
           <Avatar className="h-8 w-8 cursor-pointer">
             <AvatarImage src="" alt="User" />
             <AvatarFallback className="bg-primary text-primary-foreground">ZN</AvatarFallback>
-          </Avatar>
+          </Avatar> */}
         </div>
       </div>
     </header>
