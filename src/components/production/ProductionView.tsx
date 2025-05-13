@@ -109,6 +109,13 @@ export function ProductionView() {
   }
 
   return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-3xl font-bold tracking-tight">Painel de Produção</h2>
+        <p className="text-muted-foreground">
+          Acompanhe as encomendas em produção e concluídas.
+        </p>
+      </div>
     <Card>
       <CardHeader>
         <CardTitle>Encomendas em Produção</CardTitle>
@@ -234,6 +241,8 @@ export function ProductionView() {
         </Tabs>
       </CardContent>
     </Card>
+
+    </div>
   );
 }
 

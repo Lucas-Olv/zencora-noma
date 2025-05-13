@@ -155,7 +155,7 @@ const OrderDetail = () => {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/orders")}>
+          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <h2 className="text-3xl font-bold tracking-tight">Encomenda não encontrada</h2>
@@ -172,7 +172,7 @@ const OrderDetail = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 justify-between">
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/orders")}>
+          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Detalhes da Encomenda</h2>

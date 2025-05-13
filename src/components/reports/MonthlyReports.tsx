@@ -248,36 +248,6 @@ const MonthlyReports = () => {
       margin: { left: 14, right: 14 }
     });
     
-    // Category Distribution section
-    doc.setFontSize(14);
-    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-    doc.text("Distribuição por Categoria", 14, (doc as any).lastAutoTable.finalY + 15);
-    
-    // Category table with custom styling
-    autoTable(doc, {
-      startY: (doc as any).lastAutoTable.finalY + 20,
-      head: [["Categoria", "Quantidade"]],
-      body: reportData.categoryData.map(item => [
-        item.name,
-        item.value.toString()
-      ]),
-      theme: "grid",
-      headStyles: { 
-        fillColor: primaryColor,
-        textColor: [255, 255, 255],
-        fontStyle: 'bold',
-        halign: 'center'
-      },
-      bodyStyles: {
-        textColor: [50, 50, 50],
-        halign: 'center'
-      },
-      alternateRowStyles: {
-        fillColor: [245, 245, 245]
-      },
-      margin: { left: 14, right: 14 }
-    });
-    
     // Orders List section
     doc.setFontSize(14);
     doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);

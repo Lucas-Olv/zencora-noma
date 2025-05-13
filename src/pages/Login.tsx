@@ -14,8 +14,7 @@ const Login = () => {
       </div>
       <div className="flex-1 flex flex-col items-center pt-12 px-4 gap-8">
         <div className="w-full max-w-md text-center">
-          <img src="noma-logo.svg" alt="Zencora Noma Logo" className="w-20 h-20 mx-auto mb-2" />
-
+          <img src="noma-logo.svg" alt="Zencora Noma Logo" className="w-16 h-16 mx-auto mb-2" />
           <h1 className="text-4xl font-extrabold tracking-tight zencora-gradient-text mb-2">
             Zencora Noma
           </h1>

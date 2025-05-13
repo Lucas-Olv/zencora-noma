@@ -1,0 +1,121 @@
+.calendar-container {
+  --fc-border-color: hsl(var(--border));
+  --fc-button-text-color: hsl(var(--foreground));
+  --fc-button-bg-color: hsl(var(--background));
+  --fc-button-border-color: hsl(var(--border));
+  --fc-button-hover-bg-color: hsl(var(--accent));
+  --fc-button-hover-border-color: hsl(var(--accent));
+  --fc-button-active-bg-color: hsl(var(--accent));
+  --fc-button-active-border-color: hsl(var(--accent));
+  --fc-event-bg-color: hsl(var(--accent));
+  --fc-event-border-color: hsl(var(--accent));
+  --fc-event-text-color: hsl(var(--accent-foreground));
+  --fc-today-bg-color: hsl(var(--accent) / 0.1);
+  --fc-neutral-bg-color: hsl(var(--background));
+  --fc-list-event-hover-bg-color: hsl(var(--accent));
+  --fc-highlight-color: hsl(var(--accent) / 0.1);
+}
+
+.fc {
+  width: 100%;
+  background: hsl(var(--card));
+  border-radius: var(--radius);
+}
+
+.fc .fc-toolbar {
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem !important;
+}
+
+.fc .fc-toolbar-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.fc .fc-button {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: var(--radius);
+  transition: all 0.2s;
+}
+
+.fc .fc-button-primary:not(:disabled):active,
+.fc .fc-button-primary:not(:disabled).fc-button-active {
+  background-color: hsl(var(--accent));
+  border-color: hsl(var(--accent));
+}
+
+.fc .fc-daygrid-day {
+  min-height: 100px;
+}
+
+.fc .fc-daygrid-day-frame {
+  padding: 0.25rem;
+}
+
+.fc .fc-daygrid-day-number {
+  padding: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.fc .fc-daygrid-event {
+  margin: 0.125rem 0;
+  border-radius: var(--radius);
+  font-size: 0.75rem;
+}
+
+.fc .fc-daygrid-more-link {
+  font-size: 0.75rem;
+  padding: 0.125rem 0.25rem;
+  margin: 0.125rem 0;
+}
+
+.fc .fc-day-today {
+  background: hsl(var(--accent) / 0.1) !important;
+}
+
+.fc .fc-col-header-cell {
+  padding: 0.5rem 0;
+}
+
+.fc .fc-col-header-cell-cushion {
+  padding: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+@media (max-width: 640px) {
+  .fc .fc-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .fc .fc-toolbar-chunk {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .fc .fc-toolbar-title {
+    font-size: 1.125rem;
+  }
+
+  .fc .fc-button {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.75rem;
+  }
+
+  .fc .fc-daygrid-day {
+    min-height: 80px;
+  }
+
+  .fc .fc-daygrid-event {
+    font-size: 0.7rem;
+  }
+
+  .fc .fc-daygrid-more-link {
+    font-size: 0.7rem;
+  }
+} 

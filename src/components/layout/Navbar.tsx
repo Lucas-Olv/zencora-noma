@@ -27,9 +27,6 @@ const Navbar = ({ toggleSidebar }: NavbarProps) => {
               <Menu className="h-5 w-5" />
             </Button>
           )}
-          <a href="/" className="flex items-center space-x-2">
-            <span className="font-bold text-lg zencora-gradient-text">Zencora Noma</span>
-          </a>
         </div>
         <div className="flex-1"></div>
         <div className="flex items-center justify-center gap-2">

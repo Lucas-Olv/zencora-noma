@@ -118,6 +118,10 @@
 }
 
 @layer components {
+  .hero-gradient {
+    @apply bg-gradient-to-br from-secondary to-complementary bg-clip-text text-transparent;
+  }
+
   .zencora-card {
     @apply bg-card text-card-foreground rounded-lg border shadow-sm transition-all hover:shadow-md;
   }

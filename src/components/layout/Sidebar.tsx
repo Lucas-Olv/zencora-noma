@@ -10,7 +10,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { supabaseService } from "@/services/supabaseService";
@@ -25,6 +24,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Link } from "react-router-dom";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -68,7 +68,7 @@ const mainNavItems: NavItem[] = [
 const bottomNavItems: NavItem[] = [
   {
     title: "Meu Perfil",
-    href: "/profile",
+    href: import.meta.env.VITE_ZENCORA_ACCOUNT_WEBSITE || "/profile",
     icon: User,
   },
   {
@@ -83,6 +83,48 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
+  const handleProfileClick = async () => {
+    try {
+      const { session, error } = await supabaseService.auth.getCurrentSession();
+      
+      if (error) throw error;
+      if (!session) {
+        toast({
+          title: "Erro ao acessar perfil",
+          description: "Você precisa estar logado para acessar seu perfil.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const websiteUrl = import.meta.env.VITE_ZENCORA_ACCOUNT_WEBSITE;
+      if (!websiteUrl) {
+        toast({
+          title: "Erro ao acessar perfil",
+          description: "URL do site de perfil não configurada.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Gera um token de acesso para o site externo
+      const { session: currentSession, error: tokenError } = await supabaseService.auth.getCurrentSession();
+      
+      if (tokenError) throw tokenError;
+      if (!currentSession?.access_token) throw new Error("Token de acesso não encontrado");
+
+      // Adiciona o token como parâmetro na URL
+      const urlWithToken = `${websiteUrl}account?token=${currentSession.access_token}`;
+      window.open(urlWithToken, "_blank");
+    } catch (error: any) {
+      toast({
+        title: "Erro ao acessar perfil",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleLogout = async () => {
     try {
       const { error } = await supabaseService.auth.signOut();
@@ -103,26 +145,13 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
     }
   };
 
-  const NavItem = ({ title, href, icon: Icon }: NavItem) => {
-    const isActive = href === "/"
-      ? location.pathname === href
-      : location.pathname.startsWith(href);
-      
-    return (
-      <Button
-        variant={isActive ? "secondary" : "ghost"}
-        className={cn(
-          "w-full justify-start gap-2 my-1",
-          isActive ? "bg-secondary text-secondary-foreground" : "hover:bg-accent hover:text-accent-foreground"
-        )}
-        asChild
-      >
-        <a href={href} onClick={closeSidebar}>
-          <Icon className={cn("h-5 w-5", isActive ? "text-secondary-foreground" : "text-muted-foreground")} />
-          <span>{title}</span>
-        </a>
-      </Button>
-    );
+  const handleNavigation = (href: string) => {
+    if (href === import.meta.env.VITE_ZENCORA_ACCOUNT_WEBSITE) {
+      handleProfileClick();
+      return;
+    }
+    navigate(href);
+    closeSidebar();
   };
   
   return (
@@ -137,51 +166,80 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
       
       {/* Sidebar */}
       <aside className={cn(
-        "fixed top-14 bottom-0 left-0 z-40 w-64 bg-sidebar border-r transition-transform duration-300 md:translate-x-0 flex flex-col",
+        "fixed top-0 bottom-0 left-0 z-50 w-60 bg-background dark:bg-background border-r border-border p-4 shadow-sm transition-transform duration-300 md:translate-x-0 flex flex-col",
         isOpen ? "translate-x-0" : "-translate-x-full"
       )}>
-        
-        <nav className="flex-1 px-3 py-2">
-          <div className="space-y-1">
-            {mainNavItems.map((item) => (
-              <NavItem key={item.href} {...item} />
-            ))}
-          </div>
-        </nav>
+        <div className="px-2 py-2">
+          <Link to="/" className="flex items-center">
+            <img src="/noma-logo.svg" alt="Zencora Noma Logo" className="h-8 mr-2" />
+            <span className="text-xl font-bold zencora-gradient-text">Zencora Noma</span>
+          </Link>
+        </div>
 
-        <div className="p-3 mt-auto">
-          <Separator className="my-2" />
-          <div className="space-y-1">
-            {bottomNavItems.map((item) => (
-              <NavItem key={item.href} {...item} />
-            ))}
-            
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-100 dark:hover:bg-red-900/20 my-1"
-                >
-                  <LogOut className="h-4 w-4" />
+        <div className="space-y-1 py-4 flex-1">
+          {mainNavItems.map((item) => (
+            <button
+              key={item.href}
+              onClick={() => handleNavigation(item.href)}
+              className={cn(
+                "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium",
+                "transition-all duration-200 ease-in-out",
+                "hover:bg-muted/80 active:scale-[0.98]",
+                location.pathname === item.href
+                  ? "bg-secondary text-secondary-foreground hover:bg-secondary/90"
+                  : "opacity-80 hover:opacity-100"
+              )}
+            >
+              <item.icon className="h-5 w-5 transition-transform duration-200 group-hover:scale-110" />
+              {item.title}
+            </button>
+          ))}
+        </div>
+        
+        <div className="mt-auto border-t border-border pt-4">
+          {bottomNavItems.map((item) => (
+            <button
+              key={item.href}
+              onClick={() => handleNavigation(item.href)}
+              className={cn(
+                "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium",
+                "transition-all duration-200 ease-in-out",
+                "hover:bg-muted/80 active:scale-[0.98]",
+                location.pathname === item.href
+                  ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                  : "opacity-80 hover:opacity-100"
+              )}
+            >
+              <item.icon className="h-5 w-5 transition-transform duration-200 group-hover:scale-110" />
+              {item.title}
+            </button>
+          ))}
+          
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-100 dark:hover:bg-red-900/20 my-1"
+              >
+                <LogOut className="h-4 w-4" />
+                Sair
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent className="w-[calc(100%-2rem)] max-w-[400px] mx-auto rounded-xl">
+              <AlertDialogHeader>
+                <AlertDialogTitle>Confirmar saída</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Tem certeza que deseja sair? Você precisará fazer login novamente para acessar o sistema.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
+                <AlertDialogCancel className="w-full sm:w-auto">Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={handleLogout} className="w-full sm:w-auto bg-red-600 hover:bg-red-700">
                   Sair
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent className="w-[calc(100%-2rem)] max-w-[400px] mx-auto rounded-xl">
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Confirmar saída</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Tem certeza que deseja sair? Você precisará fazer login novamente para acessar o sistema.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
-                  <AlertDialogCancel className="w-full sm:w-auto">Cancelar</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleLogout} className="w-full sm:w-auto bg-red-600 hover:bg-red-700">
-                    Sair
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </div>
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </aside>
     </>

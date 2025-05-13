@@ -230,52 +230,47 @@ const Landing = () => {
                 </p>
               </div>
             </div>
-            <div className="grid gap-4 sm:gap-6 md:gap-8 sm:grid-cols-2 lg:grid-cols-3 mt-8 md:mt-12 lg:mt-16">
+            <div className="grid gap-4 sm:gap-6 md:gap-8 sm:grid-cols-2 lg:grid-cols-2 mt-8 md:mt-12 lg:mt-16">
               <PricingTier
-                name="Pessoal"
-                price="Grátis"
-                description="Perfeito para empreendedores iniciantes."
+                name="Essencial"
+                price="R$19,90"
+                description="Ideal para autônomos e pequenos negócios que querem organização sem complicação."
                 features={[
-                  "Até 20 encomendas por mês",
-                  "Cadastro de clientes básico",
-                  "Acesso por 1 usuário",
+                  "Encomendas ilimitadas",
                   "Relatórios básicos",
-                  "Suporte por email",
+                  "Acesso via celular e computador",
+                  "Suporte por e-mail",
                 ]}
-                buttonText="Comece grátis"
+                buttonText="Comece agora"
               />
               <PricingTier
                 name="Profissional"
-                price="R$39"
-                description="Ideal para quem está crescendo."
+                price="R$39,90"
+                description="Perfeito para quem tem uma equipe ou lida com alto volume de pedidos."
                 features={[
-                  "Encomendas ilimitadas",
-                  "Cadastro de clientes avançado",
+                  "Tudo do Essencial",
+                  "Painel de produção para colaboradores",
                   "Acesso por até 3 usuários",
-                  "Relatórios completos",
-                  "Painel de produção",
-                  "Histórico de clientes",
-                  "Suporte prioritário",
+                  "Relatórios avançados",
+                  " Suporte prioritário via WhatsApp",
                 ]}
                 highlighted={true}
                 buttonText="Teste grátis por 7 dias"
               />
-              <PricingTier
-                name="Empresarial"
-                price="R$79"
-                description="Para negócios estabelecidos."
+              {/* <PricingTier
+                name="Enterprise"
+                price="Preço sob consulta"
+                description="Um sistema sob medida para empresas que querem total controle."
                 features={[
-                  "Tudo do Profissional",
-                  "Acesso por até 10 usuários",
-                  "Personalização de marca",
-                  "Integração com calendário",
-                  "API para integrações",
+                  "Implantação personalizada",
+                  "Hospedagem dedicada ou domínio próprio",
+                  "Customização visual e estrutural completa",
                   "Exportação de dados",
                   "Suporte prioritário 24/7",
                 ]}
                 buttonText="Fale com vendas"
                 buttonLink="/contact"
-              />
+              /> */}
             </div>
             <div className="mt-8 md:mt-12 text-center">
               <p className="text-sm text-muted-foreground max-w-[600px] mx-auto">
