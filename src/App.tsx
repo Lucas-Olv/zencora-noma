@@ -21,6 +21,10 @@ import { supabaseService } from "./services/supabaseService";
 import { Session } from "@supabase/supabase-js";
 import Landing from "./pages/Landing";
 import EditOrder from "./pages/EditOrder";
+import About from "./pages/About";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
+import Contact from "./pages/Contact";
 
 const queryClient = new QueryClient();
 
@@ -51,6 +55,7 @@ const App = () => {
     return () => {
       subscription?.unsubscribe();
     };
+    
   }, []);
 
   if (loading) {
@@ -70,7 +75,11 @@ const App = () => {
           <BrowserRouter>
             <Routes>
               {/* Public Routes */}
-              <Route path="/" element={<Landing />} />
+              <Route path="/" element={session ? <Navigate to="/dashboard" /> : <Landing />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/contact" element={<Contact />} />
               <Route path="/login" element={session ? <Navigate to="/dashboard" /> : <Login />} />
               
               {/* Protected Routes */}

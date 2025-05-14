@@ -78,7 +78,7 @@ function DeliveryCalendar() {
                         {order.status === "done"
                           ? "Concluído"
                           : order.status === "production"
-                          ? "Em produção"
+                          ? "Produção"
                           : "Pendente"}
                       </Badge>
                     </div>
@@ -113,7 +113,7 @@ function DeliveryCalendar() {
                         {order.status === "done"
                           ? "Concluído"
                           : order.status === "production"
-                          ? "Em produção"
+                          ? "Produção"
                           : "Pendente"}
                       </Badge>
                     </div>
@@ -151,7 +151,7 @@ function DeliveryCalendar() {
                         {order.status === "done"
                           ? "Concluído"
                           : order.status === "production"
-                          ? "Em produção"
+                          ? "Produção"
                           : "Pendente"}
                       </Badge>
                     </div>

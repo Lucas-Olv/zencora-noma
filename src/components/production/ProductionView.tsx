@@ -23,7 +23,7 @@ const getStatusDisplay = (status: string | null) => {
       };
     case "production":
       return { 
-        label: "Em produção", 
+        label: "Produção", 
         className: "bg-purple-100/80 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200 hover:bg-purple-200 dark:hover:bg-purple-900/50" 
       };
     case "done":
@@ -113,18 +113,18 @@ export function ProductionView() {
       <div>
         <h2 className="text-3xl font-bold tracking-tight">Painel de Produção</h2>
         <p className="text-muted-foreground">
-          Acompanhe as encomendas em produção e concluídas.
+          Acompanhe as encomendas Produção e concluídas.
         </p>
       </div>
     <Card>
       <CardHeader>
-        <CardTitle>Encomendas em Produção</CardTitle>
+        <CardTitle>Encomendas Produção</CardTitle>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="pending" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="pending">
-              Em Produção
+              Produção
               {pendingOrders.length > 0 && (
                 <Badge className="ml-2">{pendingOrders.length}</Badge>
               )}
@@ -141,7 +141,7 @@ export function ProductionView() {
             <LoadingState
               loading={isLoading}
               empty={!pendingOrders.length}
-              emptyText="Nenhuma encomenda em produção"
+              emptyText="Nenhuma encomenda Produção"
               emptyIcon={<FileText className="h-12 w-12 text-muted-foreground" />}
             >
               <div className="space-y-4">
@@ -166,7 +166,7 @@ export function ProductionView() {
                           )}
                         >
                           {order.status === "production"
-                            ? "Em produção"
+                            ? "Produção"
                             : "Pendente"}
                         </Badge>
                         <span className="text-sm text-muted-foreground">

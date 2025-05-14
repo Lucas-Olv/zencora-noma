@@ -27,7 +27,7 @@ const getStatusDisplay = (status: string | null) => {
       };
     case "production":
       return { 
-        label: "Em produção", 
+        label: "Produção", 
         className: "bg-purple-100/80 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200 hover:bg-purple-200 dark:hover:bg-purple-900/50" 
       };
     case "done":
@@ -85,7 +85,7 @@ const OrderList = () => {
 
       toast({
         title: "Status atualizado!",
-        description: `A encomenda foi marcada como ${targetStatus === "pending" ? "pendente" : targetStatus === "production" ? "em produção" : "concluída"}.`,
+        description: `A encomenda foi marcada como ${targetStatus === "pending" ? "pendente" : targetStatus === "production" ? "Produção" : "concluída"}.`,
       });
     } catch (error: any) {
       toast({
@@ -218,7 +218,7 @@ const OrderList = () => {
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => handleStatusChange(order.id, "production")}
-                                title="Marcar como em produção"
+                                title="Marcar como Produção"
                                 disabled={order.status === "production"}
                                 className="flex items-center justify-center"
                               >
@@ -281,7 +281,7 @@ const OrderList = () => {
                             </Badge>
                           </div>
                           
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center justify-between gap-2">
                             <Button
                               variant="ghost"
                               size="icon"
@@ -295,7 +295,7 @@ const OrderList = () => {
                               variant="ghost"
                               size="icon"
                               onClick={() => handleStatusChange(order.id, "production")}
-                              title="Marcar como em produção"
+                              title="Marcar como Produção"
                               disabled={order.status === "production"}
                             >
                               <Package className="h-4 w-4" />

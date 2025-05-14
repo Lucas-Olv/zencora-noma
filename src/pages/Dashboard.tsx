@@ -118,9 +118,9 @@ const Dashboard = () => {
           // trend={loading ? undefined : { value: 10, isPositive: true }}
         />
         <StatsCard
-          title="Em Produção"
+          title="Produção"
           value={loading ? "-" : stats.inProduction.toString()}
-          description={loading ? "Carregando..." : "Em produção"}
+          description={loading ? "Carregando..." : "Produção"}
           icon={<Users className="h-5 w-5 text-secondary" />}
         />
         <StatsCard

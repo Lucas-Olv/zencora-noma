@@ -37,7 +37,7 @@
 
     --border: 260 15% 90%;
     --input: 260 15% 90%;
-    --ring: 260 100% 66%;
+    --ring: 265 100% 66%;
 
     --radius: 0.75rem;
 
@@ -132,5 +132,32 @@
   
   .zencora-gradient-text {
     @apply bg-gradient-to-r from-primary to-complementary bg-clip-text text-transparent;
+  }
+}
+
+/* Smooth animations */
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.reveal.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Smooth resize transitions */
+* {
+  transition-property: width, height, transform, opacity, background-color, border-color, color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
+}
+
+/* Optimize animations */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition-duration: 0s !important;
+    animation-duration: 0s !important;
   }
 }

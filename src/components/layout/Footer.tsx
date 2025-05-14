@@ -1,0 +1,91 @@
+
+import { useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
+
+export function Footer() {
+  const sectionRef = useRef<HTMLElement>(null);
+  
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('active');
+        }
+      });
+    }, { threshold: 0.1 });
+    
+    const section = sectionRef.current;
+    if (section) {
+      const elements = section.querySelectorAll('.reveal');
+      elements.forEach((el) => observer.observe(el));
+    }
+    
+    return () => {
+      if (section) {
+        const elements = section.querySelectorAll('.reveal');
+        elements.forEach((el) => observer.unobserve(el));
+      }
+    };
+  }, []);
+
+  return (
+    <footer ref={sectionRef} className="py-10 md:py-16 border-t">
+      <div className="container px-4 sm:px-6 lg:px-8 mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div className="col-span-1 md:col-span-2 reveal">
+            <div className="flex items-center mb-4">
+              <span className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                Noma
+              </span>
+            </div>
+            <p className="text-foreground/70 mb-4 max-w-md">
+              Organize suas encomendas e aumente sua produtividade com o aplicativo perfeito para pequenos empreendedores.
+            </p>
+          </div>
+          
+          <div className="reveal delay-[100ms]">
+            <h4 className="font-semibold mb-4">Produto</h4>
+            <ul className="space-y-2">
+              <li>
+                <Link to="/#features" className="text-foreground/70 hover:text-primary">Funcionalidades</Link>
+              </li>
+              <li>
+                <Link to="/#planos" className="text-foreground/70 hover:text-primary">Planos e Preços</Link>
+              </li>
+              <li>
+                <Link to="/sobre" className="text-foreground/70 hover:text-primary">Sobre</Link>
+              </li>
+              <li>
+                <Link to="/contato" className="text-foreground/70 hover:text-primary">Suporte</Link>
+              </li>
+            </ul>
+          </div>
+          
+          <div className="reveal delay-[200ms]">
+            <h4 className="font-semibold mb-4">Links</h4>
+            <ul className="space-y-2">
+              <li>
+                <Link to="/privacidade" className="text-foreground/70 hover:text-primary">Política de Privacidade</Link>
+              </li>
+              <li>
+                <Link to="/termos" className="text-foreground/70 hover:text-primary">Termos de Uso</Link>
+              </li>
+              <li>
+                <Link to="/sobre" className="text-foreground/70 hover:text-primary">Sobre a Zencora</Link>
+              </li>
+              <li>
+                <Link to="/contato" className="text-foreground/70 hover:text-primary">Contato</Link>
+              </li>
+            </ul>
+          </div>
+        </div>
+        
+        <div className="mt-10 pt-6 border-t reveal delay-[300ms]">
+          <p className="text-center text-foreground/60 text-sm">
+            © 2025 Zencora. Todos os direitos reservados.
+          </p>
+        </div>
+      </div>
+    </footer>
+  );
+}

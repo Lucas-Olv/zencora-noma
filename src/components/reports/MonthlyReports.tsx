@@ -19,7 +19,7 @@ import { cn, formatDate, parseDate } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, parseISO, isWithinInterval } from "date-fns";
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, parseISO, isWithinInterval, isSameDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { DateRange } from "react-day-picker";
@@ -87,53 +87,70 @@ const MonthlyReports = () => {
           .select("*");
 
         if (dateRange?.from && dateRange?.to) {
-          query = query
-            .gte('created_at', dateRange.from.toISOString())
-            .lte('created_at', dateRange.to.toISOString());
+          // Ajusta as datas para o início e fim do dia
+          const startDate = new Date(dateRange.from);
+          startDate.setHours(0, 0, 0, 0);
+          
+          const endDate = new Date(dateRange.to);
+          endDate.setHours(23, 59, 59, 999);
+
+          // Filtra as encomendas pelo período
+          const { data, error } = await query;
+          if (error) throw error;
+
+          // Filtra as encomendas no lado do cliente para garantir precisão
+          const filteredOrders = data?.filter(order => {
+            const orderDate = parseDate(order.due_date);
+            if (!orderDate) return false;
+            
+            // Verifica se a data está dentro do intervalo
+            return orderDate >= startDate && orderDate <= endDate;
+          }).sort((a, b) => {
+            // Ordena por data de entrega em ordem crescente
+            const dateA = parseDate(a.due_date);
+            const dateB = parseDate(b.due_date);
+            if (!dateA || !dateB) return 0;
+            return dateA.getTime() - dateB.getTime();
+          }) || [];
+
+          setOrders(filteredOrders);
+
+          // Process data for reports
+          const processedData: ReportData = {
+            totalOrders: filteredOrders.length,
+            totalRevenue: filteredOrders.reduce((sum, order) => sum + (order.price || 0), 0),
+            completedOrders: filteredOrders.filter(order => order.status === "done").length,
+            pendingOrders: filteredOrders.filter(order => order.status !== "done").length,
+            dailyRevenue: [],
+            categoryData: [],
+          };
+
+          // Process daily revenue
+          if (dateRange?.from && dateRange?.to) {
+            const days = eachDayOfInterval({ start: dateRange.from, end: dateRange.to });
+            processedData.dailyRevenue = days.map(day => {
+              const dayOrders = filteredOrders.filter(order => {
+                const orderDate = parseDate(order.due_date);
+                if (!orderDate) return false;
+                return isSameDay(orderDate, day);
+              });
+              return {
+                day: format(day, "dd/MM"),
+                value: dayOrders.reduce((sum, order) => sum + (order.price || 0), 0),
+              };
+            });
+          }
+
+          // Process category data (placeholder - you might want to add categories to your orders)
+          processedData.categoryData = [
+            { name: "Bolos", value: Math.floor(Math.random() * 30) + 10 },
+            { name: "Doces", value: Math.floor(Math.random() * 20) + 5 },
+            { name: "Salgados", value: Math.floor(Math.random() * 15) + 5 },
+            { name: "Kits", value: Math.floor(Math.random() * 10) + 2 },
+          ];
+
+          setReportData(processedData);
         }
-
-        const { data, error } = await query;
-
-        if (error) throw error;
-        setOrders(data || []);
-
-        // Process data for reports
-        const processedData: ReportData = {
-          totalOrders: data?.length || 0,
-          totalRevenue: data?.reduce((sum, order) => sum + (order.price || 0), 0) || 0,
-          completedOrders: data?.filter(order => order.status === "done").length || 0,
-          pendingOrders: data?.filter(order => order.status !== "done").length || 0,
-          dailyRevenue: [],
-          categoryData: [],
-        };
-
-        // Process daily revenue
-        if (dateRange?.from && dateRange?.to) {
-          const days = eachDayOfInterval({ start: dateRange.from, end: dateRange.to });
-          processedData.dailyRevenue = days.map(day => {
-            const dayOrders = data?.filter(order => {
-              const orderDate = parseDate(order.due_date);
-              if (!orderDate) return false;
-              return orderDate.getDate() === day.getDate() &&
-                     orderDate.getMonth() === day.getMonth() &&
-                     orderDate.getFullYear() === day.getFullYear();
-            }) || [];
-            return {
-              day: format(day, "dd/MM"),
-              value: dayOrders.reduce((sum, order) => sum + (order.price || 0), 0),
-            };
-          });
-        }
-
-        // Process category data (placeholder - you might want to add categories to your orders)
-        processedData.categoryData = [
-          { name: "Bolos", value: Math.floor(Math.random() * 30) + 10 },
-          { name: "Doces", value: Math.floor(Math.random() * 20) + 5 },
-          { name: "Salgados", value: Math.floor(Math.random() * 15) + 5 },
-          { name: "Kits", value: Math.floor(Math.random() * 10) + 2 },
-        ];
-
-        setReportData(processedData);
       } catch (error) {
         console.error("Error fetching orders:", error);
       } finally {
@@ -263,7 +280,7 @@ const MonthlyReports = () => {
         formatCurrency(order.price),
         formatDate(order.due_date),
         order.status === "pending" ? "Pendente" :
-        order.status === "production" ? "Em produção" :
+        order.status === "production" ? "Produção" :
         "Concluído"
       ]),
       theme: "grid",
@@ -523,7 +540,7 @@ const MonthlyReports = () => {
                           order.status === "done" && "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50"
                         )}>
                           {order.status === "pending" && "Pendente"}
-                          {order.status === "production" && "Em produção"}
+                          {order.status === "production" && "Produção"}
                           {order.status === "done" && "Concluído"}
                         </Badge>
                       </div>
