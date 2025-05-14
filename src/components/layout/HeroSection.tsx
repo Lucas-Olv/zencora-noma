@@ -60,35 +60,37 @@ export function HeroSection() {
             </div>
           </div>
           
+          {!isMobile && (
           <div 
-            ref={resizeRef as any}
-            className={`w-full md:w-1/2 reveal delay-[300ms] transition-all duration-300 ease-in-out`}
-          >
-            <div className="relative">
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-primary to-secondary rounded-2xl blur opacity-30 transition-all duration-300 ease-in-out"></div>
-              <div className="relative bg-card rounded-xl overflow-hidden border shadow-xl transition-all duration-300 ease-in-out">
-                <div className="aspect-[4/3] bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center p-6">
-                  <div className="w-full max-w-md bg-background/70 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/10 dark:border-white/5 transition-all duration-300 ease-in-out">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="h-8 w-32 bg-primary/20 rounded-md transition-all duration-300 ease-in-out"></div>
-                      <div className="h-8 w-8 rounded-full bg-accent/20 transition-all duration-300 ease-in-out"></div>
-                    </div>
-                    <div className="space-y-3">
-                      <div className="h-3 bg-muted rounded-full w-full transition-all duration-300 ease-in-out"></div>
-                      <div className="h-3 bg-muted rounded-full w-5/6 transition-all duration-300 ease-in-out"></div>
-                      <div className="h-3 bg-muted rounded-full w-4/6 transition-all duration-300 ease-in-out"></div>
-                    </div>
-                    <div className="mt-6 grid grid-cols-2 gap-3">
-                      <div className="h-16 bg-primary/10 rounded-lg transition-all duration-300 ease-in-out"></div>
-                      <div className="h-16 bg-secondary/10 rounded-lg transition-all duration-300 ease-in-out"></div>
-                      <div className="h-16 bg-secondary/10 rounded-lg transition-all duration-300 ease-in-out"></div>
-                      <div className="h-16 bg-primary/10 rounded-lg transition-all duration-300 ease-in-out"></div>
-                    </div>
+          ref={resizeRef as any}
+          className={`w-full md:w-1/2 reveal delay-[300ms] transition-all duration-300 ease-in-out`}
+        >
+          <div className="relative">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-primary to-secondary rounded-2xl blur opacity-30 transition-all duration-300 ease-in-out"></div>
+            <div className="relative bg-card rounded-xl overflow-hidden border shadow-xl transition-all duration-300 ease-in-out">
+              <div className="aspect-[4/3] bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center p-6">
+                <div className="w-full max-w-md bg-background/70 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/10 dark:border-white/5 transition-all duration-300 ease-in-out">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="h-8 w-32 bg-primary/20 rounded-md transition-all duration-300 ease-in-out"></div>
+                    <div className="h-8 w-8 rounded-full bg-accent/20 transition-all duration-300 ease-in-out"></div>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="h-3 bg-muted rounded-full w-full transition-all duration-300 ease-in-out"></div>
+                    <div className="h-3 bg-muted rounded-full w-5/6 transition-all duration-300 ease-in-out"></div>
+                    <div className="h-3 bg-muted rounded-full w-4/6 transition-all duration-300 ease-in-out"></div>
+                  </div>
+                  <div className="mt-6 grid grid-cols-2 gap-3">
+                    <div className="h-16 bg-primary/10 rounded-lg transition-all duration-300 ease-in-out"></div>
+                    <div className="h-16 bg-secondary/10 rounded-lg transition-all duration-300 ease-in-out"></div>
+                    <div className="h-16 bg-secondary/10 rounded-lg transition-all duration-300 ease-in-out"></div>
+                    <div className="h-16 bg-primary/10 rounded-lg transition-all duration-300 ease-in-out"></div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
+        </div>
+          )}
         </div>
       </div>
 

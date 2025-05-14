@@ -202,7 +202,7 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
               key={item.href}
               onClick={() => handleNavigation(item.href)}
               className={cn(
-                "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium",
+                "flex w-full items-center gap-3 h-10 rounded-md px-3 py-2 text-sm font-medium",
                 "transition-all duration-200 ease-in-out",
                 "hover:bg-muted/80 active:scale-[0.98]",
                 location.pathname === item.href
@@ -219,7 +219,7 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
             <AlertDialogTrigger asChild>
               <Button 
                 variant="ghost" 
-                className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-100 dark:hover:bg-red-900/20 my-1"
+                className="w-full flex gap-3 justify-start h-10 text-red-600 hover:text-red-700 hover:bg-red-100 dark:hover:bg-red-900/20"
               >
                 <LogOut className="h-4 w-4" />
                 Sair

@@ -42,13 +42,9 @@ const Contact = () => {
 
   return (
     <div className="min-h-screen">
-      <ScrollReveal>
-        <header>
-          <Nav />
-        </header>
-      </ScrollReveal>
+      <Nav />
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-24">
         <ScrollReveal>
           <section>
             <h1 className="text-4xl font-bold mb-6">Contato</h1>

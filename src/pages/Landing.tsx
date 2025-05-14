@@ -5,6 +5,8 @@ import { FeaturesSection } from "@/components/layout/FeaturesSection";
 import { PricingSection } from "@/components/layout/PricingSection";
 import { Footer } from "@/components/layout/Footer";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
+import { Faq } from "@/components/layout/Faq";
+import { Cta } from "@/components/layout/Cta";
 
 const Landing = () => {
   // Handle scrolling after page load
@@ -35,34 +37,28 @@ const Landing = () => {
 
       <main>
         <ScrollReveal>
-          <section>
-            <HeroSection />
-          </section>
+          <HeroSection />
         </ScrollReveal>
 
         <ScrollReveal delay={100}>
-          <section>
             <FeaturesSection />
-          </section>
         </ScrollReveal>
 
         <ScrollReveal delay={200}>
-          <section>
             <PricingSection />
-          </section>
         </ScrollReveal>
 
-        <ScrollReveal delay={300}>
-          <section>
-            {/* ... existing testimonials section content ... */}
-          </section>
+        <ScrollReveal delay={400}>
+            <Faq />
+        </ScrollReveal>
+
+        <ScrollReveal delay={500}>
+            <Cta />
         </ScrollReveal>
       </main>
 
-      <ScrollReveal delay={400}>
-        <footer>
+      <ScrollReveal delay={600}>
           <Footer />
-        </footer>
       </ScrollReveal>
     </div>
   );

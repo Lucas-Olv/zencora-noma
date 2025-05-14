@@ -50,13 +50,13 @@ export function Footer() {
                 <Link to="/#features" className="text-foreground/70 hover:text-primary">Funcionalidades</Link>
               </li>
               <li>
-                <Link to="/#planos" className="text-foreground/70 hover:text-primary">Planos e Preços</Link>
+                <Link to="/#pricing" className="text-foreground/70 hover:text-primary">Planos e Preços</Link>
               </li>
               <li>
-                <Link to="/sobre" className="text-foreground/70 hover:text-primary">Sobre</Link>
+                <Link to="/about" className="text-foreground/70 hover:text-primary">Sobre</Link>
               </li>
               <li>
-                <Link to="/contato" className="text-foreground/70 hover:text-primary">Suporte</Link>
+                <Link to="/contact" className="text-foreground/70 hover:text-primary">Suporte</Link>
               </li>
             </ul>
           </div>
@@ -65,16 +65,16 @@ export function Footer() {
             <h4 className="font-semibold mb-4">Links</h4>
             <ul className="space-y-2">
               <li>
-                <Link to="/privacidade" className="text-foreground/70 hover:text-primary">Política de Privacidade</Link>
+                <Link to="/privacy" className="text-foreground/70 hover:text-primary">Política de Privacidade</Link>
               </li>
               <li>
-                <Link to="/termos" className="text-foreground/70 hover:text-primary">Termos de Uso</Link>
+                <Link to="/terms" className="text-foreground/70 hover:text-primary">Termos de Uso</Link>
               </li>
               <li>
-                <Link to="/sobre" className="text-foreground/70 hover:text-primary">Sobre a Zencora</Link>
+                <Link to="/about" className="text-foreground/70 hover:text-primary">Sobre a Zencora</Link>
               </li>
               <li>
-                <Link to="/contato" className="text-foreground/70 hover:text-primary">Contato</Link>
+                <Link to="/contact" className="text-foreground/70 hover:text-primary">Contato</Link>
               </li>
             </ul>
           </div>

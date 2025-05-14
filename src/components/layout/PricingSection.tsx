@@ -20,7 +20,7 @@ function PricingTier({ name, price, features, ctaText, isPro = false, delay, fre
       } overflow-hidden`}
     >
       {isPro && (
-        <div className="absolute inset-px rounded-2xl bg-card z-10">
+        <div className="inset-px rounded-2xl border-2 border-primary bg-card z-10">
           <div className="h-full w-full p-6 md:p-8">
             <div className="mb-4">
               <h3 className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">{name}</h3>
@@ -108,7 +108,7 @@ export function PricingSection() {
     <section 
       ref={sectionRef}
       className="py-16 md:py-24 bg-muted/50 relative" 
-      id="planos"
+      id="pricing"
     >
       <div className="container px-4 sm:px-6 lg:px-8 mx-auto">
         <div className="text-center mb-12">
@@ -118,7 +118,7 @@ export function PricingSection() {
           <div className="w-24 h-1 bg-gradient-to-r from-primary to-secondary mx-auto"></div>
         </div>
         
-        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 max-w-3xl mx-auto">
+        <div className="flex flex-col gap-8 md:flex-row max-w-3xl mx-auto">
           <PricingTier 
             name="Básico" 
             price="R$19,90/mês" 

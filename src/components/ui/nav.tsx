@@ -59,7 +59,7 @@ export const Nav = () => {
     <>
       <header
         className={cn(
-          "fixed top-0 left-0 right-0 z-[100] transition-all duration-200",
+          "fixed top-0 left-0 right-0 z-50 transition-all duration-200",
           isScrolled
             ? "bg-background/80 backdrop-blur-md shadow-sm"
             : "bg-transparent"
@@ -67,9 +67,9 @@ export const Nav = () => {
       >
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center">
-            <Link to="/" className="flex items-center gap-2">
-              <img src="noma-logo.svg" alt="Zencora Noma Logo" className="h-8" />
-              <span className="font-bold text-xl zencora-gradient-text">Zencora Noma</span>
+            <img src="noma-logo.svg" alt="Zencora Noma Logo" className="h-8 mr-2" />
+            <Link to="/" className="text-2xl font-bold zencora-gradient-text">
+              Zencora Noma
             </Link>
           </div>
 
@@ -153,7 +153,7 @@ export const Nav = () => {
           />
           
           {/* Menu content */}
-          <div className="fixed top-[73px] left-0 right-0 z-[100] bg-background shadow-lg md:hidden">
+          <div className="fixed top-[70px] left-0 right-0 z-[100] bg-background shadow-lg md:hidden">
             <div className="container mx-auto px-4 py-4 flex flex-col space-y-4">
               <Link
                 to="/"

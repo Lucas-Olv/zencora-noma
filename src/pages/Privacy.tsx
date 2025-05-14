@@ -5,13 +5,9 @@ import { ScrollReveal } from "@/components/ui/scroll-reveal";
 const Privacy = () => {
   return (
     <div className="min-h-screen">
-      <ScrollReveal>
-        <header>
-          <Nav />
-        </header>
-      </ScrollReveal>
-
-      <main className="container mx-auto px-4 py-8">
+      <Nav />
+      
+      <main className="container mx-auto px-4 py-24">
         <ScrollReveal>
           <section>
             <h1 className="text-4xl font-bold mb-6">Política de Privacidade</h1>
