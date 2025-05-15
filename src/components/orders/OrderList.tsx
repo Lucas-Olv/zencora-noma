@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, Eye, Plus, Search, X, Loader2, Package, Pencil, Printer } from "lucide-react";
-import { formatDate, usePrint, getOrderCode } from "@/lib/utils";
+import { formatDate, usePrint, getOrderCode, getStatusDisplay } from "@/lib/utils";
 import { ptBR } from "date-fns/locale";
 import { supabaseService, OrderType } from "@/services/supabaseService";
 
@@ -17,31 +17,6 @@ interface OrderWithCollaborator extends OrderType {
     name: string | null;
   } | null;
 }
-
-const getStatusDisplay = (status: string | null) => {
-  switch (status) {
-    case "pending":
-      return { 
-        label: "Pendente", 
-        className: "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50" 
-      };
-    case "production":
-      return { 
-        label: "Produção", 
-        className: "bg-purple-100/80 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200 hover:bg-purple-200 dark:hover:bg-purple-900/50" 
-      };
-    case "done":
-      return { 
-        label: "Concluído", 
-        className: "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50" 
-      };
-    default:
-      return { 
-        label: "Pendente", 
-        className: "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50" 
-      };
-  }
-};
 
 const OrderList = () => {
   const { toast } = useToast();
@@ -64,7 +39,7 @@ const OrderList = () => {
         }
       }
     `
-  }); 
+  });
 
   const OrderLabel = ({ order }: { order: OrderWithCollaborator }) => {
     const statusDisplay = getStatusDisplay(order.status);
@@ -75,39 +50,39 @@ const OrderList = () => {
             <h1 className="text-2xl font-bold">ZENCORA</h1>
             <p className="text-sm">Etiqueta de Encomenda</p>
           </div>
-          
+
           <div className="space-y-2 flex-1">
             <div>
               <p className="text-xs text-gray-500">Código</p>
               <p className="font-mono text-lg font-bold">{getOrderCode(order.id)}</p>
             </div>
-            
+
             <div>
               <p className="text-xs text-gray-500">Cliente</p>
               <p className="font-medium">{order.client_name}</p>
             </div>
-            
+
             <div>
               <p className="text-xs text-gray-500">Descrição</p>
               <p className="text-sm">{order.description || "Sem descrição"}</p>
             </div>
-            
+
             <div>
               <p className="text-xs text-gray-500">Data de Entrega</p>
               <p className="text-sm">{formatDate(order.due_date)}</p>
             </div>
-            
+
             <div>
               <p className="text-xs text-gray-500">Preço</p>
               <p className="text-sm">R$ {order.price.toFixed(2).replace('.', ',')}</p>
             </div>
-            
+
             <div>
               <p className="text-xs text-gray-500">Status</p>
               <p className="text-sm font-medium">{statusDisplay.label}</p>
             </div>
           </div>
-          
+
           <div className="text-center text-xs text-gray-500 mt-4">
             <p>Impresso em {formatDate(new Date().toISOString(), "dd/MM/yyyy 'às' HH:mm")}</p>
           </div>
@@ -115,11 +90,11 @@ const OrderList = () => {
       </div>
     );
   };
-  
+
   useEffect(() => {
     fetchOrders();
   }, []);
-  
+
   const fetchOrders = async () => {
     try {
       const { user } = await supabaseService.auth.getCurrentUser();
@@ -139,13 +114,13 @@ const OrderList = () => {
       setLoading(false);
     }
   };
-  
+
   const handleStatusChange = async (id: string, targetStatus: "pending" | "production" | "done") => {
     try {
       const { error } = await supabaseService.orders.updateOrderStatus(id, targetStatus);
       if (error) throw error;
 
-      setOrders(orders.map(order => 
+      setOrders(orders.map(order =>
         order.id === id ? { ...order, status: targetStatus } : order
       ));
 
@@ -161,14 +136,14 @@ const OrderList = () => {
       });
     }
   };
-  
-  const filteredOrders = searchTerm.trim() === "" 
-    ? orders 
-    : orders.filter(order => 
-        order.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (order.description && order.description.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
-  
+
+  const filteredOrders = searchTerm.trim() === ""
+    ? orders
+    : orders.filter(order =>
+      order.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (order.description && order.description.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
@@ -178,12 +153,12 @@ const OrderList = () => {
             Gerencie todas as suas encomendas em um só lugar
           </p>
         </div>
-        
+
         <Button onClick={() => navigate("/orders/new")} className="shrink-0">
           <Plus className="mr-2 h-4 w-4" /> Nova Encomenda
         </Button>
       </div>
-      
+
       <Card>
         <CardHeader className="pb-3">
           <div className="flex flex-col sm:flex-row justify-between gap-4">
@@ -321,16 +296,16 @@ const OrderList = () => {
                                 <Eye className="h-4 w-4" />
                               </Button>
                               <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => {
-                                setSelectedOrder(order);
-                                setTimeout(handlePrint, 100);
-                              }}
-                              title="Imprimir"
-                            >
-                              <Printer className="h-4 w-4" />
-                            </Button>
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  setSelectedOrder(order);
+                                  setTimeout(handlePrint, 100);
+                                }}
+                                title="Imprimir"
+                              >
+                                <Printer className="h-4 w-4" />
+                              </Button>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -362,7 +337,7 @@ const OrderList = () => {
                               {statusDisplay.label}
                             </Badge>
                           </div>
-                          
+
                           <div className="flex items-center justify-between gap-2">
                             <Button
                               variant="ghost"
@@ -430,8 +405,8 @@ const OrderList = () => {
         </CardContent>
       </Card>
 
-            {/* Hidden print content */}
-            <div className="hidden">
+      {/* Hidden print content */}
+      <div className="hidden">
         {selectedOrder && (
           <div ref={printRef}>
             <OrderLabel order={selectedOrder} />

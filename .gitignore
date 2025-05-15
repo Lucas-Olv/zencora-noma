@@ -49,3 +49,7 @@ lerna-debug.log*
 
 # TypeScript
 *.tsbuildinfo
+
+#Others
+yarn.lock
+package-lock.json
