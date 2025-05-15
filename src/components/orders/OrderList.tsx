@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
@@ -6,8 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, Eye, Plus, Search, X, Loader2, Package, Pencil } from "lucide-react";
-import { formatDate, parseDate } from "@/lib/utils";
+import { CheckCircle2, Eye, Plus, Search, X, Loader2, Package, Pencil, Printer } from "lucide-react";
+import { formatDate, usePrint, getOrderCode } from "@/lib/utils";
 import { ptBR } from "date-fns/locale";
 import { supabaseService, OrderType } from "@/services/supabaseService";
 
@@ -49,6 +49,72 @@ const OrderList = () => {
   const [orders, setOrders] = useState<OrderWithCollaborator[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedOrder, setSelectedOrder] = useState<OrderWithCollaborator | null>(null);
+  const printRef = useRef<HTMLDivElement>(null);
+  const handlePrint = usePrint(printRef, {
+    pageStyle: `
+      @page {
+        size: 100mm 150mm;
+        margin: 0;
+      }
+      @media print {
+        body {
+          margin: 0;
+          padding: 0;
+        }
+      }
+    `
+  }); 
+
+  const OrderLabel = ({ order }: { order: OrderWithCollaborator }) => {
+    const statusDisplay = getStatusDisplay(order.status);
+    return (
+      <div className="p-4 w-[100mm] h-[150mm] bg-white text-black">
+        <div className="border-2 border-black h-full p-4 flex flex-col">
+          <div className="text-center mb-4">
+            <h1 className="text-2xl font-bold">ZENCORA</h1>
+            <p className="text-sm">Etiqueta de Encomenda</p>
+          </div>
+          
+          <div className="space-y-2 flex-1">
+            <div>
+              <p className="text-xs text-gray-500">Código</p>
+              <p className="font-mono text-lg font-bold">{getOrderCode(order.id)}</p>
+            </div>
+            
+            <div>
+              <p className="text-xs text-gray-500">Cliente</p>
+              <p className="font-medium">{order.client_name}</p>
+            </div>
+            
+            <div>
+              <p className="text-xs text-gray-500">Descrição</p>
+              <p className="text-sm">{order.description || "Sem descrição"}</p>
+            </div>
+            
+            <div>
+              <p className="text-xs text-gray-500">Data de Entrega</p>
+              <p className="text-sm">{formatDate(order.due_date)}</p>
+            </div>
+            
+            <div>
+              <p className="text-xs text-gray-500">Preço</p>
+              <p className="text-sm">R$ {order.price.toFixed(2).replace('.', ',')}</p>
+            </div>
+            
+            <div>
+              <p className="text-xs text-gray-500">Status</p>
+              <p className="text-sm font-medium">{statusDisplay.label}</p>
+            </div>
+          </div>
+          
+          <div className="text-center text-xs text-gray-500 mt-4">
+            <p>Impresso em {formatDate(new Date().toISOString(), "dd/MM/yyyy 'às' HH:mm")}</p>
+          </div>
+        </div>
+      </div>
+    );
+  };
   
   useEffect(() => {
     fetchOrders();
@@ -178,6 +244,7 @@ const OrderList = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead>Código</TableHead>
                       <TableHead>Cliente</TableHead>
                       <TableHead>Data de Entrega</TableHead>
                       <TableHead>Preço</TableHead>
@@ -190,6 +257,7 @@ const OrderList = () => {
                       const statusDisplay = getStatusDisplay(order.status);
                       return (
                         <TableRow key={order.id}>
+                          <TableCell className="font-mono text-sm text-muted-foreground">{getOrderCode(order.id)}</TableCell>
                           <TableCell className="font-medium">{order.client_name}</TableCell>
                           <TableCell>
                             {formatDate(order.due_date)}
@@ -252,6 +320,17 @@ const OrderList = () => {
                               >
                                 <Eye className="h-4 w-4" />
                               </Button>
+                              <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                setSelectedOrder(order);
+                                setTimeout(handlePrint, 100);
+                              }}
+                              title="Imprimir"
+                            >
+                              <Printer className="h-4 w-4" />
+                            </Button>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -271,7 +350,10 @@ const OrderList = () => {
                         <div className="flex flex-col gap-3">
                           <div className="flex items-start justify-between">
                             <div>
-                              <h3 className="font-medium">{order.client_name}</h3>
+                              <div className="flex items-center gap-2">
+                                <p className="font-mono text-sm text-muted-foreground">{getOrderCode(order.id)}</p>
+                                <h3 className="font-medium">{order.client_name}</h3>
+                              </div>
                               <p className="text-sm text-muted-foreground">
                                 {formatDate(order.due_date)}
                               </p>
@@ -325,6 +407,17 @@ const OrderList = () => {
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                setSelectedOrder(order);
+                                setTimeout(handlePrint, 100);
+                              }}
+                              title="Imprimir"
+                            >
+                              <Printer className="h-4 w-4" />
+                            </Button>
                           </div>
                         </div>
                       </CardContent>
@@ -336,6 +429,15 @@ const OrderList = () => {
           )}
         </CardContent>
       </Card>
+
+            {/* Hidden print content */}
+            <div className="hidden">
+        {selectedOrder && (
+          <div ref={printRef}>
+            <OrderLabel order={selectedOrder} />
+          </div>
+        )}
+      </div>
     </div>
   );
 };

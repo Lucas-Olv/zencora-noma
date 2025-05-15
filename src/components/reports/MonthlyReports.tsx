@@ -15,7 +15,7 @@ import {
   Bar,
   Legend,
 } from "recharts";
-import { cn, formatDate, parseDate } from "@/lib/utils";
+import { cn, formatDate, getOrderCode, parseDate } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
@@ -521,17 +521,20 @@ const MonthlyReports = () => {
                       className="flex flex-col gap-2 p-2 rounded-lg bg-card hover:bg-accent/50 transition-colors border sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:p-3"
                     >
                       <div className="flex-1 min-w-0">
-                        <div className="font-medium">{order.client_name}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {order.description || "Sem descrição"}
+                        <div className="flex items-center gap-2">
+                          <p className="font-mono text-sm text-muted-foreground">{getOrderCode(order.id)}</p>
+                          <h3 className="font-medium">{order.client_name}</h3>
                         </div>
+                        <p className="text-sm text-muted-foreground">
+                          {order.description || "Sem descrição"}
+                        </p>
                       </div>
                       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
                         <div className="text-left sm:text-right">
-                          <div className="font-medium">{formatCurrency(order.price)}</div>
-                          <div className="text-sm text-muted-foreground">
+                          <p className="font-medium">{formatCurrency(order.price)}</p>
+                          <p className="text-sm text-muted-foreground">
                             {formatDate(order.due_date)}
-                          </div>
+                          </p>
                         </div>
                         <Badge variant="outline" className={cn(
                           "whitespace-nowrap min-w-[100px] px-3 text-center inline-flex justify-center items-center",

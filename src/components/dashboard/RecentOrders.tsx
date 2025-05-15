@@ -3,7 +3,7 @@ import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { Calendar, FileText } from "lucide-react"
 import { Link } from "react-router-dom"
-import { cn, formatDate, parseDate } from "@/lib/utils"
+import { cn, formatDate, parseDate, getOrderCode } from "@/lib/utils"
 
 import { getOrders } from "@/lib/api"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -39,7 +39,10 @@ function RecentOrders() {
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium">{order.client_name}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-mono text-sm text-muted-foreground">{getOrderCode(order.id)}</p>
+                      <p className="font-medium">{order.client_name}</p>
+                    </div>
                     <p className="text-sm text-muted-foreground">
                       {order.description}
                     </p>

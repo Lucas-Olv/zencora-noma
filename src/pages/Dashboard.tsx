@@ -5,7 +5,7 @@ import DeliveryCalendar from "@/components/dashboard/DeliveryCalendar";
 import { Calendar, ClipboardList, FileText, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
-import { formatDate, parseDate } from "@/lib/utils";
+import { formatDate, parseDate, getOrderCode } from "@/lib/utils";
 
 type Order = Tables<"orders">;
 

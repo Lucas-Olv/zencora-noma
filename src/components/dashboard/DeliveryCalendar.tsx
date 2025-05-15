@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query"
 import { format, addDays, isSameDay, isAfter, isBefore } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { Calendar } from "lucide-react"
-import { cn, formatDate, parseDate } from "@/lib/utils"
+import { cn, formatDate, parseDate, getOrderCode } from "@/lib/utils"
 
 import { getOrders } from "@/lib/api"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -62,7 +62,10 @@ function DeliveryCalendar() {
                       className="flex items-center justify-between rounded-lg border p-3"
                     >
                       <div>
-                        <p className="font-medium">{order.client_name}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-mono text-sm text-muted-foreground">{getOrderCode(order.id)}</p>
+                          <p className="font-medium">{order.client_name}</p>
+                        </div>
                         <p className="text-sm text-muted-foreground">
                           {order.description}
                         </p>
@@ -97,7 +100,10 @@ function DeliveryCalendar() {
                       className="flex items-center justify-between rounded-lg border p-3"
                     >
                       <div>
-                        <p className="font-medium">{order.client_name}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-mono text-sm text-muted-foreground">{getOrderCode(order.id)}</p>
+                          <p className="font-medium">{order.client_name}</p>
+                        </div>
                         <p className="text-sm text-muted-foreground">
                           {order.description}
                         </p>
@@ -132,7 +138,10 @@ function DeliveryCalendar() {
                       className="flex items-center justify-between rounded-lg border p-3"
                     >
                       <div>
-                        <p className="font-medium">{order.client_name}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-mono text-sm text-muted-foreground">{getOrderCode(order.id)}</p>
+                          <p className="font-medium">{order.client_name}</p>
+                        </div>
                         <p className="text-sm text-muted-foreground">
                           {order.description}
                         </p>

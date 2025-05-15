@@ -11,7 +11,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { getOrders, Order } from "@/lib/api";
 import { LoadingState } from "@/components/ui/loading-state";
-import { cn, formatDate, parseDate } from "@/lib/utils";
+import { cn, formatDate, parseDate, getOrderCode } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 
 const getStatusDisplay = (status: string | null) => {
@@ -151,9 +151,12 @@ export function ProductionView() {
                     className="flex flex-col sm:flex-row sm:items-center justify-between rounded-lg border p-4 gap-4"
                   >
                     <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                      <p className="font-mono text-sm text-muted-foreground">{getOrderCode(order.id)}</p>
                       <h3 className="font-semibold">
                         {order.client_name}
                       </h3>
+                      </div>
                       <p className="text-sm text-muted-foreground">
                         {order.description}
                       </p>
