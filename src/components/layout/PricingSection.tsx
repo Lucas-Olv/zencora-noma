@@ -169,7 +169,7 @@ export function PricingSection() {
         
         <div className="flex flex-col gap-8 md:flex-row mx-auto max-w-3xl">
           <PricingTier 
-            name="Básico" 
+            name="Essencial" 
             price={getPrice(19.90)}
             description="Simplicidade e eficiência para quem está começando."
             features={[
@@ -178,9 +178,8 @@ export function PricingSection() {
               "Acesso via celular e computador",
               "Suporte por e-mail"
             ]}
-            ctaText="Comece agora"
+            ctaText="Assinar Essencial"
             delay="100ms"
-            freeTrialDays={7}
             smallText="Ideal para autônomos e pequenos negócios que querem organização sem complicação."
           />
           
@@ -196,7 +195,7 @@ export function PricingSection() {
               "Relatórios avançados",
               "Prioridade no suporte"
             ]}
-            ctaText="Assinar Pro"
+            ctaText="Comece agora"
             isPro
             delay="200ms"
             freeTrialDays={7}

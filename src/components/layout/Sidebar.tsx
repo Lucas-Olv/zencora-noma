@@ -135,7 +135,7 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
         description: "Você foi desconectado com sucesso.",
       });
 
-      navigate("/login");
+      navigate("/");
     } catch (error: any) {
       toast({
         title: "Erro ao fazer logout",

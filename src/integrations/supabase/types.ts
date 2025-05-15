@@ -9,6 +9,15 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      tenants: {
+        Row: {
+          id: string
+          name: string
+          product_id: string
+          owner_id: string
+          created_at: string
+        }
+      }
       collaborators: {
         Row: {
           can_login: boolean | null

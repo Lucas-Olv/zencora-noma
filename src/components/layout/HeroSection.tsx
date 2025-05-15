@@ -55,7 +55,7 @@ export function HeroSection() {
                 className="bg-primary hover:bg-primary/90 text-white px-8 py-6 text-lg rounded-full transition-all duration-300 ease-in-out"
                 asChild
               >
-                <a href="#planos">Comece grátis</a>
+                <a href="#pricing">Comece grátis</a>
               </Button>
             </div>
           </div>
