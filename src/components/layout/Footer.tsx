@@ -29,21 +29,21 @@ export function Footer() {
   }, []);
 
   return (
-    <footer ref={sectionRef} className="py-10 md:py-16 border-t">
+    <footer ref={sectionRef} className="py-16 md:py-24 border-t">
       <div className="container px-4 sm:px-6 lg:px-8 mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div className="col-span-1 md:col-span-2 reveal">
-            <div className="flex items-center mb-4">
-              <span className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="col-span-1 md:col-span-1 reveal">
+            <div className="flex flex-col items-start">
+              <p className="text-2xl w-full text-center md:text-left font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-4">
                 Noma
-              </span>
-            </div>
-            <p className="text-foreground/70 mb-4 max-w-md">
+              </p>
+            <p className="text-foreground/70 mb-4 max-w-md text-center md:text-left">
               Organize suas encomendas e aumente sua produtividade com o aplicativo perfeito para pequenos empreendedores.
             </p>
+            </div>
           </div>
-          
-          <div className="reveal delay-[100ms]">
+          <div className="flex flex-row justify-between col-span-1 items-center reveal px-8">
+          <div className="reveal delay-[100ms] text-start md:text-left w-full">
             <h4 className="font-semibold mb-4">Produto</h4>
             <ul className="space-y-2">
               <li>
@@ -61,11 +61,11 @@ export function Footer() {
             </ul>
           </div>
           
-          <div className="reveal delay-[200ms]">
+          <div className="reveal delay-[200ms] text-end md:text-left w-full">
             <h4 className="font-semibold mb-4">Links</h4>
             <ul className="space-y-2">
               <li>
-                <Link to="/privacy" className="text-foreground/70 hover:text-primary">Política de Privacidade</Link>
+                <Link to="/privacy" className="text-foreground/70 hover:text-primary">Privacidade</Link>
               </li>
               <li>
                 <Link to="/terms" className="text-foreground/70 hover:text-primary">Termos de Uso</Link>
@@ -78,9 +78,11 @@ export function Footer() {
               </li>
             </ul>
           </div>
+          </div>
+          
         </div>
         
-        <div className="mt-10 pt-6 border-t reveal delay-[300ms]">
+        <div className="mt-10 pt-6 reveal delay-[300ms]">
           <p className="text-center text-foreground/60 text-sm">
             © 2025 Zencora. Todos os direitos reservados.
           </p>

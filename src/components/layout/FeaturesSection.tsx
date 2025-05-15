@@ -96,7 +96,7 @@ export function FeaturesSection() {
   return (
     <section 
       ref={sectionRef}
-      className=" md:py-24 relative" 
+      className=" py-16 md:py-24 relative" 
       id="features" // Updated ID to match navigation links
     >
       <div className="container px-4 sm:px-6 lg:px-8 mx-auto">

@@ -33,7 +33,7 @@ export function Cta() {
   }, []);
 
   return (
-    <section id="cta" className="py-12 md:py-20">
+    <section id="cta" className="py-16 md:py-24">
     <div className="container">
       <div className="bg-gradient-to-r from-primary to-secondary rounded-xl p-6 md:p-8 lg:p-12 text-primary-foreground text-center">
         <h2 className="text-2xl md:text-3xl font-bold mb-4">

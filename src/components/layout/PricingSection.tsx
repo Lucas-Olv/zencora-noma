@@ -1,39 +1,42 @@
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface PricingTierProps {
   name: string;
   price: string;
+  description: string;
   features: string[];
   ctaText: string;
   isPro?: boolean;
   delay: string;
   freeTrialDays?: number;
+  smallText?: string;
 }
 
-function PricingTier({ name, price, features, ctaText, isPro = false, delay, freeTrialDays }: PricingTierProps) {
+function PricingTier({ name, price, description, features, ctaText, isPro = false, delay, freeTrialDays, smallText }: PricingTierProps) {
   return (
     <div 
-      className={`reveal delay-[${delay}] relative rounded-2xl ${
+      className={`reveal delay-[${delay}] w-full relative rounded-2xl ${
         isPro ? "bg-gradient-to-b from-secondary to-primary border-0" : "bg-card border"
-      } overflow-hidden`}
+      }`}
     >
       {isPro && (
         <div className="inset-px rounded-2xl border-2 border-primary bg-card z-10">
-          <div className="h-full w-full p-6 md:p-8">
+          <div className="h-full w-full p-6 md:p-8 flex flex-col">
+            {freeTrialDays && (
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-base font-medium px-4 py-1 rounded-full">
+                {freeTrialDays} dias grátis
+              </div>
+            )}
             <div className="mb-4">
               <h3 className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">{name}</h3>
               <div className="mt-2">
                 <span className="text-3xl font-bold">{price}</span>
-                {freeTrialDays && (
-                  <div className="inline-block ml-2 bg-primary/10 text-primary text-sm font-medium px-2 py-0.5 rounded-full">
-                    {freeTrialDays} dias grátis
-                  </div>
-                )}
               </div>
+              <p className="mt-2 text-sm text-muted-foreground">{description}</p>
             </div>
-            <ul className="mb-8 space-y-3">
+            <ul className="mb-8 space-y-3 flex-grow">
               {features.map((feature, index) => (
                 <li key={index} className="flex items-center">
                   <Check className="h-5 w-5 mr-2 text-primary" />
@@ -41,27 +44,33 @@ function PricingTier({ name, price, features, ctaText, isPro = false, delay, fre
                 </li>
               ))}
             </ul>
-            <Button className="w-full bg-primary hover:bg-primary/90 dark:bg-primary dark:hover:bg-primary/90">
-              {ctaText}
-            </Button>
+            <div className="mt-auto">
+              {smallText && (
+                <p className="text-sm text-muted-foreground mb-4">{smallText}</p>
+              )}
+              <Button className="w-full bg-primary hover:bg-primary/90 dark:bg-primary dark:hover:bg-primary/90">
+                {ctaText}
+              </Button>
+            </div>
           </div>
         </div>
       )}
 
       {!isPro && (
-        <div className="h-full w-full p-6 md:p-8">
+        <div className="h-full w-full p-6 md:p-8 flex flex-col">
+          {freeTrialDays && (
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-base font-medium px-4 py-1 rounded-full">
+              {freeTrialDays} dias grátis
+            </div>
+          )}
           <div className="mb-4">
             <h3 className="text-xl font-bold">{name}</h3>
             <div className="mt-2">
               <span className="text-3xl font-bold">{price}</span>
-              {freeTrialDays && (
-                <div className="inline-block ml-2 bg-primary/10 text-primary text-sm font-medium px-2 py-0.5 rounded-full">
-                  {freeTrialDays} dias grátis
-                </div>
-              )}
             </div>
+            <p className="mt-2 text-sm text-muted-foreground">{description}</p>
           </div>
-          <ul className="mb-8 space-y-3">
+          <ul className="mb-8 space-y-3 flex-grow">
             {features.map((feature, index) => (
               <li key={index} className="flex items-center">
                 <Check className="h-5 w-5 mr-2 text-primary" />
@@ -69,9 +78,14 @@ function PricingTier({ name, price, features, ctaText, isPro = false, delay, fre
               </li>
             ))}
           </ul>
-          <Button variant="outline" className="w-full border-primary text-primary hover:bg-primary hover:text-white">
-            {ctaText}
-          </Button>
+          <div className="mt-auto">
+            {smallText && (
+              <p className="text-sm text-muted-foreground mb-4">{smallText}</p>
+            )}
+            <Button variant="outline" className="w-full border-primary text-primary hover:bg-primary hover:text-white">
+              {ctaText}
+            </Button>
+          </div>
         </div>
       )}
     </div>
@@ -80,6 +94,7 @@ function PricingTier({ name, price, features, ctaText, isPro = false, delay, fre
 
 export function PricingSection() {
   const sectionRef = useRef<HTMLElement>(null);
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
@@ -104,6 +119,14 @@ export function PricingSection() {
     };
   }, []);
 
+  const getPrice = (monthlyPrice: number) => {
+    if (billingCycle === 'yearly') {
+      const yearlyPrice = monthlyPrice * 10;
+      return `R$${(yearlyPrice).toFixed(2)}/ano`;
+    }
+    return `R$${monthlyPrice.toFixed(2)}/mês`;
+  };
+
   return (
     <section 
       ref={sectionRef}
@@ -115,30 +138,61 @@ export function PricingSection() {
           <h2 className="reveal text-3xl md:text-4xl font-bold mb-4">
             Escolha o plano ideal para você
           </h2>
-          <div className="w-24 h-1 bg-gradient-to-r from-primary to-secondary mx-auto"></div>
+          <div className="w-24 h-1 bg-gradient-to-r from-primary to-secondary mx-auto mb-8"></div>
+          
+          <div className="flex items-center justify-center gap-4 mb-8">
+            <button
+              onClick={() => setBillingCycle('monthly')}
+              className={`px-4 py-2 rounded-lg ${
+                billingCycle === 'monthly'
+                  ? 'bg-primary text-white'
+                  : 'bg-muted text-muted-foreground'
+              }`}
+            >
+              Mensal
+            </button>
+            <button
+              onClick={() => setBillingCycle('yearly')}
+              className={`px-4 py-2 rounded-lg ${
+                billingCycle === 'yearly'
+                  ? 'bg-primary text-white'
+                  : 'bg-muted text-muted-foreground'
+              }`}
+            >
+              Anual
+              <span className="ml-2 text-xs bg-accent text-accent-foreground px-2 py-0.5 rounded-full">
+                -17%
+              </span>
+            </button>
+          </div>
         </div>
         
-        <div className="flex flex-col gap-8 md:flex-row max-w-3xl mx-auto">
+        <div className="flex flex-col gap-8 md:flex-row mx-auto max-w-3xl">
           <PricingTier 
             name="Básico" 
-            price="R$19,90/mês" 
+            price={getPrice(19.90)}
+            description="Simplicidade e eficiência para quem está começando."
             features={[
-              "Até 20 encomendas por mês",
-              "1 colaborador",
+              "Encomendas ilimitadas",
               "Relatórios básicos",
-              "Acesso ao painel de produção"
+              "Acesso via celular e computador",
+              "Suporte por e-mail"
             ]}
             ctaText="Comece agora"
             delay="100ms"
             freeTrialDays={7}
+            smallText="Ideal para autônomos e pequenos negócios que querem organização sem complicação."
           />
           
           <PricingTier 
             name="Pro" 
-            price="R$39,90/mês" 
+            price={getPrice(39.90)}
+            description="Mais controle e recursos para negócios com equipe."
             features={[
-              "Encomendas ilimitadas",
-              "Colaboradores ilimitados",
+              "Tudo do Essencial",
+              "Cadastro de colaboradores",
+              "Painel de produção",
+              "Controle de acesso por papel",
               "Relatórios avançados",
               "Prioridade no suporte"
             ]}
@@ -146,6 +200,7 @@ export function PricingSection() {
             isPro
             delay="200ms"
             freeTrialDays={7}
+            smallText="Perfeito para quem tem uma equipe ou lida com alto volume de pedidos."
           />
         </div>
       </div>
