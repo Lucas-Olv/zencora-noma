@@ -10,7 +10,7 @@ export type OrderType = {
   description: string;
   price: number;
   due_date: string;
-  user_id: string;
+  tenant_id: string;
   collaborator_id: string | null;
   status: "pending" | "production" | "done";
   phone?: string;
@@ -19,6 +19,7 @@ export type OrderType = {
     name: string | null;
   } | null;
 };
+export type TenantType = Database['public']['Tables']['tenants']['Row'];
 export type CollaboratorType = Database['public']['Tables']['collaborators']['Row'];
 export type UserType = Database['public']['Tables']['users']['Row'];
 export type SubscriptionType = Database['public']['Tables']['subscriptions']['Row'];
@@ -142,14 +143,26 @@ export const productsService = {
   }
 };
 
+// Serviço de tenants
+export const tenantsService = {
+  // Obtém o tenant de um usuário
+  getUserTenant: async (ownerId: string) => {
+    return await supabase
+      .from('tenants')
+      .select('*')
+      .eq('owner_id', ownerId)
+      .single();
+  }
+};
+
 // Serviço de colaboradores
 export const collaboratorsService = {
-  // Obtém todos os colaboradores de um usuário
-  getUserCollaborators: async (ownerId: string) => {
+  // Obtém todos os colaboradores de um tenant
+  getTenantCollaborators: async (tenantId: string) => {
     return await supabase
       .from('collaborators')
       .select('*')
-      .eq('owner_id', ownerId);
+      .eq('tenant_id', tenantId);
   },
   
   // Cria um novo colaborador
@@ -187,12 +200,12 @@ export const collaboratorsService = {
 
 // Serviço de encomendas
 export const ordersService = {
-  // Obtém todas as encomendas de um usuário
-  getUserOrders: async (userId: string) => {
+  // Obtém todas as encomendas de um tenant
+  getTenantOrders: async (tenantId: string) => {
     return await supabase
       .from('orders')
       .select('*, collaborator:collaborators(name)')
-      .eq('user_id', userId)
+      .eq('tenant_id', tenantId)
       .order('due_date', { ascending: true });
   },
   
@@ -241,6 +254,7 @@ export const ordersService = {
 export const supabaseService = {
   auth: authService,
   users: usersService,
+  tenants: tenantsService,
   subscriptions: subscriptionsService,
   products: productsService,
   collaborators: collaboratorsService,

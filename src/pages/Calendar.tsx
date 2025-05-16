@@ -9,6 +9,7 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import ptBrLocale from '@fullcalendar/core/locales/pt-br';
 import "@/styles/calendar.css";
+import { useTenant } from "@/contexts/TenantContext";
 
 interface Order {
   id: string;
@@ -47,23 +48,32 @@ const getStatusTextColor = (status: string | null) => {
 const CalendarPage = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { tenant, loading: tenantLoading, error: tenantError } = useTenant();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     document.title = "Calendário | Zencora Noma";
-    fetchOrders();
-  }, []);
+    if (!tenantLoading && tenant) {
+      fetchOrders();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tenant, tenantLoading]);
 
   const fetchOrders = async () => {
     try {
-      const { user } = await supabaseService.auth.getCurrentUser();
-      if (!user) return;
+      if (tenantLoading) return;
+      if (tenantError || !tenant) throw new Error(tenantError || "Tenant não encontrado");
 
-      const { data, error } = await supabaseService.orders.getUserOrders(user.id);
+      const { data, error } = await supabaseService.orders.getTenantOrders(tenant.id);
       if (error) throw error;
 
-      setOrders(data as Order[]);
+      setOrders(
+        (data || []).map(order => ({
+          ...order,
+          status: order.status as "pending" | "production" | "done"
+        }))
+      );
     } catch (error: any) {
       toast({
         title: "Erro ao carregar encomendas",

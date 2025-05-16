@@ -6,6 +6,8 @@ import { Calendar, ClipboardList, FileText, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import { formatDate, parseDate, getOrderCode } from "@/lib/utils";
+import { useTenant } from "@/contexts/TenantContext";
+import { supabaseService } from "@/services/supabaseService";
 
 type Order = Tables<"orders">;
 
@@ -26,6 +28,8 @@ const formatCurrency = (value: number) => {
 };
 
 const Dashboard = () => {
+  const { tenant, loading: tenantLoading, error: tenantError } = useTenant();
+  const [orders, setOrders] = useState<Order[]>([]);
   const [stats, setStats] = useState<DashboardStats>({
     activeOrders: 0,
     inProduction: 0,
@@ -41,6 +45,11 @@ const Dashboard = () => {
 
     const fetchStats = async () => {
       try {
+        if (tenantLoading) return;
+        if (tenantError || !tenant) {
+          throw new Error(tenantError || 'Tenant não encontrado');
+        }
+
         const today = new Date();
         const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
         const startOfWeek = new Date(today);
@@ -48,12 +57,10 @@ const Dashboard = () => {
         const endOfWeek = new Date(startOfWeek);
         endOfWeek.setDate(startOfWeek.getDate() + 6);
 
-        const { data: orders, error } = await supabase
-          .from("orders")
-          .select("*")
-          .gte("created_at", startOfMonth.toISOString());
+        const { data: orders, error } = await supabaseService.orders.getTenantOrders(tenant.id);
 
         if (error) throw error;
+
 
         const activeOrders = orders?.filter(order => 
           order.status !== "done" && order.status !== "canceled"
@@ -82,6 +89,7 @@ const Dashboard = () => {
           return orderDate && orderDate >= startOfWeek && orderDate <= endOfWeek;
         }).reduce((sum, order) => sum + (order.price || 0), 0) || 0;
 
+        setOrders(orders);
         setStats({
           activeOrders,
           inProduction,
@@ -98,7 +106,7 @@ const Dashboard = () => {
     };
 
     fetchStats();
-  }, []);
+  }, [tenant, tenantLoading, tenantError]);
 
   return (
     <div className="space-y-6">
@@ -115,7 +123,6 @@ const Dashboard = () => {
           value={loading ? "-" : stats.activeOrders.toString()}
           description={loading ? "Carregando..." : `${stats.todayDeliveries} para entrega hoje`}
           icon={<ClipboardList className="h-5 w-5 text-primary" />}
-          // trend={loading ? undefined : { value: 10, isPositive: true }}
         />
         <StatsCard
           title="Produção"
@@ -134,16 +141,15 @@ const Dashboard = () => {
           value={loading ? "-" : formatCurrency(stats.monthlyRevenue)}
           description={loading ? "Carregando..." : `${formatCurrency(stats.weeklyRevenue)} esta semana`}
           icon={<FileText className="h-5 w-5 text-green-600" />}
-          // trend={loading ? undefined : { value: 5, isPositive: true }}
         />
       </div>
 
       <div className="grid gap-6 grid-cols-1 lg:grid-cols-4">
         <div className="lg:col-span-3">
-          <RecentOrders />
+          <RecentOrders orders={orders} loading={loading} />
         </div>
         <div className="lg:col-span-1">
-          <DeliveryCalendar />
+          <DeliveryCalendar orders={orders} loading={loading} />
         </div>
       </div>
     </div>

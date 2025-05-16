@@ -10,6 +10,7 @@ import { CheckCircle2, Eye, Plus, Search, X, Loader2, Package, Pencil, Printer }
 import { formatDate, usePrint, getOrderCode, getStatusDisplay } from "@/lib/utils";
 import { ptBR } from "date-fns/locale";
 import { supabaseService, OrderType } from "@/services/supabaseService";
+import { useTenant } from "@/contexts/TenantContext";
 
 // Interface para a ordem com dados do colaborador
 interface OrderWithCollaborator extends OrderType {
@@ -40,6 +41,7 @@ const OrderList = () => {
       }
     `
   });
+  const { tenant, loading: tenantLoading, error: tenantError } = useTenant();
 
   const OrderLabel = ({ order }: { order: OrderWithCollaborator }) => {
     const statusDisplay = getStatusDisplay(order.status);
@@ -95,12 +97,14 @@ const OrderList = () => {
     fetchOrders();
   }, []);
 
-  const fetchOrders = async () => {
+  const fetchOrders = async () => {    
     try {
-      const { user } = await supabaseService.auth.getCurrentUser();
-      if (!user) return;
+      if (tenantLoading) return;
+      if (tenantError || !tenant) {
+        throw new Error(tenantError || 'Tenant não encontrado');
+      }
 
-      const { data, error } = await supabaseService.orders.getUserOrders(user.id);
+      const { data, error } = await supabaseService.orders.getTenantOrders(tenant.id);
       if (error) throw error;
 
       setOrders(data as OrderWithCollaborator[]);

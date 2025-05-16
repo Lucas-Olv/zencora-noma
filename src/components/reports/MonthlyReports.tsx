@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Calendar, Download, FileText, Loader2, Check, Clock } from "lucide-react";
 import {
@@ -27,6 +26,8 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { Badge } from "@/components/ui/badge";
 import { report } from "process";
+import supabaseService from "@/services/supabaseService";
+import { useTenant } from "@/contexts/TenantContext";
 
 type Order = Tables<"orders">;
 
@@ -52,7 +53,6 @@ const ReportItem = ({ title, value, icon, className }: { title: string; value: s
 );
 
 const MonthlyReports = () => {
-  const [selectedMonth, setSelectedMonth] = useState(() => format(new Date(), "MMMM", { locale: ptBR }));
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: startOfMonth(new Date()),
     to: endOfMonth(new Date()),
@@ -68,11 +68,7 @@ const MonthlyReports = () => {
     categoryData: [],
   });
   const isMobile = useIsMobile();
-
-  // Available months
-  const months = Array.from({ length: 12 }, (_, i) => 
-    format(new Date(2024, i, 1), "MMMM", { locale: ptBR })
-  );
+  const { tenant, loading: tenantLoading, error: tenantError } = useTenant();
 
   const formatCurrency = (value: number) => {
     return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -82,10 +78,6 @@ const MonthlyReports = () => {
     const fetchOrders = async () => {
       try {
         setLoading(true);
-        let query = supabase
-          .from("orders")
-          .select("*");
-
         if (dateRange?.from && dateRange?.to) {
           // Ajusta as datas para o início e fim do dia
           const startDate = new Date(dateRange.from);
@@ -94,8 +86,7 @@ const MonthlyReports = () => {
           const endDate = new Date(dateRange.to);
           endDate.setHours(23, 59, 59, 999);
 
-          // Filtra as encomendas pelo período
-          const { data, error } = await query;
+          const { data, error } = await supabaseService.orders.getTenantOrders(tenant.id);
           if (error) throw error;
 
           // Filtra as encomendas no lado do cliente para garantir precisão
@@ -160,16 +151,6 @@ const MonthlyReports = () => {
 
     fetchOrders();
   }, [dateRange]);
-
-  const handleMonthChange = (month: string) => {
-    setSelectedMonth(month);
-    const monthIndex = months.indexOf(month);
-    const year = new Date().getFullYear();
-    setDateRange({
-      from: startOfMonth(new Date(year, monthIndex, 1)),
-      to: endOfMonth(new Date(year, monthIndex, 1)),
-    });
-  };
 
   const completionRate = reportData.totalOrders > 0 
     ? Math.round((reportData.completedOrders / reportData.totalOrders) * 100)
@@ -350,20 +331,7 @@ const MonthlyReports = () => {
 
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <Select value={selectedMonth} onValueChange={handleMonthChange}>
-            <SelectTrigger className="w-full sm:w-[180px] h-9">
-              <Calendar className="mr-2 h-4 w-4" />
-              <SelectValue placeholder="Selecionar mês" />
-            </SelectTrigger>
-            <SelectContent>
-              {months.map((month) => (
-                <SelectItem key={month} value={month}>
-                  {month.charAt(0).toUpperCase() + month.slice(1)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
             <DateRangePicker
               value={dateRange}
               onChange={setDateRange}

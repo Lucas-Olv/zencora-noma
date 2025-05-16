@@ -6,11 +6,6 @@ import { DateRange } from "react-day-picker";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 
 interface DateRangePickerProps {
   value?: DateRange;
@@ -23,45 +18,78 @@ export function DateRangePicker({
   onChange,
   className,
 }: DateRangePickerProps) {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const buttonRef = React.useRef<HTMLButtonElement>(null);
+  const calendarRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        calendarRef.current &&
+        !calendarRef.current.contains(event.target as Node) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   return (
-    <div className={cn("grid gap-2", className)}>
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            id="date"
-            variant={"outline"}
-            className={cn(
-              "w-[300px] justify-start text-left font-normal",
-              !value && "text-muted-foreground"
-            )}
-          >
-            <CalendarIcon className="mr-2 h-4 w-4" />
-            {value?.from ? (
-              value.to ? (
-                <>
-                  {format(value.from, "dd/MM/yyyy", { locale: ptBR })} -{" "}
-                  {format(value.to, "dd/MM/yyyy", { locale: ptBR })}
-                </>
-              ) : (
-                format(value.from, "dd/MM/yyyy", { locale: ptBR })
-              )
-            ) : (
-              <span>Selecionar período</span>
-            )}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
+    <div className={cn("grid gap-2 relative", className)}>
+      <Button
+        ref={buttonRef}
+        id="date"
+        variant={"outline"}
+        className={cn(
+          "w-[300px] justify-start text-left font-normal",
+          !value && "text-muted-foreground"
+        )}
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <CalendarIcon className="mr-2 h-4 w-4" />
+        {value?.from ? (
+          value.to ? (
+            <>
+              {format(value.from, "dd/MM/yyyy", { locale: ptBR })} -{" "}
+              {format(value.to, "dd/MM/yyyy", { locale: ptBR })}
+            </>
+          ) : (
+            format(value.from, "dd/MM/yyyy", { locale: ptBR })
+          )
+        ) : (
+          <span>Selecionar período</span>
+        )}
+      </Button>
+      {isOpen && (
+        <div
+          ref={calendarRef}
+          className="absolute z-50 w-auto rounded-md border bg-popover p-0 shadow-md"
+          style={{
+            top: "100%",
+            left: 0,
+            marginTop: 4
+          }}
+        >
           <Calendar
             initialFocus
             mode="range"
             defaultMonth={value?.from}
             selected={value}
-            onSelect={onChange}
+            onSelect={(date) => {
+              onChange?.(date);
+              if (date?.to) {
+                setIsOpen(false);
+              }
+            }}
             numberOfMonths={2}
             locale={ptBR}
           />
-        </PopoverContent>
-      </Popover>
+        </div>
+      )}
     </div>
   );
 } 

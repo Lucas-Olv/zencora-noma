@@ -1,20 +1,21 @@
-import { useQuery } from "@tanstack/react-query"
 import { format, addDays, isSameDay, isAfter, isBefore } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { Calendar } from "lucide-react"
 import { cn, formatDate, parseDate, getOrderCode } from "@/lib/utils"
 
-import { getOrders } from "@/lib/api"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { LoadingState } from "@/components/ui/loading-state"
 import { Badge } from "@/components/ui/badge"
+import { Tables } from "@/integrations/supabase/types"
 
-function DeliveryCalendar() {
-  const { data: orders, isLoading } = useQuery({
-    queryKey: ["orders"],
-    queryFn: getOrders,
-  })
+type Order = Tables<"orders">
 
+interface DeliveryCalendarProps {
+  orders: Order[]
+  loading?: boolean
+}
+
+function DeliveryCalendar({ orders, loading = false }: DeliveryCalendarProps) {
   const today = new Date()
   const tomorrow = addDays(today, 1)
 
@@ -46,7 +47,7 @@ function DeliveryCalendar() {
       </CardHeader>
       <CardContent>
         <LoadingState
-          loading={isLoading}
+          loading={loading}
           empty={!allOrders.length}
           emptyText="Nenhuma entrega programada"
           emptyIcon={<Calendar className="h-12 w-12 text-muted-foreground" />}

@@ -8,7 +8,7 @@ export interface Order {
   created_at: string | null
   due_date: string
   status: "pending" | "production" | "done" | null
-  user_id: string | null
+  tenant_id: string | null
   collaborator_id: string | null
   phone: string | null
 }
@@ -29,7 +29,7 @@ export async function getOrders(): Promise<Order[]> {
     created_at: order.created_at,
     due_date: order.due_date,
     status: order.status?.toLowerCase() as Order["status"] || "pending",
-    user_id: order.user_id,
+    tenant_id: order.tenant_id,
     collaborator_id: order.collaborator_id,
     phone: order.phone
   }))

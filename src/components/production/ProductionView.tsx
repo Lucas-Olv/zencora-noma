@@ -5,25 +5,51 @@ import { Badge } from "@/components/ui/badge";
 import { Check, Clock, FileText, Loader2, Pencil, Printer } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { supabase } from "@/integrations/supabase/client";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { getOrders, Order } from "@/lib/api";
 import { LoadingState } from "@/components/ui/loading-state";
 import { cn, formatDate, parseDate, getOrderCode, usePrint, getStatusDisplay } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
+import { useTenant } from "@/contexts/TenantContext";
+import { supabaseService, OrderType } from "@/services/supabaseService";
 
 export function ProductionView() {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const { data: orders, isLoading } = useQuery({
-    queryKey: ["orders"],
-    queryFn: getOrders,
-  });
+  const { tenant, loading: tenantLoading, error: tenantError } = useTenant();
+  const [orders, setOrders] = useState<OrderType[]>([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const pendingOrders = orders?.filter((order) => order.status === "pending" || order.status === "production")
+  useEffect(() => {
+    if (!tenantLoading && tenant) {
+      fetchOrders();
+    }
+  }, [tenantLoading, tenant]);
+
+  const fetchOrders = async () => {
+    try {
+      if (tenantError || !tenant) {
+        throw new Error(tenantError || 'Tenant não encontrado');
+      }
+
+      const { data, error } = await supabaseService.orders.getTenantOrders(tenant.id);
+      if (error) throw error;
+      setOrders((data || []).map(order => ({
+        ...order,
+        status: order.status as "pending" | "production" | "done"
+      })));
+    } catch (error: any) {
+      toast({
+        title: "Erro ao carregar encomendas",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const pendingOrders = orders.filter((order) => order.status === "pending" || order.status === "production")
     .sort((a, b) => {
       // Primeiro, ordena por status (production vem antes de pending)
       if (a.status === "production" && b.status !== "production") return -1;
@@ -31,13 +57,12 @@ export function ProductionView() {
 
       // Se o status for igual, ordena por data de entrega
       return parseDate(a.due_date).getTime() - parseDate(b.due_date).getTime();
-    }) || [];
+    });
 
-  const completedOrders = orders?.filter((order) => order.status === "done")
-    .sort((a, b) => parseDate(a.due_date).getTime() - parseDate(b.due_date).getTime()) || [];
+  const completedOrders = orders.filter((order) => order.status === "done")
+    .sort((a, b) => parseDate(a.due_date).getTime() - parseDate(b.due_date).getTime());
 
-
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<OrderType | null>(null);
   const printRef = useRef<HTMLDivElement>(null);
   const handlePrint = usePrint(printRef, {
     pageStyle: `
@@ -54,7 +79,7 @@ export function ProductionView() {
     `
   });
 
-  const OrderLabel = ({ order }: { order: Order }) => {
+  const OrderLabel = ({ order }: { order: OrderType }) => {
     const statusDisplay = getStatusDisplay(order.status);
     return (
       <div className="p-4 w-[100mm] h-[150mm] bg-white text-black">
@@ -106,36 +131,34 @@ export function ProductionView() {
 
   const handleChangeOrderStatus = async (id: string, status: string) => {
     try {
-      const order = orders?.find((o) => o.id === id);
+      const order = orders.find((o) => o.id === id);
       if (!order) return;
 
       const newStatus = status === "pending" ? "production" : "done";
 
-      const { error } = await supabase
-        .from("orders")
-        .update({ status: newStatus })
-        .eq("id", id);
-
+      const { error } = await supabaseService.orders.updateOrderStatus(id, newStatus);
       if (error) throw error;
 
-      // Invalidate and refetch the orders query
-      await queryClient.invalidateQueries({ queryKey: ["orders"] });
+      // Atualiza o estado local
+      setOrders(orders.map(order =>
+        order.id === id ? { ...order, status: newStatus } : order
+      ));
 
       toast({
         title: "Status atualizado",
         description: "O status da encomenda foi atualizado com sucesso.",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating order status:", error);
       toast({
         title: "Erro ao atualizar status",
-        description: "Não foi possível atualizar o status da encomenda.",
+        description: error.message,
         variant: "destructive",
       });
     }
   };
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-200px)]">
         <div className="flex flex-col items-center gap-2">
@@ -177,7 +200,7 @@ export function ProductionView() {
 
             <TabsContent value="pending">
               <LoadingState
-                loading={isLoading}
+                loading={loading}
                 empty={!pendingOrders.length}
                 emptyText="Nenhuma encomenda Produção"
                 emptyIcon={<FileText className="h-12 w-12 text-muted-foreground" />}
@@ -245,7 +268,7 @@ export function ProductionView() {
 
             <TabsContent value="completed">
               <LoadingState
-                loading={isLoading}
+                loading={loading}
                 empty={!completedOrders.length}
                 emptyText="Nenhuma encomenda concluída"
                 emptyIcon={<FileText className="h-12 w-12 text-muted-foreground" />}

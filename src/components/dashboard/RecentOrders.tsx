@@ -1,22 +1,23 @@
-import { useQuery } from "@tanstack/react-query"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { Calendar, FileText } from "lucide-react"
 import { Link } from "react-router-dom"
 import { cn, formatDate, parseDate, getOrderCode } from "@/lib/utils"
 
-import { getOrders } from "@/lib/api"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { LoadingState } from "@/components/ui/loading-state"
 import { Badge } from "@/components/ui/badge"
+import { Tables } from "@/integrations/supabase/types"
 
-function RecentOrders() {
-  const { data: orders, isLoading } = useQuery({
-    queryKey: ["orders"],
-    queryFn: getOrders,
-  })
+type Order = Tables<"orders">
 
-  const recentOrders = orders?.slice(0, 5) || [];
+interface RecentOrdersProps {
+  orders: Order[]
+  loading?: boolean
+}
+
+function RecentOrders({ orders, loading = false }: RecentOrdersProps) {
+  const recentOrders = orders?.slice(0, 5) || []
 
   return (
     <Card>
@@ -25,7 +26,7 @@ function RecentOrders() {
       </CardHeader>
       <CardContent>
         <LoadingState
-          loading={isLoading}
+          loading={loading}
           empty={!recentOrders.length}
           emptyText="Nenhuma encomenda recente"
           emptyIcon={<FileText className="h-12 w-12 text-muted-foreground" />}
