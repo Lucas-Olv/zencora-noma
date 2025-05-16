@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { supabaseService } from "@/services/supabaseService";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useTenant } from "@/contexts/TenantContext";
 
 interface OrderFormProps {
   mode?: "create" | "edit";
@@ -34,6 +35,7 @@ interface FormErrors {
 const OrderForm = ({ mode = "create", orderId }: OrderFormProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { tenant, loading: tenantLoading, error: tenantError } = useTenant();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(mode === "edit");
   const [errors, setErrors] = useState<FormErrors>({});
@@ -236,27 +238,25 @@ const OrderForm = ({ mode = "create", orderId }: OrderFormProps) => {
       return;
     }
 
+    if (tenantLoading || tenantError || !tenant) {
+      toast({
+        title: "Erro de tenant",
+        description: "Não foi possível identificar o tenant atual.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      const { user } = await supabaseService.auth.getCurrentUser();
-      
-      if (!user) {
-        toast({
-          title: "Erro de autenticação",
-          description: "Usuário não autenticado.",
-          variant: "destructive",
-        });
-        return;
-      }
-
       const orderData = {
         client_name: formData.customerName.trim(),
         phone: formData.phone.trim(),
         description: formData.description.trim(),
         price: parseFloat(formData.value.replace(',', '.')),
         due_date: formData.deliveryDate,
-        user_id: user.id,
+        tenant_id: tenant.id,
         collaborator_id: null,
         status: 'pending' as const
       };
