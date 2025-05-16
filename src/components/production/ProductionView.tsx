@@ -12,13 +12,13 @@ import { cn, formatDate, parseDate, getOrderCode, usePrint, getStatusDisplay } f
 import { useNavigate } from "react-router-dom";
 import { useTenant } from "@/contexts/TenantContext";
 import { supabaseService, OrderType } from "@/services/supabaseService";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
 export function ProductionView() {
   const { toast } = useToast();
   const { tenant, loading: tenantLoading, error: tenantError } = useTenant();
   const [orders, setOrders] = useState<OrderType[]>([]);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (!tenantLoading && tenant) {
@@ -78,6 +78,128 @@ export function ProductionView() {
       }
     `
   });
+
+  const isMobile = useMediaQuery("(max-width: 640px)");
+
+  const OrderCard = ({ order }: { order: OrderType }) => {
+    if (isMobile) {
+      return (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between rounded-lg border p-4 gap-4">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <p className="font-mono text-sm text-muted-foreground">{getOrderCode(order.id)}</p>
+                <h3 className="font-semibold">
+                  {order.client_name}
+                </h3>
+              </div>
+              <Badge
+                variant="outline"
+                className={cn(
+                  "w-fit",
+                  order.status === "pending" && "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50",
+                  order.status === "production" && "bg-purple-100/80 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200 hover:bg-purple-200 dark:hover:bg-purple-900/50"
+                )}
+              >
+                {order.status === "production"
+                  ? "Produção"
+                  : "Pendente"}
+              </Badge>
+            </div>
+            <p className="text-sm text-muted-foreground mt-1">
+              {order.description}
+            </p>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <span className="text-sm text-muted-foreground">
+                Entrega: <span className="font-semibold">
+                  {order.due_date ? formatDate(order.due_date) : "Sem data"}
+                </span>
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 mt-4 sm:mt-0">
+            <Button
+              variant={order.status === "pending" ? "outline" : "default"}
+              size="sm"
+              onClick={() => handleChangeOrderStatus(order.id, order.status)}
+              className="flex-1 sm:flex-none"
+            >
+              {order.status === "pending" ? "Iniciar Produção" : "Finalizar"}
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                setSelectedOrder(order);
+                setTimeout(handlePrint, 100);
+              }}
+              title="Imprimir"
+            >
+              <Printer className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-[1fr,auto] gap-4 rounded-lg border p-4">
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <p className="font-mono text-sm text-muted-foreground">{getOrderCode(order.id)}</p>
+            <h3 className="font-semibold">
+              {order.client_name}
+            </h3>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            {order.description}
+          </p>
+          <div className="flex flex-col gap-2">
+            <span className="text-sm text-muted-foreground">
+              Entrega: <span className="font-semibold">
+                {order.due_date ? formatDate(order.due_date) : "Sem data"}
+              </span>
+            </span>
+          </div>
+        </div>
+        <div className="flex flex-col items-end justify-between gap-2">
+        <Badge
+              variant="outline"
+              className={cn(
+                "w-fit",
+                order.status === "pending" && "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50",
+                order.status === "production" && "bg-purple-100/80 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200 hover:bg-purple-200 dark:hover:bg-purple-900/50"
+              )}
+            >
+              {order.status === "production"
+                ? "Produção"
+                : "Pendente"}
+            </Badge>
+        <div className="flex items-center gap-2">
+          <Button
+            variant={order.status === "pending" ? "outline" : "default"}
+            size="sm"
+            onClick={() => handleChangeOrderStatus(order.id, order.status)}
+            className="flex-1 sm:flex-none"
+          >
+            {order.status === "pending" ? "Iniciar Produção" : "Finalizar"}
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => {
+              setSelectedOrder(order);
+              setTimeout(handlePrint, 100);
+            }}
+            title="Imprimir"
+          >
+            <Printer className="h-4 w-4" />
+          </Button>
+        </div>
+        </div>
+      </div>
+    );
+  };
 
   const OrderLabel = ({ order }: { order: OrderType }) => {
     const statusDisplay = getStatusDisplay(order.status);
@@ -207,60 +329,7 @@ export function ProductionView() {
               >
                 <div className="space-y-4">
                   {pendingOrders.map((order) => (
-                    <div
-                      key={order.id}
-                      className="flex flex-col sm:flex-row sm:items-center justify-between rounded-lg border p-4 gap-4"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="font-mono text-sm text-muted-foreground">{getOrderCode(order.id)}</p>
-                          <h3 className="font-semibold">
-                            {order.client_name}
-                          </h3>
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          {order.description}
-                        </p>
-                        <div className="mt-2 flex flex-wrap items-center gap-2">
-                          <Badge
-                            variant="outline"
-                            className={cn(
-                              order.status === "pending" && "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50",
-                              order.status === "production" && "bg-purple-100/80 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200 hover:bg-purple-200 dark:hover:bg-purple-900/50"
-                            )}
-                          >
-                            {order.status === "production"
-                              ? "Produção"
-                              : "Pendente"}
-                          </Badge>
-                          <span className="text-sm text-muted-foreground">
-                            Entrega: <span className="font-semibold">
-                              {order.due_date ? formatDate(order.due_date, "dd 'de' MMMM") : "Sem data"}
-                            </span>
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant={order.status === "pending" ? "outline" : "default"}
-                          size="sm"
-                          onClick={() => handleChangeOrderStatus(order.id, order.status)}
-                        >
-                          {order.status === "pending" ? "Iniciar Produção" : "Finalizar"}
-                        </Button>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          setSelectedOrder(order);
-                          setTimeout(handlePrint, 100);
-                        }}
-                        title="Imprimir"
-                      >
-                        <Printer className="h-4 w-4" />
-                      </Button>
-                    </div>
+                    <OrderCard key={order.id} order={order} />
                   ))}
                 </div>
               </LoadingState>
@@ -275,31 +344,7 @@ export function ProductionView() {
               >
                 <div className="space-y-4">
                   {completedOrders.map((order) => (
-                    <div
-                      key={order.id}
-                      className="flex items-center justify-between rounded-lg border p-4"
-                    >
-                      <div>
-                        <h3 className="font-semibold">
-                          {order.client_name}
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          {order.description}
-                        </p>
-                        <div className="mt-2 flex items-center gap-2">
-                          <Badge
-                            variant="outline"
-                            className="bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50"
-                          >
-                            Concluído
-                          </Badge>
-                          <span className="text-sm text-muted-foreground">
-                            Concluído em{" "}
-                            {order.due_date ? formatDate(order.due_date, "dd/MM/yyyy") : "Sem data"}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
+                    <OrderCard key={order.id} order={order} />
                   ))}
                 </div>
               </LoadingState>

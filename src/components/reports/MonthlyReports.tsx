@@ -75,82 +75,84 @@ const MonthlyReports = () => {
   };
 
   useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        setLoading(true);
-        if (dateRange?.from && dateRange?.to) {
-          // Ajusta as datas para o início e fim do dia
-          const startDate = new Date(dateRange.from);
-          startDate.setHours(0, 0, 0, 0);
+    if (!tenantLoading && tenant) {
+      fetchOrders();
+    }
+  }, [dateRange, tenantLoading, tenant]);
+
+  const fetchOrders = async () => {
+    try {
+      setLoading(true);
+      if (dateRange?.from && dateRange?.to) {
+        // Ajusta as datas para o início e fim do dia
+        const startDate = new Date(dateRange.from);
+        startDate.setHours(0, 0, 0, 0);
+        
+        const endDate = new Date(dateRange.to);
+        endDate.setHours(23, 59, 59, 999);
+
+        const { data, error } = await supabaseService.orders.getTenantOrders(tenant.id);
+        if (error) throw error;
+
+        // Filtra as encomendas no lado do cliente para garantir precisão
+        const filteredOrders = data?.filter(order => {
+          const orderDate = parseDate(order.due_date);
+          if (!orderDate) return false;
           
-          const endDate = new Date(dateRange.to);
-          endDate.setHours(23, 59, 59, 999);
+          // Verifica se a data está dentro do intervalo
+          return orderDate >= startDate && orderDate <= endDate;
+        }).sort((a, b) => {
+          // Ordena por data de entrega em ordem crescente
+          const dateA = parseDate(a.due_date);
+          const dateB = parseDate(b.due_date);
+          if (!dateA || !dateB) return 0;
+          return dateA.getTime() - dateB.getTime();
+        }) || [];
 
-          const { data, error } = await supabaseService.orders.getTenantOrders(tenant.id);
-          if (error) throw error;
+        setOrders(filteredOrders);
 
-          // Filtra as encomendas no lado do cliente para garantir precisão
-          const filteredOrders = data?.filter(order => {
-            const orderDate = parseDate(order.due_date);
-            if (!orderDate) return false;
-            
-            // Verifica se a data está dentro do intervalo
-            return orderDate >= startDate && orderDate <= endDate;
-          }).sort((a, b) => {
-            // Ordena por data de entrega em ordem crescente
-            const dateA = parseDate(a.due_date);
-            const dateB = parseDate(b.due_date);
-            if (!dateA || !dateB) return 0;
-            return dateA.getTime() - dateB.getTime();
-          }) || [];
+        // Process data for reports
+        const processedData: ReportData = {
+          totalOrders: filteredOrders.length,
+          totalRevenue: filteredOrders.reduce((sum, order) => sum + (order.price || 0), 0),
+          completedOrders: filteredOrders.filter(order => order.status === "done").length,
+          pendingOrders: filteredOrders.filter(order => order.status !== "done").length,
+          dailyRevenue: [],
+          categoryData: [],
+        };
 
-          setOrders(filteredOrders);
-
-          // Process data for reports
-          const processedData: ReportData = {
-            totalOrders: filteredOrders.length,
-            totalRevenue: filteredOrders.reduce((sum, order) => sum + (order.price || 0), 0),
-            completedOrders: filteredOrders.filter(order => order.status === "done").length,
-            pendingOrders: filteredOrders.filter(order => order.status !== "done").length,
-            dailyRevenue: [],
-            categoryData: [],
-          };
-
-          // Process daily revenue
-          if (dateRange?.from && dateRange?.to) {
-            const days = eachDayOfInterval({ start: dateRange.from, end: dateRange.to });
-            processedData.dailyRevenue = days.map(day => {
-              const dayOrders = filteredOrders.filter(order => {
-                const orderDate = parseDate(order.due_date);
-                if (!orderDate) return false;
-                return isSameDay(orderDate, day);
-              });
-              return {
-                day: format(day, "dd/MM"),
-                value: dayOrders.reduce((sum, order) => sum + (order.price || 0), 0),
-              };
+        // Process daily revenue
+        if (dateRange?.from && dateRange?.to) {
+          const days = eachDayOfInterval({ start: dateRange.from, end: dateRange.to });
+          processedData.dailyRevenue = days.map(day => {
+            const dayOrders = filteredOrders.filter(order => {
+              const orderDate = parseDate(order.due_date);
+              if (!orderDate) return false;
+              return isSameDay(orderDate, day);
             });
-          }
-
-          // Process category data (placeholder - you might want to add categories to your orders)
-          processedData.categoryData = [
-            { name: "Bolos", value: Math.floor(Math.random() * 30) + 10 },
-            { name: "Doces", value: Math.floor(Math.random() * 20) + 5 },
-            { name: "Salgados", value: Math.floor(Math.random() * 15) + 5 },
-            { name: "Kits", value: Math.floor(Math.random() * 10) + 2 },
-          ];
-
-          setReportData(processedData);
+            return {
+              day: format(day, "dd/MM"),
+              value: dayOrders.reduce((sum, order) => sum + (order.price || 0), 0),
+            };
+          });
         }
-      } catch (error) {
-        console.error("Error fetching orders:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
 
-    fetchOrders();
-  }, [dateRange]);
+        // Process category data (placeholder - you might want to add categories to your orders)
+        processedData.categoryData = [
+          { name: "Bolos", value: Math.floor(Math.random() * 30) + 10 },
+          { name: "Doces", value: Math.floor(Math.random() * 20) + 5 },
+          { name: "Salgados", value: Math.floor(Math.random() * 15) + 5 },
+          { name: "Kits", value: Math.floor(Math.random() * 10) + 2 },
+        ];
+
+        setReportData(processedData);
+      }
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const completionRate = reportData.totalOrders > 0 
     ? Math.round((reportData.completedOrders / reportData.totalOrders) * 100)
@@ -180,7 +182,7 @@ const MonthlyReports = () => {
     doc.setFontSize(12);
     doc.setTextColor(mutedColor[0], mutedColor[1], mutedColor[2]);
     const periodText = dateRange?.from && dateRange?.to
-      ? `Período: ${format(dateRange.from, "dd/MM/yyyy")} - ${format(dateRange.to, "dd/MM/yyyy")}`
+      ? `Período: ${formatDate(dateRange.from.toISOString(), "dd/MM/yyyy")} - ${formatDate(dateRange.to.toISOString(), "dd/MM/yyyy")}`
       : "Período: Todo o mês";
     doc.text(periodText, pageWidth / 2, 40, { align: "center" });
     
@@ -301,7 +303,7 @@ const MonthlyReports = () => {
         { align: "center" }
       );
       doc.text(
-        `Gerado em ${format(new Date(), "dd/MM/yyyy 'às' HH:mm")}`,
+        `Gerado em ${formatDate(new Date().toISOString(), "dd/MM/yyyy 'às' HH:mm")}`,
         pageWidth / 2,
         doc.internal.pageSize.getHeight() - 5,
         { align: "center" }
@@ -309,7 +311,7 @@ const MonthlyReports = () => {
     }
     
     // Save the PDF
-    doc.save(`relatorio-zencora-${format(new Date(), "yyyy-MM-dd")}.pdf`);
+    doc.save(`relatorio-zencora-${formatDate(new Date().toISOString(), "yyyy-MM-dd")}.pdf`);
   };
 
   if (loading) {

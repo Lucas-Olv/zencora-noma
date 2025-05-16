@@ -238,7 +238,7 @@ const OrderDetail = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Data de Entrega</p>
-                <p className="font-medium">{formatDate(order.due_date, "dd 'de' MMMM, yyyy")}</p>
+                <p className="font-medium">{formatDate(order.due_date)}</p>
               </div>
             </div>
             

@@ -8,7 +8,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function formatDate(date: string | null | undefined, formatStr: string = "dd 'de' MMMM"): string {
+export function formatDate(date: string | null | undefined, formatStr: string = "dd 'de' MMMM 'às' HH:mm"): string {
   if (!date) return "Data não definida"
   
   try {

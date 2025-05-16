@@ -159,14 +159,14 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
       {/* Backdrop for mobile */}
       {isOpen && (
         <div 
-          className="fixed inset-0 z-30 bg-background/80 backdrop-blur-sm md:hidden"
+          className="fixed inset-0 z-[120] bg-black/30 backdrop-blur-sm md:hidden"
           onClick={closeSidebar}
         />
       )}
       
       {/* Sidebar */}
       <aside className={cn(
-        "fixed top-0 bottom-0 left-0 z-50 w-60 bg-background dark:bg-background border-r border-border p-4 shadow-sm transition-transform duration-300 md:translate-x-0 flex flex-col",
+        "fixed top-0 bottom-0 left-0 z-[130] w-60 bg-background dark:bg-background border-r border-border p-4 shadow-sm transition-transform duration-300 md:translate-x-0 flex flex-col",
         isOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="px-2 py-2">

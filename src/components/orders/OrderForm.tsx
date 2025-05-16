@@ -10,6 +10,7 @@ import { supabaseService } from "@/services/supabaseService";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useTenant } from "@/contexts/TenantContext";
+import { formatDate } from "@/lib/utils";
 
 interface OrderFormProps {
   mode?: "create" | "edit";
@@ -22,6 +23,7 @@ interface FormData {
   description: string;
   value: string;
   deliveryDate: string;
+  deliveryTime: string;
 }
 
 interface FormErrors {
@@ -30,6 +32,7 @@ interface FormErrors {
   description?: string;
   value?: string;
   deliveryDate?: string;
+  deliveryTime?: string;
 }
 
 const OrderForm = ({ mode = "create", orderId }: OrderFormProps) => {
@@ -44,8 +47,9 @@ const OrderForm = ({ mode = "create", orderId }: OrderFormProps) => {
     customerName: "",
     phone: "",
     description: "",
-    value: "",
+    value: "0,00",
     deliveryDate: "",
+    deliveryTime: "12:00",
   });
 
   const [priceInput, setPriceInput] = useState(
@@ -73,12 +77,14 @@ const OrderForm = ({ mode = "create", orderId }: OrderFormProps) => {
           return;
         }
 
+        const dueDate = parseISO(data.due_date);
         setFormData({
           customerName: data.client_name,
           phone: data.phone || "",
           description: data.description || "",
           value: data.price.toFixed(2).replace('.', ','),
-          deliveryDate: format(parseISO(data.due_date), "yyyy-MM-dd"),
+          deliveryDate: formatDate(data.due_date, "yyyy-MM-dd"),
+          deliveryTime: formatDate(data.due_date, "HH:mm"),
         });
 
         setPriceInput(new Intl.NumberFormat("pt-BR", {
@@ -135,13 +141,14 @@ const OrderForm = ({ mode = "create", orderId }: OrderFormProps) => {
     // Data de entrega
     if (!formData.deliveryDate) {
       newErrors.deliveryDate = "Data de entrega é obrigatória";
+    } else if (!formData.deliveryTime) {
+      newErrors.deliveryTime = "Hora de entrega é obrigatória";
     } else {
-      const deliveryDate = new Date(formData.deliveryDate + 'T00:00:00');
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      const deliveryDateTime = new Date(`${formData.deliveryDate}T${formData.deliveryTime}:00`);
+      const now = new Date();
       
-      if (deliveryDate < today) {
-        newErrors.deliveryDate = "Data de entrega não pode ser no passado";
+      if (deliveryDateTime < now) {
+        newErrors.deliveryDate = "Data e hora de entrega não podem ser no passado";
       }
     }
     
@@ -251,40 +258,38 @@ const OrderForm = ({ mode = "create", orderId }: OrderFormProps) => {
 
     try {
       const orderData = {
-        client_name: formData.customerName.trim(),
-        phone: formData.phone.trim(),
-        description: formData.description.trim(),
+        client_name: formData.customerName,
+        phone: formData.phone || null,
+        description: formData.description,
         price: parseFloat(formData.value.replace(',', '.')),
-        due_date: formData.deliveryDate,
+        due_date: `${formData.deliveryDate}T${formData.deliveryTime}:00`,
         tenant_id: tenant.id,
         collaborator_id: null,
         status: 'pending' as const
       };
-      
-      if (mode === "edit" && orderId) {
-        const { error } = await supabaseService.orders.updateOrder(orderId, orderData);
-        if (error) throw error;
-        
-        toast({
-          title: "Encomenda atualizada!",
-          description: "A encomenda foi atualizada com sucesso.",
-        });
-        
-        navigate(-1);
-      } else {
+
+      if (mode === "create") {
         const { error } = await supabaseService.orders.createOrder(orderData);
         if (error) throw error;
         
         toast({
-          title: "Encomenda registrada!",
-          description: "A encomenda foi registrada com sucesso.",
+          title: "Encomenda criada",
+          description: "A encomenda foi criada com sucesso.",
         });
+        navigate("/orders");
+      } else if (mode === "edit" && orderId) {
+        const { error } = await supabaseService.orders.updateOrder(orderId, orderData);
+        if (error) throw error;
         
+        toast({
+          title: "Encomenda atualizada",
+          description: "A encomenda foi atualizada com sucesso.",
+        });
         navigate("/orders");
       }
     } catch (error: any) {
       toast({
-        title: mode === "edit" ? "Erro ao atualizar encomenda" : "Erro ao registrar encomenda",
+        title: "Erro ao salvar encomenda",
         description: error.message,
         variant: "destructive",
       });
@@ -304,56 +309,65 @@ const OrderForm = ({ mode = "create", orderId }: OrderFormProps) => {
   return (
     <Card>
       <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-4 pt-6">
-          <div className="space-y-2">
-            <Label htmlFor="customerName">Nome do Cliente*</Label>
-            <Input
-              id="customerName"
-              name="customerName"
-              value={formData.customerName}
-              onChange={handleChange}
-              placeholder="Nome completo do cliente"
-              className={errors.customerName ? "border-destructive" : ""}
-            />
-            {errors.customerName && (
-              <p className="text-sm text-destructive">{errors.customerName}</p>
-            )}
+        <CardHeader>
+          <CardTitle>{mode === "create" ? "Nova Encomenda" : "Editar Encomenda"}</CardTitle>
+          <CardDescription>
+            {mode === "create"
+              ? "Preencha os dados para criar uma nova encomenda."
+              : "Atualize os dados da encomenda conforme necessário."}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="customerName">Nome do Cliente</Label>
+              <Input
+                id="customerName"
+                name="customerName"
+                value={formData.customerName}
+                onChange={handleChange}
+                placeholder="Nome do cliente"
+                disabled={isSubmitting}
+              />
+              {errors.customerName && (
+                <p className="text-sm text-destructive">{errors.customerName}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="phone">Telefone (opcional)</Label>
+              <Input
+                id="phone"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                placeholder="(00) 00000-0000"
+                disabled={isSubmitting}
+              />
+              {errors.phone && (
+                <p className="text-sm text-destructive">{errors.phone}</p>
+              )}
+            </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="phone">Telefone</Label>
-            <Input
-              id="phone"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              placeholder="(00) 00000-0000"
-              className={errors.phone ? "border-destructive" : ""}
-            />
-            {errors.phone && (
-              <p className="text-sm text-destructive">{errors.phone}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="description">Descrição do Produto*</Label>
+            <Label htmlFor="description">Descrição do Produto</Label>
             <Textarea
               id="description"
               name="description"
               value={formData.description}
               onChange={handleChange}
-              placeholder="Descreva o produto e detalhes da encomenda"
-              rows={3}
-              className={errors.description ? "border-destructive" : ""}
+              placeholder="Descreva o produto ou serviço"
+              disabled={isSubmitting}
             />
             {errors.description && (
               <p className="text-sm text-destructive">{errors.description}</p>
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="value">Valor*</Label>
+              <Label htmlFor="value">Valor</Label>
               <Input
                 id="value"
                 name="value"
@@ -361,41 +375,49 @@ const OrderForm = ({ mode = "create", orderId }: OrderFormProps) => {
                 onChange={handlePriceChange}
                 onBlur={handlePriceBlur}
                 placeholder="R$ 0,00"
-                className={errors.value ? "border-destructive" : ""}
+                disabled={isSubmitting}
               />
               {errors.value && (
                 <p className="text-sm text-destructive">{errors.value}</p>
               )}
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="deliveryDate">Data de Entrega*</Label>
-              <Input
-                id="deliveryDate"
-                name="deliveryDate"
-                type="date"
-                value={formData.deliveryDate}
-                onChange={handleChange}
-                min={new Date().toISOString().split('T')[0]}
-                className={errors.deliveryDate ? "border-destructive" : ""}
-              />
-              {errors.deliveryDate && (
-                <p className="text-sm text-destructive">{errors.deliveryDate}</p>
-              )}
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="deliveryDate">Data de Entrega</Label>
+                <Input
+                  id="deliveryDate"
+                  name="deliveryDate"
+                  type="date"
+                  value={formData.deliveryDate}
+                  onChange={handleChange}
+                  disabled={isSubmitting}
+                />
+                {errors.deliveryDate && (
+                  <p className="text-sm text-destructive">{errors.deliveryDate}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="deliveryTime">Hora de Entrega</Label>
+                <Input
+                  id="deliveryTime"
+                  name="deliveryTime"
+                  type="time"
+                  value={formData.deliveryTime}
+                  onChange={handleChange}
+                  disabled={isSubmitting}
+                />
+                {errors.deliveryTime && (
+                  <p className="text-sm text-destructive">{errors.deliveryTime}</p>
+                )}
+              </div>
             </div>
           </div>
         </CardContent>
-        <CardFooter className="flex justify-between">
-          <Button 
-            variant="outline" 
-            type="button" 
-            onClick={() => navigate(-1)}
-          >
-            Cancelar
-          </Button>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting 
-              ? (mode === "edit" ? "Atualizando..." : "Registrando...") 
-              : (mode === "edit" ? "Atualizar Encomenda" : "Registrar Encomenda")}
+        <CardFooter className="flex md:justify-end sm:justify-start">
+          <Button className="w-full md:w-auto" type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Salvando..." : mode === "create" ? "Criar Encomenda" : "Salvar Alterações"}
           </Button>
         </CardFooter>
       </form>

@@ -58,7 +58,7 @@ function RecentOrders({ orders, loading = false }: RecentOrdersProps) {
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Calendar className="h-4 w-4" />
                       <span>
-                        {formatDate(order.due_date, "dd/MM/yyyy")}
+                        {formatDate(order.due_date)}
                       </span>
                     </div>
                   </div>

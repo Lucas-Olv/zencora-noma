@@ -94,8 +94,10 @@ const OrderList = () => {
   };
 
   useEffect(() => {
-    fetchOrders();
-  }, []);
+    if (!tenantLoading && tenant) {
+      fetchOrders();
+    }
+  }, [tenantLoading, tenant]);
 
   const fetchOrders = async () => {    
     try {

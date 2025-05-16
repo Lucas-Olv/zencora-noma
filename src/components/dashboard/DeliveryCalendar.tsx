@@ -2,6 +2,7 @@ import { format, addDays, isSameDay, isAfter, isBefore } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { Calendar } from "lucide-react"
 import { cn, formatDate, parseDate, getOrderCode } from "@/lib/utils"
+import { useNavigate } from "react-router-dom"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { LoadingState } from "@/components/ui/loading-state"
@@ -16,6 +17,7 @@ interface DeliveryCalendarProps {
 }
 
 function DeliveryCalendar({ orders, loading = false }: DeliveryCalendarProps) {
+  const navigate = useNavigate()
   const today = new Date()
   const tomorrow = addDays(today, 1)
 
@@ -60,7 +62,8 @@ function DeliveryCalendar({ orders, loading = false }: DeliveryCalendarProps) {
                   {todayOrders.map((order) => (
                     <div
                       key={order.id}
-                      className="flex items-center justify-between rounded-lg border p-3"
+                      className="flex items-center justify-between rounded-lg border p-3 hover:bg-accent/50 cursor-pointer transition-colors"
+                      onClick={() => navigate(`/orders/${order.id}`)}
                     >
                       <div>
                         <div className="flex items-center gap-2">
@@ -98,7 +101,8 @@ function DeliveryCalendar({ orders, loading = false }: DeliveryCalendarProps) {
                   {tomorrowOrders.map((order) => (
                     <div
                       key={order.id}
-                      className="flex items-center justify-between rounded-lg border p-3"
+                      className="flex items-center justify-between rounded-lg border p-3 hover:bg-accent/50 cursor-pointer transition-colors"
+                      onClick={() => navigate(`/orders/${order.id}`)}
                     >
                       <div>
                         <div className="flex items-center gap-2">
@@ -136,18 +140,19 @@ function DeliveryCalendar({ orders, loading = false }: DeliveryCalendarProps) {
                   {futureOrders.map((order) => (
                     <div
                       key={order.id}
-                      className="flex items-center justify-between rounded-lg border p-3"
+                      className="flex items-center justify-between rounded-lg border p-3 hover:bg-accent/50 cursor-pointer transition-colors"
+                      onClick={() => navigate(`/orders/${order.id}`)}
                     >
                       <div>
                         <div className="flex items-center gap-2">
                           <p className="font-mono text-sm text-muted-foreground">{getOrderCode(order.id)}</p>
                           <p className="font-medium">{order.client_name}</p>
                         </div>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-xs text-muted-foreground truncate max-w-[8dvw]">
                           {order.description}
                         </p>
                         <p className="text-xs text-muted-foreground mt-1">
-                          Entrega: {formatDate(order.due_date, "dd 'de' MMMM")}
+                          Entrega: {formatDate(order.due_date)}
                         </p>
                       </div>
                       <Badge
