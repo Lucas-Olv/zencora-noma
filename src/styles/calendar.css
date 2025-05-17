@@ -14,12 +14,17 @@
   --fc-neutral-bg-color: hsl(var(--background));
   --fc-list-event-hover-bg-color: hsl(var(--accent));
   --fc-highlight-color: hsl(var(--accent) / 0.1);
+  --fc-page-bg-color: hsl(var(--background));
+  --fc-neutral-bg-color: hsl(var(--background));
+  --fc-list-event-hover-bg-color: hsl(var(--accent));
+  --fc-highlight-color: hsl(var(--accent) / 0.1);
 }
 
 .fc {
   width: 100%;
-  background: hsl(var(--card));
+  background: hsl(var(--background));
   border-radius: var(--radius);
+  color: hsl(var(--foreground));
 }
 
 .fc .fc-toolbar {
@@ -31,6 +36,7 @@
 .fc .fc-toolbar-title {
   font-size: 1.25rem;
   font-weight: 600;
+  color: hsl(var(--foreground));
 }
 
 .fc .fc-button {
@@ -39,37 +45,76 @@
   font-weight: 500;
   border-radius: var(--radius);
   transition: all 0.2s;
+  background-color: hsl(var(--background));
+  border-color: hsl(var(--border));
+  color: hsl(var(--foreground));
 }
 
 .fc .fc-button-primary:not(:disabled):active,
 .fc .fc-button-primary:not(:disabled).fc-button-active {
   background-color: hsl(var(--accent));
   border-color: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
 }
 
 .fc .fc-daygrid-day {
   min-height: 100px;
+  background: hsl(var(--background));
 }
 
 .fc .fc-daygrid-day-frame {
   padding: 0.25rem;
+  background: hsl(var(--background));
 }
 
 .fc .fc-daygrid-day-number {
   padding: 0.25rem;
   font-size: 0.875rem;
+  color: hsl(var(--foreground));
 }
 
 .fc .fc-daygrid-event {
   margin: 0.125rem 0;
   border-radius: var(--radius);
   font-size: 0.75rem;
+  border: none !important;
+}
+
+.fc .fc-daygrid-event[data-status="pending"] {
+  background-color: hsl(48 96% 89%) !important;
+  color: hsl(48 96% 20%) !important;
+}
+
+.fc .fc-daygrid-event[data-status="production"] {
+  background-color: hsl(270 91% 94%) !important;
+  color: hsl(270 91% 20%) !important;
+}
+
+.fc .fc-daygrid-event[data-status="done"] {
+  background-color: hsl(142 76% 94%) !important;
+  color: hsl(142 76% 20%) !important;
+}
+
+.dark .fc .fc-daygrid-event[data-status="pending"] {
+  background-color: hsl(48 96% 20%) !important;
+  color: hsl(48 96% 89%) !important;
+}
+
+.dark .fc .fc-daygrid-event[data-status="production"] {
+  background-color: hsl(270 91% 20%) !important;
+  color: hsl(270 91% 94%) !important;
+}
+
+.dark .fc .fc-daygrid-event[data-status="done"] {
+  background-color: hsl(142 76% 20%) !important;
+  color: hsl(142 76% 94%) !important;
 }
 
 .fc .fc-daygrid-more-link {
   font-size: 0.75rem;
   padding: 0.125rem 0.25rem;
   margin: 0.125rem 0;
+  color: hsl(var(--foreground));
 }
 
 .fc .fc-day-today {
@@ -78,12 +123,38 @@
 
 .fc .fc-col-header-cell {
   padding: 0.5rem 0;
+  background: hsl(var(--background));
 }
 
 .fc .fc-col-header-cell-cushion {
   padding: 0.25rem;
   font-size: 0.875rem;
   font-weight: 500;
+  color: hsl(var(--foreground));
+}
+
+.fc .fc-daygrid-day-frame {
+  background: hsl(var(--background));
+}
+
+.fc .fc-scrollgrid {
+  border-color: hsl(var(--border));
+}
+
+.fc .fc-scrollgrid-section > * {
+  border-color: hsl(var(--border));
+}
+
+.fc .fc-daygrid-day-frame {
+  background: hsl(var(--background));
+}
+
+.fc .fc-daygrid-day.fc-day-today {
+  background: hsl(var(--accent) / 0.1) !important;
+}
+
+.fc .fc-daygrid-day.fc-day-other {
+  background: hsl(var(--background));
 }
 
 @media (max-width: 640px) {

@@ -137,14 +137,26 @@ const CalendarPage = () => {
                   dayMaxEvents: true,
                 }
               }}
-              eventContent={(eventInfo) => (
-                <div className="p-1 overflow-hidden">
-                  <div className="font-medium truncate">{eventInfo.event.title}</div>
-                  <div className="text-xs">
-                    R$ {eventInfo.event.extendedProps.price.toFixed(2).replace('.', ',')}
+              eventContent={(eventInfo) => {
+                const status = eventInfo.event.extendedProps.status;
+                const bgColor = getStatusColor(status);
+                const textColor = getStatusTextColor(status);
+                
+                return (
+                  <div 
+                    className="p-1 overflow-hidden rounded-md w-full"
+                    style={{
+                      backgroundColor: bgColor,
+                      color: textColor
+                    }}
+                  >
+                    <div className="font-medium truncate">{eventInfo.event.title}</div>
+                    <div className="text-xs">
+                      R$ {eventInfo.event.extendedProps.price.toFixed(2).replace('.', ',')}
+                    </div>
                   </div>
-                </div>
-              )}
+                );
+              }}
               eventTimeFormat={{
                 hour: '2-digit',
                 minute: '2-digit',
