@@ -28,6 +28,7 @@ import { Badge } from "@/components/ui/badge";
 import { report } from "process";
 import supabaseService from "@/services/supabaseService";
 import { useTenant } from "@/contexts/TenantContext";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type Order = Tables<"orders">;
 
@@ -334,6 +335,33 @@ const MonthlyReports = () => {
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <div className="flex items-center gap-4">
+            <Select
+              value={dateRange?.from ? format(dateRange.from, "yyyy-MM") : undefined}
+              onValueChange={(value) => {
+                const [year, month] = value.split("-").map(Number);
+                const start = startOfMonth(new Date(year, month - 1));
+                const end = endOfMonth(new Date(year, month - 1));
+                setDateRange({ from: start, to: end });
+              }}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Selecione o mês" />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 12 }, (_, i) => {
+                  const date = new Date();
+                  date.setMonth(date.getMonth() - i);
+                  return (
+                    <SelectItem
+                      key={format(date, "yyyy-MM")}
+                      value={format(date, "yyyy-MM")}
+                    >
+                      {format(date, "MMMM yyyy", { locale: ptBR })}
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
             <DateRangePicker
               value={dateRange}
               onChange={setDateRange}

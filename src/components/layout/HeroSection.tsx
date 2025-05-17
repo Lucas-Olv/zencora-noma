@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useRef } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useResizeAnimation } from "@/hooks/useResizeAnimation";
+import { Link } from "react-router-dom";
 
 export function HeroSection() {
   const isMobile = useIsMobile();
@@ -55,7 +56,7 @@ export function HeroSection() {
                 className="bg-primary hover:bg-primary/90 text-white px-8 py-6 text-lg rounded-full transition-all duration-300 ease-in-out"
                 asChild
               >
-                <a href="#pricing">Comece grátis</a>
+                <Link to="/login?register=true">Comece grátis</Link>
               </Button>
             </div>
           </div>

@@ -34,20 +34,19 @@ export function Cta() {
 
   return (
     <section id="cta" className="py-16 md:py-24">
-    <div className="container">
-      <div className="bg-gradient-to-r from-primary to-secondary rounded-xl p-6 md:p-8 lg:p-12 text-primary-foreground text-center">
-        <h2 className="text-2xl md:text-3xl font-bold mb-4">
-          Pronto para organizar suas encomendas?
-        </h2>
-        <p className="text-base md:text-lg opacity-90 mb-6 max-w-2xl mx-auto">
-          Comece a usar o Noma hoje mesmo e tenha 7 dias gratuitos para experimentar todas as funcionalidades.
-        </p>
-        <Button size="lg" variant="secondary" asChild>
-          <Link to="/dashboard">Comece grátis por 7 dias</Link>
-        </Button>
+      <div className="container">
+        <div className="bg-gradient-to-r from-primary to-secondary rounded-xl p-6 md:p-8 lg:p-12 text-primary-foreground text-center">
+          <h2 className="text-2xl md:text-3xl font-bold mb-4">
+            Pronto para organizar suas encomendas?
+          </h2>
+          <p className="text-base md:text-lg opacity-90 mb-6 max-w-2xl mx-auto">
+            Comece a usar o Noma hoje mesmo e tenha 7 dias gratuitos para experimentar todas as funcionalidades.
+          </p>
+          <Button size="lg" variant="secondary" asChild>
+            <Link to="/login?register=true">Comece grátis por 7 dias</Link>
+          </Button>
+        </div>
       </div>
-    </div>
-  </section>
-
+    </section>
   );
 }

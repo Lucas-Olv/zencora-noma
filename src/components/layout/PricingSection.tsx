@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 
 interface PricingTierProps {
   name: string;
@@ -48,8 +49,8 @@ function PricingTier({ name, price, description, features, ctaText, isPro = fals
               {smallText && (
                 <p className="text-sm text-muted-foreground mb-4">{smallText}</p>
               )}
-              <Button className="w-full bg-primary hover:bg-primary/90 dark:bg-primary dark:hover:bg-primary/90">
-                {ctaText}
+              <Button className="w-full bg-primary hover:bg-primary/90 dark:bg-primary dark:hover:bg-primary/90" asChild>
+                <Link to="/login?register=true">{ctaText}</Link>
               </Button>
             </div>
           </div>
@@ -82,8 +83,8 @@ function PricingTier({ name, price, description, features, ctaText, isPro = fals
             {smallText && (
               <p className="text-sm text-muted-foreground mb-4">{smallText}</p>
             )}
-            <Button variant="outline" className="w-full border-primary text-primary hover:bg-primary hover:text-white">
-              {ctaText}
+            <Button variant="outline" className="w-full border-primary text-primary hover:bg-primary hover:text-white" asChild>
+              <Link to="/login?register=true">{ctaText}</Link>
             </Button>
           </div>
         </div>
