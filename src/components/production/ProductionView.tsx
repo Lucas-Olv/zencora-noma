@@ -19,6 +19,7 @@ export function ProductionView() {
   const { tenant, loading: tenantLoading, error: tenantError } = useTenant();
   const [orders, setOrders] = useState<OrderType[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!tenantLoading && tenant) {
@@ -84,7 +85,7 @@ export function ProductionView() {
   const OrderCard = ({ order }: { order: OrderType }) => {
     if (isMobile) {
       return (
-        <div className="grid grid-cols-1 gap-4 rounded-lg border p-4">
+        <div className="grid grid-cols-1 gap-4 rounded-lg border p-4 hover:bg-accent/50 cursor-pointer transition-colors" onClick={() => navigate(`/orders/${order.id}`)}>
           <div className="grid grid-cols-[minmax(0,1fr),auto] gap-4">
             <div className="min-w-0">
               <div className="flex items-center gap-2">
@@ -147,7 +148,7 @@ export function ProductionView() {
     }
 
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-[1fr,auto] gap-4 rounded-lg border p-4">
+      <div className="grid grid-cols-1 sm:grid-cols-[1fr,auto] gap-4 rounded-lg border p-4 hover:bg-accent/50 cursor-pointer transition-colors" onClick={() => navigate(`/orders/${order.id}`)}>
         <div className="grid grid-cols-[minmax(0,1fr),auto] gap-4">
           <div className="min-w-0">
             <div className="flex items-center gap-2">
