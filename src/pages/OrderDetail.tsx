@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,6 +42,28 @@ const getStatusDisplay = (status: "done" | "pending" | "production" | null) => {
         className: "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50" 
       };
   }
+};
+
+const AutoResizeTextarea = ({ value, className }: { value: string, className?: string }) => {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = `${textarea.scrollHeight}px`;
+    }
+  }, [value]);
+
+  return (
+    <textarea
+      ref={textareaRef}
+      className={className}
+      value={value}
+      readOnly
+      rows={1}
+    />
+  );
 };
 
 const OrderDetail = () => {
@@ -228,7 +250,10 @@ const OrderDetail = () => {
         <CardContent className="space-y-6">
           <div>
             <h3 className="font-semibold mb-2">Descrição</h3>
-            <p className="text-muted-foreground">{order.description || "Sem descrição"}</p>
+            <AutoResizeTextarea 
+              value={order.description || "Sem descrição"} 
+              className="text-muted-foreground w-full px-0 py-1 resize-none overflow-hidden bg-transparent focus:outline-none focus:ring-0"
+            />
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
