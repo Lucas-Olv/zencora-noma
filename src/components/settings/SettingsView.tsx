@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Trash, UserPlus, Users } from "lucide-react";
+import { Plus, Pencil, Trash, UserPlus, Users, Link } from "lucide-react";
 import { supabaseService, CollaboratorType } from "@/services/supabaseService";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
@@ -352,13 +352,47 @@ const SettingsView = () => {
       
       <Card>
         <CardHeader>
-          <CardTitle>Colaboradores</CardTitle>
-          <CardDescription>
-            Gerencie os colaboradores que têm acesso ao sistema.
-          </CardDescription>
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle>Colaboradores</CardTitle>
+              <CardDescription>
+                Gerencie os colaboradores que têm acesso ao sistema.
+              </CardDescription>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="flex md:justify-end mb-4 sm:justify-center">
+          <div className="flex flex-col md:flex-row sm:justify-center md:justify-end mb-4 gap-4">
+          <Button
+              variant="outline"
+              onClick={() => {
+                const baseUrl = import.meta.env.VITE_NOMA_BASE_URL;
+                if (!baseUrl) {
+                  toast({
+                    title: "Erro",
+                    description: "URL base não configurada",
+                    variant: "destructive",
+                  });
+                  return;
+                }
+                const url = `${baseUrl}/${tenant?.id}/collaborators`;
+                navigator.clipboard.writeText(url).then(() => {
+                  toast({
+                    title: "Link copiado!",
+                    description: "O link foi copiado para a área de transferência.",
+                  });
+                }).catch(() => {
+                  toast({
+                    title: "Erro",
+                    description: "Não foi possível copiar o link",
+                    variant: "destructive",
+                  });
+                });
+              }}
+            >
+              <Link className="w-4 h-4 mr-2" />
+              Link para acesso de colaboradores
+            </Button>
             <Dialog open={isDialogOpen} onOpenChange={handleDialogOpenChange}>
               <DialogTrigger asChild>
                 <Button className="w-full sm:w-auto">
