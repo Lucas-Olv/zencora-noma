@@ -84,15 +84,29 @@ export function ProductionView() {
   const OrderCard = ({ order }: { order: OrderType }) => {
     if (isMobile) {
       return (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between rounded-lg border p-4 gap-4">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between">
+        <div className="grid grid-cols-1 gap-4 rounded-lg border p-4">
+          <div className="grid grid-cols-[minmax(0,1fr),auto] gap-4">
+            <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <p className="font-mono text-sm text-muted-foreground">{getOrderCode(order.id)}</p>
-                <h3 className="font-semibold">
+                <p className="font-mono text-sm text-muted-foreground shrink-0">{getOrderCode(order.id)}</p>
+                <h3 className="font-semibold truncate">
                   {order.client_name}
                 </h3>
               </div>
+              <div className="mt-1">
+                <p className="text-sm text-muted-foreground line-clamp-2">
+                  {order.description}
+                </p>
+              </div>
+              <div className="mt-2">
+                <span className="text-sm text-muted-foreground">
+                  Entrega: <span className="font-semibold">
+                    {order.due_date ? formatDate(order.due_date) : "Sem data"}
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div className="flex flex-col items-end gap-2">
               <Badge
                 variant="outline"
                 className={cn(
@@ -106,23 +120,13 @@ export function ProductionView() {
                   : "Pendente"}
               </Badge>
             </div>
-            <p className="text-sm text-muted-foreground mt-1">
-              {order.description}
-            </p>
-            <div className="mt-2 flex flex-wrap items-center gap-2">
-              <span className="text-sm text-muted-foreground">
-                Entrega: <span className="font-semibold">
-                  {order.due_date ? formatDate(order.due_date) : "Sem data"}
-                </span>
-              </span>
-            </div>
           </div>
-          <div className="flex items-center gap-2 mt-4 sm:mt-0">
+          <div className="flex items-center gap-2">
             <Button
               variant={order.status === "pending" ? "outline" : "default"}
               size="sm"
               onClick={() => handleChangeOrderStatus(order.id, order.status)}
-              className="flex-1 sm:flex-none"
+              className="flex-1"
             >
               {order.status === "pending" ? "Iniciar Produção" : "Finalizar"}
             </Button>
@@ -144,26 +148,29 @@ export function ProductionView() {
 
     return (
       <div className="grid grid-cols-1 sm:grid-cols-[1fr,auto] gap-4 rounded-lg border p-4">
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-2">
-            <p className="font-mono text-sm text-muted-foreground">{getOrderCode(order.id)}</p>
-            <h3 className="font-semibold">
-              {order.client_name}
-            </h3>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            {order.description}
-          </p>
-          <div className="flex flex-col gap-2">
-            <span className="text-sm text-muted-foreground">
-              Entrega: <span className="font-semibold">
-                {order.due_date ? formatDate(order.due_date) : "Sem data"}
+        <div className="grid grid-cols-[minmax(0,1fr),auto] gap-4">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <p className="font-mono text-sm text-muted-foreground shrink-0">{getOrderCode(order.id)}</p>
+              <h3 className="font-semibold truncate">
+                {order.client_name}
+              </h3>
+            </div>
+            <div className="mt-1">
+              <p className="text-sm text-muted-foreground">
+                {order.description}
+              </p>
+            </div>
+            <div className="mt-2">
+              <span className="text-sm text-muted-foreground">
+                Entrega: <span className="font-semibold">
+                  {order.due_date ? formatDate(order.due_date) : "Sem data"}
+                </span>
               </span>
-            </span>
+            </div>
           </div>
-        </div>
-        <div className="flex flex-col items-end justify-between gap-2">
-        <Badge
+          <div className="flex flex-col items-end justify-between gap-2">
+            <Badge
               variant="outline"
               className={cn(
                 "w-fit",
@@ -175,27 +182,28 @@ export function ProductionView() {
                 ? "Produção"
                 : "Pendente"}
             </Badge>
-        <div className="flex items-center gap-2">
-          <Button
-            variant={order.status === "pending" ? "outline" : "default"}
-            size="sm"
-            onClick={() => handleChangeOrderStatus(order.id, order.status)}
-            className="flex-1 sm:flex-none"
-          >
-            {order.status === "pending" ? "Iniciar Produção" : "Finalizar"}
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => {
-              setSelectedOrder(order);
-              setTimeout(handlePrint, 100);
-            }}
-            title="Imprimir"
-          >
-            <Printer className="h-4 w-4" />
-          </Button>
-        </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant={order.status === "pending" ? "outline" : "default"}
+                size="sm"
+                onClick={() => handleChangeOrderStatus(order.id, order.status)}
+                className="flex-1 sm:flex-none"
+              >
+                {order.status === "pending" ? "Iniciar Produção" : "Finalizar"}
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  setSelectedOrder(order);
+                  setTimeout(handlePrint, 100);
+                }}
+                title="Imprimir"
+              >
+                <Printer className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     );

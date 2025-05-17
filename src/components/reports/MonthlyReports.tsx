@@ -29,6 +29,7 @@ import { report } from "process";
 import supabaseService from "@/services/supabaseService";
 import { useTenant } from "@/contexts/TenantContext";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useNavigate } from "react-router-dom";
 
 type Order = Tables<"orders">;
 
@@ -70,6 +71,7 @@ const MonthlyReports = () => {
   });
   const isMobile = useIsMobile();
   const { tenant, loading: tenantLoading, error: tenantError } = useTenant();
+  const navigate = useNavigate();
 
   const formatCurrency = (value: number) => {
     return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -332,19 +334,19 @@ const MonthlyReports = () => {
         </p>
       </div>
 
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col w-full gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row gap-4">
             <Select
-              value={dateRange?.from ? format(dateRange.from, "yyyy-MM") : undefined}
+              value={dateRange?.from ? format(dateRange.from, "yyyy-MM") : ""}
               onValueChange={(value) => {
-                const [year, month] = value.split("-").map(Number);
-                const start = startOfMonth(new Date(year, month - 1));
-                const end = endOfMonth(new Date(year, month - 1));
+                const [year, month] = value.split("-");
+                const start = new Date(parseInt(year), parseInt(month) - 1, 1);
+                const end = new Date(parseInt(year), parseInt(month), 0);
                 setDateRange({ from: start, to: end });
               }}
             >
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-full sm:w-[180px]">
                 <SelectValue placeholder="Selecione o mês" />
               </SelectTrigger>
               <SelectContent>
@@ -362,19 +364,26 @@ const MonthlyReports = () => {
                 })}
               </SelectContent>
             </Select>
-            <DateRangePicker
-              value={dateRange}
-              onChange={setDateRange}
-              className="w-full sm:w-auto"
-            />
-            <Button 
-              variant="outline" 
-              size="icon" 
-              onClick={handleDownloadPDF}
-              className="shrink-0 h-10 w-10"
-            >
-              <Download className="h-4 w-4" />
-            </Button>
+            <div className="flex gap-2">
+              <DateRangePicker
+                value={dateRange}
+                onChange={setDateRange}
+                className="w-full sm:w-[300px]"
+              />
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleDownloadPDF}
+                disabled={loading}
+                className="shrink-0 h-10 w-10"
+              >
+                {loading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -516,34 +525,48 @@ const MonthlyReports = () => {
                   {orders.map((order) => (
                     <div
                       key={order.id}
-                      className="flex flex-col gap-2 p-2 rounded-lg bg-card hover:bg-accent/50 transition-colors border sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:p-3"
+                      className="grid grid-cols-1 gap-4 rounded-lg border p-4 hover:bg-accent/50 cursor-pointer transition-colors"
+                      onClick={() => navigate(`/orders/${order.id}`)}
                     >
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="font-mono text-sm text-muted-foreground">{getOrderCode(order.id)}</p>
-                          <h3 className="font-medium">{order.client_name}</h3>
+                      <div className="grid grid-cols-[minmax(0,1fr),auto] gap-4">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="font-mono text-sm text-muted-foreground shrink-0">{getOrderCode(order.id)}</p>
+                            <h3 className="font-semibold truncate">
+                              {order.client_name}
+                            </h3>
+                          </div>
+                          <div className="mt-1">
+                            <p className="text-sm text-muted-foreground line-clamp-2">
+                              {order.description || "Sem descrição"}
+                            </p>
+                          </div>
+                          <div className="mt-2">
+                            <span className="text-sm text-muted-foreground">
+                              Entrega: <span className="font-semibold">
+                                {order.due_date ? formatDate(order.due_date) : "Sem data"}
+                              </span>
+                            </span>
+                          </div>
                         </div>
-                        <p className="text-sm text-muted-foreground">
-                          {order.description || "Sem descrição"}
-                        </p>
-                      </div>
-                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-                        <div className="text-left sm:text-right">
-                          <p className="font-medium">{formatCurrency(order.price)}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {formatDate(order.due_date)}
-                          </p>
+                        <div className="flex flex-col items-end justify-between gap-2">
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              "w-fit",
+                              order.status === "pending" && "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50",
+                              order.status === "production" && "bg-purple-100/80 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200 hover:bg-purple-200 dark:hover:bg-purple-900/50",
+                              order.status === "done" && "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50"
+                            )}
+                          >
+                            {order.status === "pending" && "Pendente"}
+                            {order.status === "production" && "Produção"}
+                            {order.status === "done" && "Concluído"}
+                          </Badge>
+                          <div className="text-right">
+                            <p className="font-medium">{formatCurrency(order.price)}</p>
+                          </div>
                         </div>
-                        <Badge variant="outline" className={cn(
-                          "whitespace-nowrap min-w-[100px] px-3 text-center inline-flex justify-center items-center",
-                          order.status === "pending" && "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50",
-                          order.status === "production" && "bg-purple-100/80 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200 hover:bg-purple-200 dark:hover:bg-purple-900/50",
-                          order.status === "done" && "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50"
-                        )}>
-                          {order.status === "pending" && "Pendente"}
-                          {order.status === "production" && "Produção"}
-                          {order.status === "done" && "Concluído"}
-                        </Badge>
                       </div>
                     </div>
                   ))}
