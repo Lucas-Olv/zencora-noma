@@ -20,7 +20,16 @@ export type OrderType = {
   } | null;
 };
 export type TenantType = Database['public']['Tables']['tenants']['Row'];
-export type CollaboratorType = Database['public']['Tables']['collaborators']['Row'];
+export type CollaboratorType = {
+  id: string;
+  name: string;
+  email: string | null;
+  password: string | null;
+  tenant_id: string | null;
+  created_at: string | null;
+  can_login: boolean | null;
+  role: string | null;
+};
 export type UserType = Database['public']['Tables']['users']['Row'];
 export type SubscriptionType = Database['public']['Tables']['subscriptions']['Row'];
 

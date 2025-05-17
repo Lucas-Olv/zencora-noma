@@ -57,6 +57,7 @@ export type Database = {
           name: string
           tenant_id: string | null
           password: string | null
+          role: string | null
         }
         Insert: {
           can_login?: boolean | null
@@ -66,6 +67,7 @@ export type Database = {
           name: string
           tenant_id?: string | null
           password?: string | null
+          role?: string | null
         }
         Update: {
           can_login?: boolean | null
@@ -75,6 +77,7 @@ export type Database = {
           name?: string
           tenant_id?: string | null
           password?: string | null
+          role?: string | null
         }
         Relationships: [
           {
