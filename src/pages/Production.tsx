@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import ProductionView from "@/components/production/ProductionView";
 

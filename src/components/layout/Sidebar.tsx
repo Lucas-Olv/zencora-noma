@@ -1,12 +1,12 @@
-import { 
-  Calendar, 
-  ClipboardList, 
-  Home, 
-  User, 
-  Users, 
+import {
+  Calendar,
+  ClipboardList,
+  Home,
+  User,
+  Users,
   LogOut,
   Settings,
-  FileText
+  FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -82,11 +82,11 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
-  
+
   const handleProfileClick = async () => {
     try {
       const { session, error } = await supabaseService.auth.getCurrentSession();
-      
+
       if (error) throw error;
       if (!session) {
         toast({
@@ -108,10 +108,12 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
       }
 
       // Gera um token de acesso para o site externo
-      const { session: currentSession, error: tokenError } = await supabaseService.auth.getCurrentSession();
-      
+      const { session: currentSession, error: tokenError } =
+        await supabaseService.auth.getCurrentSession();
+
       if (tokenError) throw tokenError;
-      if (!currentSession?.access_token) throw new Error("Token de acesso não encontrado");
+      if (!currentSession?.access_token)
+        throw new Error("Token de acesso não encontrado");
 
       // Adiciona o token como parâmetro na URL
       const urlWithToken = `${websiteUrl}account?token=${currentSession.access_token}`;
@@ -153,26 +155,34 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
     navigate(href);
     closeSidebar();
   };
-  
+
   return (
     <>
       {/* Backdrop for mobile */}
       {isOpen && (
-        <div 
+        <div
           className="fixed inset-0 z-[120] bg-black/30 backdrop-blur-sm md:hidden"
           onClick={closeSidebar}
         />
       )}
-      
+
       {/* Sidebar */}
-      <aside className={cn(
-        "fixed top-0 bottom-0 left-0 z-[130] w-60 bg-background dark:bg-background border-r border-border p-4 shadow-sm transition-transform duration-300 md:translate-x-0 flex flex-col",
-        isOpen ? "translate-x-0" : "-translate-x-full"
-      )}>
+      <aside
+        className={cn(
+          "fixed top-0 bottom-0 left-0 z-[130] w-60 bg-background dark:bg-background border-r border-border p-4 shadow-sm transition-transform duration-300 md:translate-x-0 flex flex-col",
+          isOpen ? "translate-x-0" : "-translate-x-full",
+        )}
+      >
         <div className="px-2 py-2">
           <Link to="/" className="flex items-center">
-            <img src="/noma-logo.svg" alt="Zencora Noma Logo" className="h-8 mr-2" />
-            <span className="text-xl font-bold zencora-gradient-text">Zencora Noma</span>
+            <img
+              src="/noma-logo.svg"
+              alt="Zencora Noma Logo"
+              className="h-8 mr-2"
+            />
+            <span className="text-xl font-bold zencora-gradient-text">
+              Zencora Noma
+            </span>
           </Link>
         </div>
 
@@ -187,7 +197,7 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
                 "hover:bg-muted/80 active:scale-[0.98]",
                 location.pathname === item.href
                   ? "bg-secondary text-secondary-foreground hover:bg-secondary/90"
-                  : "opacity-80 hover:opacity-100"
+                  : "opacity-80 hover:opacity-100",
               )}
             >
               <item.icon className="h-5 w-5 transition-transform duration-200 group-hover:scale-110" />
@@ -195,7 +205,7 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
             </button>
           ))}
         </div>
-        
+
         <div className="mt-auto border-t border-border pt-4">
           {bottomNavItems.map((item) => (
             <button
@@ -207,18 +217,18 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
                 "hover:bg-muted/80 active:scale-[0.98]",
                 location.pathname === item.href
                   ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                  : "opacity-80 hover:opacity-100"
+                  : "opacity-80 hover:opacity-100",
               )}
             >
               <item.icon className="h-5 w-5 transition-transform duration-200 group-hover:scale-110" />
               {item.title}
             </button>
           ))}
-          
+
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 className="w-full flex gap-3 justify-start h-10 text-red-600 hover:text-red-700 hover:bg-red-100 dark:hover:bg-red-900/20"
               >
                 <LogOut className="h-4 w-4" />
@@ -229,12 +239,18 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
               <AlertDialogHeader>
                 <AlertDialogTitle>Confirmar saída</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Tem certeza que deseja sair? Você precisará fazer login novamente para acessar o sistema.
+                  Tem certeza que deseja sair? Você precisará fazer login
+                  novamente para acessar o sistema.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
-                <AlertDialogCancel className="w-full sm:w-auto">Cancelar</AlertDialogCancel>
-                <AlertDialogAction onClick={handleLogout} className="w-full sm:w-auto bg-red-600 hover:bg-red-700">
+                <AlertDialogCancel className="w-full sm:w-auto">
+                  Cancelar
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleLogout}
+                  className="w-full sm:w-auto bg-red-600 hover:bg-red-700"
+                >
                   Sair
                 </AlertDialogAction>
               </AlertDialogFooter>

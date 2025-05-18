@@ -12,19 +12,19 @@ const Landing = () => {
   // Handle scrolling after page load
   useEffect(() => {
     // Check if we need to scroll to a specific section (coming from another page)
-    const scrollToSection = sessionStorage.getItem('scrollToSection');
-    
+    const scrollToSection = sessionStorage.getItem("scrollToSection");
+
     if (scrollToSection) {
       // Clear the stored section to avoid scrolling on future page loads
-      sessionStorage.removeItem('scrollToSection');
-      
+      sessionStorage.removeItem("scrollToSection");
+
       // Small timeout to ensure the page is fully loaded
       setTimeout(() => {
         const targetElement = document.getElementById(scrollToSection);
         if (targetElement) {
           window.scrollTo({
             top: targetElement.offsetTop - 80, // Offset for fixed header
-            behavior: 'smooth'
+            behavior: "smooth",
           });
         }
       }, 100);
@@ -41,24 +41,24 @@ const Landing = () => {
         </ScrollReveal>
 
         <ScrollReveal delay={100}>
-            <FeaturesSection />
+          <FeaturesSection />
         </ScrollReveal>
 
         <ScrollReveal delay={200}>
-            <PricingSection />
+          <PricingSection />
         </ScrollReveal>
 
         <ScrollReveal delay={400}>
-            <Faq />
+          <Faq />
         </ScrollReveal>
 
         <ScrollReveal delay={500}>
-            <Cta />
+          <Cta />
         </ScrollReveal>
       </main>
 
       <ScrollReveal delay={600}>
-          <Footer />
+        <Footer />
       </ScrollReveal>
     </div>
   );

@@ -47,7 +47,7 @@ const Dashboard = () => {
       try {
         if (tenantLoading) return;
         if (tenantError || !tenant) {
-          throw new Error(tenantError || 'Tenant não encontrado');
+          throw new Error(tenantError || "Tenant não encontrado");
         }
 
         const today = new Date();
@@ -57,37 +57,43 @@ const Dashboard = () => {
         const endOfWeek = new Date(startOfWeek);
         endOfWeek.setDate(startOfWeek.getDate() + 6);
 
-        const { data: orders, error } = await supabaseService.orders.getTenantOrders(tenant.id);
+        const { data: orders, error } =
+          await supabaseService.orders.getTenantOrders(tenant.id);
 
         if (error) throw error;
 
+        const activeOrders =
+          orders?.filter(
+            (order) => order.status !== "done" && order.status !== "canceled",
+          ).length || 0;
 
-        const activeOrders = orders?.filter(order => 
-          order.status !== "done" && order.status !== "canceled"
-        ).length || 0;
+        const inProduction =
+          orders?.filter((order) => order.status === "production").length || 0;
 
-        const inProduction = orders?.filter(order => 
-          order.status === "production"
-        ).length || 0;
+        const scheduled =
+          orders?.filter((order) => {
+            const dueDate = parseDate(order.due_date);
+            return dueDate && dueDate > today;
+          }).length || 0;
 
-        const scheduled = orders?.filter(order => {
-          const dueDate = parseDate(order.due_date);
-          return dueDate && dueDate > today;
-        }).length || 0;
+        const todayDeliveries =
+          orders?.filter((order) => {
+            const dueDate = parseDate(order.due_date);
+            return dueDate && dueDate.toDateString() === today.toDateString();
+          }).length || 0;
 
-        const todayDeliveries = orders?.filter(order => {
-          const dueDate = parseDate(order.due_date);
-          return dueDate && dueDate.toDateString() === today.toDateString();
-        }).length || 0;
+        const monthlyRevenue =
+          orders?.reduce((sum, order) => sum + (order.price || 0), 0) || 0;
 
-        const monthlyRevenue = orders?.reduce((sum, order) => 
-          sum + (order.price || 0), 0
-        ) || 0;
-
-        const weeklyRevenue = orders?.filter(order => {
-          const orderDate = parseDate(order.created_at);
-          return orderDate && orderDate >= startOfWeek && orderDate <= endOfWeek;
-        }).reduce((sum, order) => sum + (order.price || 0), 0) || 0;
+        const weeklyRevenue =
+          orders
+            ?.filter((order) => {
+              const orderDate = parseDate(order.created_at);
+              return (
+                orderDate && orderDate >= startOfWeek && orderDate <= endOfWeek
+              );
+            })
+            .reduce((sum, order) => sum + (order.price || 0), 0) || 0;
 
         setOrders(orders);
         setStats({
@@ -121,7 +127,11 @@ const Dashboard = () => {
         <StatsCard
           title="Encomendas Ativas"
           value={loading ? "-" : stats.activeOrders.toString()}
-          description={loading ? "Carregando..." : `${stats.todayDeliveries} para entrega hoje`}
+          description={
+            loading
+              ? "Carregando..."
+              : `${stats.todayDeliveries} para entrega hoje`
+          }
           icon={<ClipboardList className="h-5 w-5 text-primary" />}
         />
         <StatsCard
@@ -139,7 +149,11 @@ const Dashboard = () => {
         <StatsCard
           title="Faturamento (Mês)"
           value={loading ? "-" : formatCurrency(stats.monthlyRevenue)}
-          description={loading ? "Carregando..." : `${formatCurrency(stats.weeklyRevenue)} esta semana`}
+          description={
+            loading
+              ? "Carregando..."
+              : `${formatCurrency(stats.weeklyRevenue)} esta semana`
+          }
           icon={<FileText className="h-5 w-5 text-green-600" />}
         />
       </div>

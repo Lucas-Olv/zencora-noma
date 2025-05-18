@@ -22,12 +22,12 @@ export const Nav = () => {
   // Control body scroll when mobile menu is open
   useEffect(() => {
     if (isMobileMenuOpen) {
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     }
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     };
   }, [isMobileMenuOpen]);
 
@@ -45,11 +45,12 @@ export const Nav = () => {
     if (element) {
       const headerOffset = 80;
       const elementPosition = element.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+      const offsetPosition =
+        elementPosition + window.pageYOffset - headerOffset;
 
       window.scrollTo({
         top: offsetPosition,
-        behavior: "smooth"
+        behavior: "smooth",
       });
     }
     closeMobileMenu();
@@ -62,12 +63,16 @@ export const Nav = () => {
           "fixed top-0 left-0 right-0 z-50 transition-all duration-200",
           isScrolled
             ? "bg-background/80 backdrop-blur-md shadow-sm"
-            : "bg-transparent"
+            : "bg-transparent",
         )}
       >
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center">
-            <img src="noma-logo.svg" alt="Zencora Noma Logo" className="h-8 mr-2" />
+            <img
+              src="noma-logo.svg"
+              alt="Zencora Noma Logo"
+              className="h-8 mr-2"
+            />
             <Link to="/" className="text-2xl font-bold zencora-gradient-text">
               Zencora Noma
             </Link>
@@ -75,37 +80,42 @@ export const Nav = () => {
 
           {/* Desktop Navigation */}
           <section className="hidden md:flex items-center space-x-6">
-            <Link to="/" onClick={() => {
-              setTimeout(() => {
-                const element = document.getElementById('hero');
-                if (element) {
-                  const headerOffset = 80;
-                  const elementPosition = element.getBoundingClientRect().top;
-                  const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+            <Link
+              to="/"
+              onClick={() => {
+                setTimeout(() => {
+                  const element = document.getElementById("hero");
+                  if (element) {
+                    const headerOffset = 80;
+                    const elementPosition = element.getBoundingClientRect().top;
+                    const offsetPosition =
+                      elementPosition + window.pageYOffset - headerOffset;
 
-                  window.scrollTo({
-                    top: offsetPosition,
-                    behavior: "smooth"
-                  });
-                }
-              }, 100);
-            }} className="font-medium hover:text-primary transition-colors">
+                    window.scrollTo({
+                      top: offsetPosition,
+                      behavior: "smooth",
+                    });
+                  }
+                }, 100);
+              }}
+              className="font-medium hover:text-primary transition-colors"
+            >
               Home
             </Link>
             <button
-              onClick={() => scrollToSection('features')}
+              onClick={() => scrollToSection("features")}
               className="font-medium hover:text-primary transition-colors"
             >
               Funcionalidades
             </button>
             <button
-              onClick={() => scrollToSection('pricing')}
+              onClick={() => scrollToSection("pricing")}
               className="font-medium hover:text-primary transition-colors"
             >
               Preços
             </button>
             <button
-              onClick={() => scrollToSection('faq')}
+              onClick={() => scrollToSection("faq")}
               className="font-medium hover:text-primary transition-colors"
             >
               FAQ
@@ -116,7 +126,10 @@ export const Nav = () => {
           <div className="hidden md:flex items-center space-x-4">
             <ThemeToggle />
             <Link to="/login">
-              <Button variant="ghost" className="text-foreground hover:text-foreground hover:bg-muted transition-all duration-200 rounded-md">
+              <Button
+                variant="ghost"
+                className="text-foreground hover:text-foreground hover:bg-muted transition-all duration-200 rounded-md"
+              >
                 Entrar
               </Button>
             </Link>
@@ -146,12 +159,12 @@ export const Nav = () => {
       {isMobileMenuOpen && (
         <>
           {/* Backdrop */}
-          <div 
+          <div
             className="fixed inset-0 z-[99] bg-background/80 backdrop-blur-sm md:hidden"
-            style={{ top: '73px' }}
+            style={{ top: "73px" }}
             onClick={closeMobileMenu}
           />
-          
+
           {/* Menu content */}
           <div className="fixed top-[70px] left-0 right-0 z-[100] bg-background shadow-lg md:hidden">
             <div className="container mx-auto px-4 py-4 flex flex-col space-y-4">
@@ -160,15 +173,17 @@ export const Nav = () => {
                 onClick={() => {
                   closeMobileMenu();
                   setTimeout(() => {
-                    const element = document.getElementById('hero');
+                    const element = document.getElementById("hero");
                     if (element) {
                       const headerOffset = 80;
-                      const elementPosition = element.getBoundingClientRect().top;
-                      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                      const elementPosition =
+                        element.getBoundingClientRect().top;
+                      const offsetPosition =
+                        elementPosition + window.pageYOffset - headerOffset;
 
                       window.scrollTo({
                         top: offsetPosition,
-                        behavior: "smooth"
+                        behavior: "smooth",
                       });
                     }
                   }, 100);
@@ -178,26 +193,29 @@ export const Nav = () => {
                 Home
               </Link>
               <button
-                onClick={() => scrollToSection('features')}
+                onClick={() => scrollToSection("features")}
                 className="font-medium p-2 hover:bg-muted rounded-md text-left"
               >
                 Funcionalidades
               </button>
               <button
-                onClick={() => scrollToSection('pricing')}
+                onClick={() => scrollToSection("pricing")}
                 className="font-medium p-2 hover:bg-muted rounded-md text-left"
               >
                 Preços
               </button>
               <button
-                onClick={() => scrollToSection('faq')}
+                onClick={() => scrollToSection("faq")}
                 className="font-medium p-2 hover:bg-muted rounded-md text-left"
               >
                 FAQ
               </button>
               <div className="flex flex-col space-y-4">
                 <Link to="/login" onClick={closeMobileMenu}>
-                  <Button variant="ghost" className="w-full text-foreground hover:text-foreground hover:bg-muted/80 transition-all duration-200 rounded-md">
+                  <Button
+                    variant="ghost"
+                    className="w-full text-foreground hover:text-foreground hover:bg-muted/80 transition-all duration-200 rounded-md"
+                  >
                     Entrar
                   </Button>
                 </Link>
@@ -213,4 +231,4 @@ export const Nav = () => {
       )}
     </>
   );
-}; 
+};

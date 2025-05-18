@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef } from "react";
 
 interface ResizeAnimationOptions {
   duration?: number;
@@ -6,10 +6,7 @@ interface ResizeAnimationOptions {
 }
 
 export const useResizeAnimation = (options: ResizeAnimationOptions = {}) => {
-  const {
-    duration = 300,
-    easing = 'cubic-bezier(0.4, 0, 0.2, 1)'
-  } = options;
+  const { duration = 300, easing = "cubic-bezier(0.4, 0, 0.2, 1)" } = options;
 
   const elementRef = useRef<HTMLElement>(null);
 
@@ -19,7 +16,7 @@ export const useResizeAnimation = (options: ResizeAnimationOptions = {}) => {
 
     // Add transition styles
     element.style.transition = `all ${duration}ms ${easing}`;
-    element.style.willChange = 'transform, width, height';
+    element.style.willChange = "transform, width, height";
 
     // Handle resize
     const handleResize = () => {
@@ -29,12 +26,12 @@ export const useResizeAnimation = (options: ResizeAnimationOptions = {}) => {
       });
     };
 
-    window.addEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
 
     return () => {
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener("resize", handleResize);
     };
   }, [duration, easing]);
 
   return elementRef;
-}; 
+};

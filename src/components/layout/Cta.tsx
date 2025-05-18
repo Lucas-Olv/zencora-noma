@@ -8,25 +8,28 @@ export function Cta() {
   const isMobile = useIsMobile();
   const sectionRef = useRef<HTMLElement>(null);
   const resizeRef = useResizeAnimation();
-  
+
   useEffect(() => {
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('active');
-        }
-      });
-    }, { threshold: 0.1 });
-    
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("active");
+          }
+        });
+      },
+      { threshold: 0.1 },
+    );
+
     const section = sectionRef.current;
     if (section) {
-      const elements = section.querySelectorAll('.reveal');
+      const elements = section.querySelectorAll(".reveal");
       elements.forEach((el) => observer.observe(el));
     }
-    
+
     return () => {
       if (section) {
-        const elements = section.querySelectorAll('.reveal');
+        const elements = section.querySelectorAll(".reveal");
         elements.forEach((el) => observer.unobserve(el));
       }
     };
@@ -40,7 +43,8 @@ export function Cta() {
             Pronto para organizar suas encomendas?
           </h2>
           <p className="text-base md:text-lg opacity-90 mb-6 max-w-2xl mx-auto">
-            Comece a usar o Noma hoje mesmo e tenha 7 dias gratuitos para experimentar todas as funcionalidades.
+            Comece a usar o Noma hoje mesmo e tenha 7 dias gratuitos para
+            experimentar todas as funcionalidades.
           </p>
           <Button size="lg" variant="secondary" asChild>
             <Link to="/login?register=true">Comece grátis por 7 dias</Link>

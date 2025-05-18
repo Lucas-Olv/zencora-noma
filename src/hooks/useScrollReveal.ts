@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef } from "react";
 
 interface ScrollRevealOptions {
   threshold?: number;
@@ -12,11 +12,11 @@ interface ScrollRevealOptions {
 export const useScrollReveal = (options: ScrollRevealOptions = {}) => {
   const {
     threshold = 0.1,
-    rootMargin = '0px',
+    rootMargin = "0px",
     delay = 0,
     distance = 20,
     duration = 800,
-    easing = 'cubic-bezier(0.4, 0, 0.2, 1)'
+    easing = "cubic-bezier(0.4, 0, 0.2, 1)",
   } = options;
 
   const elementRef = useRef<HTMLElement>(null);
@@ -26,10 +26,10 @@ export const useScrollReveal = (options: ScrollRevealOptions = {}) => {
     if (!element) return;
 
     // Add initial styles
-    element.style.opacity = '0';
+    element.style.opacity = "0";
     element.style.transform = `translateY(${distance}px)`;
     element.style.transition = `all ${duration}ms ${easing} ${delay}ms`;
-    element.style.willChange = 'transform, opacity';
+    element.style.willChange = "transform, opacity";
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -37,8 +37,8 @@ export const useScrollReveal = (options: ScrollRevealOptions = {}) => {
           if (entry.isIntersecting) {
             // Use requestAnimationFrame for smoother animation
             requestAnimationFrame(() => {
-              element.style.opacity = '1';
-              element.style.transform = 'translateY(0)';
+              element.style.opacity = "1";
+              element.style.transform = "translateY(0)";
             });
             observer.unobserve(element);
           }
@@ -46,8 +46,8 @@ export const useScrollReveal = (options: ScrollRevealOptions = {}) => {
       },
       {
         threshold,
-        rootMargin
-      }
+        rootMargin,
+      },
     );
 
     observer.observe(element);
@@ -58,4 +58,4 @@ export const useScrollReveal = (options: ScrollRevealOptions = {}) => {
   }, [threshold, rootMargin, delay, distance, duration, easing]);
 
   return elementRef;
-}; 
+};

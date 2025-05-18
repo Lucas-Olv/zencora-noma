@@ -1,22 +1,28 @@
-import { format } from "date-fns"
-import { ptBR } from "date-fns/locale"
-import { Calendar, FileText } from "lucide-react"
-import { Link, useNavigate } from "react-router-dom"
-import { cn, formatDate, parseDate, getOrderCode } from "@/lib/utils"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { LoadingState } from "@/components/ui/loading-state"
-import { Badge } from "@/components/ui/badge"
-import { Tables } from "@/integrations/supabase/types"
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { Calendar, FileText } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { cn, formatDate, parseDate, getOrderCode } from "@/lib/utils";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { LoadingState } from "@/components/ui/loading-state";
+import { Badge } from "@/components/ui/badge";
+import { Tables } from "@/integrations/supabase/types";
 
-type Order = Tables<"orders">
+type Order = Tables<"orders">;
 
 interface RecentOrdersProps {
-  orders: Order[]
-  loading?: boolean
+  orders: Order[];
+  loading?: boolean;
 }
 
 function RecentOrders({ orders, loading = false }: RecentOrdersProps) {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   return (
     <Card>
@@ -43,7 +49,9 @@ function RecentOrders({ orders, loading = false }: RecentOrdersProps) {
                 <div className="grid grid-cols-[minmax(0,1fr),auto] gap-4">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <p className="font-mono text-sm text-muted-foreground shrink-0">{getOrderCode(order.id)}</p>
+                      <p className="font-mono text-sm text-muted-foreground shrink-0">
+                        {getOrderCode(order.id)}
+                      </p>
                       <h3 className="font-semibold truncate">
                         {order.client_name}
                       </h3>
@@ -55,8 +63,11 @@ function RecentOrders({ orders, loading = false }: RecentOrdersProps) {
                     </div>
                     <div className="mt-2">
                       <span className="text-sm text-muted-foreground">
-                        Entrega: <span className="font-semibold">
-                          {order.due_date ? formatDate(order.due_date) : "Sem data"}
+                        Entrega:{" "}
+                        <span className="font-semibold">
+                          {order.due_date
+                            ? formatDate(order.due_date)
+                            : "Sem data"}
                         </span>
                       </span>
                     </div>
@@ -66,9 +77,12 @@ function RecentOrders({ orders, loading = false }: RecentOrdersProps) {
                       variant="outline"
                       className={cn(
                         "w-fit",
-                        order.status === "pending" && "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50",
-                        order.status === "production" && "bg-purple-100/80 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200 hover:bg-purple-200 dark:hover:bg-purple-900/50",
-                        order.status === "done" && "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50"
+                        order.status === "pending" &&
+                          "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50",
+                        order.status === "production" &&
+                          "bg-purple-100/80 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200 hover:bg-purple-200 dark:hover:bg-purple-900/50",
+                        order.status === "done" &&
+                          "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50",
                       )}
                     >
                       {order.status === "pending" && "Pendente"}
@@ -83,7 +97,7 @@ function RecentOrders({ orders, loading = false }: RecentOrdersProps) {
         </LoadingState>
       </CardContent>
     </Card>
-  )
+  );
 }
 
-export default RecentOrders
+export default RecentOrders;

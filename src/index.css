@@ -88,7 +88,7 @@
     --border: 260 25% 20%;
     --input: 260 25% 20%;
     --ring: 265 80% 70%;
-    
+
     --sidebar-background: 260 25% 12%;
     --sidebar-foreground: 260 10% 85%;
     --sidebar-primary: 265 80% 70%;
@@ -113,7 +113,9 @@
 
   body {
     @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1;
   }
 }
 
@@ -125,11 +127,11 @@
   .zencora-card {
     @apply bg-card text-card-foreground rounded-lg border shadow-sm transition-all hover:shadow-md;
   }
-  
+
   .zencora-gradient-bg {
     @apply bg-gradient-to-br from-primary/80 via-primary to-secondary;
   }
-  
+
   .zencora-gradient-text {
     @apply bg-gradient-to-r from-primary to-complementary bg-clip-text text-transparent;
   }

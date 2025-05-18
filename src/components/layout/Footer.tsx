@@ -1,4 +1,3 @@
-
 import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 
@@ -6,23 +5,26 @@ export function Footer() {
   const sectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('active');
-        }
-      });
-    }, { threshold: 0.1 });
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("active");
+          }
+        });
+      },
+      { threshold: 0.1 },
+    );
 
     const section = sectionRef.current;
     if (section) {
-      const elements = section.querySelectorAll('.reveal');
+      const elements = section.querySelectorAll(".reveal");
       elements.forEach((el) => observer.observe(el));
     }
 
     return () => {
       if (section) {
-        const elements = section.querySelectorAll('.reveal');
+        const elements = section.querySelectorAll(".reveal");
         elements.forEach((el) => observer.unobserve(el));
       }
     };
@@ -35,13 +37,18 @@ export function Footer() {
           <div className="col-span-1 md:col-span-1 reveal">
             <div className="flex flex-col items-start">
               <div className="flex items-center justify-center gap-2 mb-4">
-                <img src="noma-logo.svg" alt="Zencora Noma Logo" className="w-10 h-10" />
+                <img
+                  src="noma-logo.svg"
+                  alt="Zencora Noma Logo"
+                  className="w-10 h-10"
+                />
                 <p className="text-2xl w-full text-center md:text-left font-bold bg-gradient-to-r from-primary to-complementary bg-clip-text text-transparent">
                   Noma
                 </p>
               </div>
               <p className="text-foreground/70 mb-4 max-w-md text-center md:text-left">
-                Organize suas encomendas e aumente sua produtividade com o aplicativo perfeito para pequenos empreendedores.
+                Organize suas encomendas e aumente sua produtividade com o
+                aplicativo perfeito para pequenos empreendedores.
               </p>
             </div>
           </div>
@@ -50,16 +57,36 @@ export function Footer() {
               <h4 className="font-semibold mb-4">Produto</h4>
               <ul className="space-y-2">
                 <li>
-                  <Link to="/#features" className="text-foreground/70 hover:text-primary">Funcionalidades</Link>
+                  <Link
+                    to="/#features"
+                    className="text-foreground/70 hover:text-primary"
+                  >
+                    Funcionalidades
+                  </Link>
                 </li>
                 <li>
-                  <Link to="/#pricing" className="text-foreground/70 hover:text-primary">Planos e Preços</Link>
+                  <Link
+                    to="/#pricing"
+                    className="text-foreground/70 hover:text-primary"
+                  >
+                    Planos e Preços
+                  </Link>
                 </li>
                 <li>
-                  <Link to="/about" className="text-foreground/70 hover:text-primary">Sobre</Link>
+                  <Link
+                    to="/about"
+                    className="text-foreground/70 hover:text-primary"
+                  >
+                    Sobre
+                  </Link>
                 </li>
                 <li>
-                  <Link to="/contact" className="text-foreground/70 hover:text-primary">Suporte</Link>
+                  <Link
+                    to="/contact"
+                    className="text-foreground/70 hover:text-primary"
+                  >
+                    Suporte
+                  </Link>
                 </li>
               </ul>
             </div>
@@ -68,21 +95,40 @@ export function Footer() {
               <h4 className="font-semibold mb-4">Links</h4>
               <ul className="space-y-2">
                 <li>
-                  <Link to="/privacy" className="text-foreground/70 hover:text-primary">Privacidade</Link>
+                  <Link
+                    to="/privacy"
+                    className="text-foreground/70 hover:text-primary"
+                  >
+                    Privacidade
+                  </Link>
                 </li>
                 <li>
-                  <Link to="/terms" className="text-foreground/70 hover:text-primary">Termos de Uso</Link>
+                  <Link
+                    to="/terms"
+                    className="text-foreground/70 hover:text-primary"
+                  >
+                    Termos de Uso
+                  </Link>
                 </li>
                 <li>
-                  <Link to="/about" className="text-foreground/70 hover:text-primary">Sobre a Zencora</Link>
+                  <Link
+                    to="/about"
+                    className="text-foreground/70 hover:text-primary"
+                  >
+                    Sobre a Zencora
+                  </Link>
                 </li>
                 <li>
-                  <Link to="/contact" className="text-foreground/70 hover:text-primary">Contato</Link>
+                  <Link
+                    to="/contact"
+                    className="text-foreground/70 hover:text-primary"
+                  >
+                    Contato
+                  </Link>
                 </li>
               </ul>
             </div>
           </div>
-
         </div>
 
         <div className="mt-10 pt-6 reveal delay-[300ms]">

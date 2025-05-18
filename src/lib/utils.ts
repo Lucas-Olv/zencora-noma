@@ -1,40 +1,42 @@
-import { type ClassValue, clsx } from "clsx"
-import { twMerge } from "tailwind-merge"
-import { format, parseISO } from "date-fns"
-import { ptBR } from "date-fns/locale"
-import { useReactToPrint, type UseReactToPrintOptions } from "react-to-print"
-import bcrypt from "bcryptjs"
-
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+import { format, parseISO } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { useReactToPrint, type UseReactToPrintOptions } from "react-to-print";
+import bcrypt from "bcryptjs";
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
 
-export function formatDate(date: string | null | undefined, formatStr: string = "dd 'de' MMMM 'às' HH:mm"): string {
-  if (!date) return "Data não definida"
-  
+export function formatDate(
+  date: string | null | undefined,
+  formatStr: string = "dd 'de' MMMM 'às' HH:mm",
+): string {
+  if (!date) return "Data não definida";
+
   try {
-    const parsedDate = parseISO(date)
+    const parsedDate = parseISO(date);
     if (isNaN(parsedDate.getTime())) {
-      return "Data inválida"
+      return "Data inválida";
     }
-    return format(parsedDate, formatStr, { locale: ptBR })
+    return format(parsedDate, formatStr, { locale: ptBR });
   } catch (error) {
-    return "Data inválida"
+    return "Data inválida";
   }
 }
 
 export function parseDate(date: string | null | undefined): Date | null {
-  if (!date) return null
-  
+  if (!date) return null;
+
   try {
-    const parsedDate = parseISO(date)
+    const parsedDate = parseISO(date);
     if (isNaN(parsedDate.getTime())) {
-      return null
+      return null;
     }
-    return parsedDate
+    return parsedDate;
   } catch (error) {
-    return null
+    return null;
   }
 }
 
@@ -43,10 +45,15 @@ export function getOrderCode(id: string): string {
   return id.slice(-6).toUpperCase();
 }
 
-export function usePrint(ref: React.RefObject<HTMLElement>, options?: Partial<UseReactToPrintOptions>) {
+export function usePrint(
+  ref: React.RefObject<HTMLElement>,
+  options?: Partial<UseReactToPrintOptions>,
+) {
   return useReactToPrint({
     contentRef: ref,
-    pageStyle: options?.pageStyle || `
+    pageStyle:
+      options?.pageStyle ||
+      `
       @page {
         size: auto;
         margin: 0;
@@ -58,7 +65,7 @@ export function usePrint(ref: React.RefObject<HTMLElement>, options?: Partial<Us
         }
       }
     `,
-    ...options
+    ...options,
   });
 }
 
@@ -67,48 +74,51 @@ export function getStatusDisplay(status: string | null) {
     case "pending":
       return {
         label: "Pendente",
-        className: "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50"
+        className:
+          "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50",
       };
     case "production":
       return {
         label: "Produção",
-        className: "bg-purple-100/80 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200 hover:bg-purple-200 dark:hover:bg-purple-900/50"
+        className:
+          "bg-purple-100/80 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200 hover:bg-purple-200 dark:hover:bg-purple-900/50",
       };
     case "done":
       return {
         label: "Concluído",
-        className: "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50"
+        className:
+          "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50",
       };
     default:
       return {
         label: "Pendente",
-        className: "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50"
+        className:
+          "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50",
       };
   }
-};
+}
 
 export async function hashPassword(password: string): Promise<string> {
-  const SALT_ROUNDS = 12
-  const salt = await bcrypt.genSalt(SALT_ROUNDS)
-  return bcrypt.hash(password, salt)
+  const SALT_ROUNDS = 12;
+  const salt = await bcrypt.genSalt(SALT_ROUNDS);
+  return bcrypt.hash(password, salt);
 }
 
 export function decodeJwt(token: string) {
   try {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
     const jsonPayload = decodeURIComponent(
       atob(base64)
-        .split('')
+        .split("")
         .map(function (c) {
-          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+          return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
         })
-        .join('')
+        .join(""),
     );
     return JSON.parse(jsonPayload);
   } catch (error) {
-    console.error('Erro ao decodificar token:', error);
+    console.error("Erro ao decodificar token:", error);
     return null;
   }
 }
-

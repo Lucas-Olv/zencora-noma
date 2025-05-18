@@ -1,5 +1,10 @@
-
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 interface StatsCardProps {
@@ -38,10 +43,12 @@ const StatsCard = ({
           <CardDescription className="flex items-center mt-1">
             {description}
             {trend && (
-              <span className={cn(
-                "ml-2 flex items-center text-xs font-medium",
-                trend.isPositive ? "text-green-500" : "text-red-500"
-              )}>
+              <span
+                className={cn(
+                  "ml-2 flex items-center text-xs font-medium",
+                  trend.isPositive ? "text-green-500" : "text-red-500",
+                )}
+              >
                 {trend.isPositive ? "↑" : "↓"} {Math.abs(trend.value)}%
               </span>
             )}

@@ -4,10 +4,10 @@ import { Calendar as CalendarIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { supabaseService } from "@/services/supabaseService";
-import FullCalendar from '@fullcalendar/react';
-import dayGridPlugin from '@fullcalendar/daygrid';
-import interactionPlugin from '@fullcalendar/interaction';
-import ptBrLocale from '@fullcalendar/core/locales/pt-br';
+import FullCalendar from "@fullcalendar/react";
+import dayGridPlugin from "@fullcalendar/daygrid";
+import interactionPlugin from "@fullcalendar/interaction";
+import ptBrLocale from "@fullcalendar/core/locales/pt-br";
 import "@/styles/calendar.css";
 import { useTenant } from "@/contexts/TenantContext";
 
@@ -63,16 +63,19 @@ const CalendarPage = () => {
   const fetchOrders = async () => {
     try {
       if (tenantLoading) return;
-      if (tenantError || !tenant) throw new Error(tenantError || "Tenant não encontrado");
+      if (tenantError || !tenant)
+        throw new Error(tenantError || "Tenant não encontrado");
 
-      const { data, error } = await supabaseService.orders.getTenantOrders(tenant.id);
+      const { data, error } = await supabaseService.orders.getTenantOrders(
+        tenant.id,
+      );
       if (error) throw error;
 
       setOrders(
-        (data || []).map(order => ({
+        (data || []).map((order) => ({
           ...order,
-          status: order.status as "pending" | "production" | "done"
-        }))
+          status: order.status as "pending" | "production" | "done",
+        })),
       );
     } catch (error: any) {
       toast({
@@ -85,7 +88,7 @@ const CalendarPage = () => {
     }
   };
 
-  const events = orders.map(order => ({
+  const events = orders.map((order) => ({
     id: order.id,
     title: order.client_name,
     start: order.due_date,
@@ -93,8 +96,8 @@ const CalendarPage = () => {
     textColor: getStatusTextColor(order.status),
     extendedProps: {
       price: order.price,
-      status: order.status
-    }
+      status: order.status,
+    },
   }));
 
   const handleEventClick = (info: any) => {
@@ -104,7 +107,9 @@ const CalendarPage = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">Calendário de Encomendas</h2>
+        <h2 className="text-3xl font-bold tracking-tight">
+          Calendário de Encomendas
+        </h2>
         <p className="text-muted-foreground">
           Veja o calendário de suas encomendas.
         </p>
@@ -121,46 +126,55 @@ const CalendarPage = () => {
               eventClick={handleEventClick}
               height="auto"
               headerToolbar={{
-                left: 'prev,next',
-                center: 'title',
-                right: 'today dayGridMonth,dayGridWeek'
+                left: "prev,next",
+                center: "title",
+                right: "today dayGridMonth,dayGridWeek",
               }}
               views={{
                 dayGridMonth: {
-                  titleFormat: { year: 'numeric', month: 'long' },
-                  dayHeaderFormat: { weekday: 'short' },
+                  titleFormat: { year: "numeric", month: "long" },
+                  dayHeaderFormat: { weekday: "short" },
                   dayMaxEvents: true,
                 },
                 dayGridWeek: {
-                  titleFormat: { year: 'numeric', month: 'long', day: 'numeric' },
-                  dayHeaderFormat: { weekday: 'short' },
+                  titleFormat: {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  },
+                  dayHeaderFormat: { weekday: "short" },
                   dayMaxEvents: true,
-                }
+                },
               }}
               eventContent={(eventInfo) => {
                 const status = eventInfo.event.extendedProps.status;
                 const bgColor = getStatusColor(status);
                 const textColor = getStatusTextColor(status);
-                
+
                 return (
-                  <div 
+                  <div
                     className="p-1 overflow-hidden rounded-md w-full"
                     style={{
                       backgroundColor: bgColor,
-                      color: textColor
+                      color: textColor,
                     }}
                   >
-                    <div className="font-medium truncate">{eventInfo.event.title}</div>
+                    <div className="font-medium truncate">
+                      {eventInfo.event.title}
+                    </div>
                     <div className="text-xs">
-                      R$ {eventInfo.event.extendedProps.price.toFixed(2).replace('.', ',')}
+                      R${" "}
+                      {eventInfo.event.extendedProps.price
+                        .toFixed(2)
+                        .replace(".", ",")}
                     </div>
                   </div>
                 );
               }}
               eventTimeFormat={{
-                hour: '2-digit',
-                minute: '2-digit',
-                meridiem: false
+                hour: "2-digit",
+                minute: "2-digit",
+                meridiem: false,
               }}
               moreLinkContent={(args) => `+${args.num} mais`}
               moreLinkClick="popover"

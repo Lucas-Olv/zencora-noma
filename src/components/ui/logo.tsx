@@ -34,4 +34,4 @@ export function Logo({ className, ...props }: LogoProps) {
       />
     </svg>
   );
-} 
+}

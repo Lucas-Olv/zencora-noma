@@ -1,9 +1,15 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { supabaseService } from '@/services/supabaseService';
-import { Tables } from '@/integrations/supabase/types';
-import { useAuthContext } from '@/contexts/AuthContext';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from "react";
+import { supabaseService } from "@/services/supabaseService";
+import { Tables } from "@/integrations/supabase/types";
+import { useAuthContext } from "@/contexts/AuthContext";
 
-type Tenant = Tables<'tenants'>;
+type Tenant = Tables<"tenants">;
 
 interface TenantContextType {
   tenant: Tenant | null;
@@ -26,11 +32,13 @@ export function TenantProvider({ children }: { children: ReactNode }) {
       setLoading(true);
       setError(null);
 
-      const { user, error: authError } = await supabaseService.auth.getCurrentUser();
-      if (authError || !user) throw new Error('Usuário não autenticado');
+      const { user, error: authError } =
+        await supabaseService.auth.getCurrentUser();
+      if (authError || !user) throw new Error("Usuário não autenticado");
 
-      const { data: tenantData, error: tenantError } = await supabaseService.tenants.getUserTenant(user.id);
-      if (tenantError || !tenantData) throw new Error('Tenant não encontrado');
+      const { data: tenantData, error: tenantError } =
+        await supabaseService.tenants.getUserTenant(user.id);
+      if (tenantError || !tenantData) throw new Error("Tenant não encontrado");
 
       setTenantState(tenantData);
     } catch (error: any) {
@@ -64,16 +72,14 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <TenantContext.Provider value={value}>
-      {children}
-    </TenantContext.Provider>
+    <TenantContext.Provider value={value}>{children}</TenantContext.Provider>
   );
 }
 
 export function useTenant() {
   const context = useContext(TenantContext);
   if (context === undefined) {
-    throw new Error('useTenant must be used within a TenantProvider');
+    throw new Error("useTenant must be used within a TenantProvider");
   }
   return context;
 }

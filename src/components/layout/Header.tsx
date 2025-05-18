@@ -1,9 +1,9 @@
-import { Link } from "react-router-dom"
-import { Menu } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Link } from "react-router-dom";
+import { Menu } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface HeaderProps {
-  onMenuClick: () => void
+  onMenuClick: () => void;
 }
 
 export function Header({ onMenuClick }: HeaderProps) {
@@ -23,11 +23,9 @@ export function Header({ onMenuClick }: HeaderProps) {
           <div className="w-full flex-1 md:w-auto md:flex-none">
             {/* Add search or other header content here */}
           </div>
-          <nav className="flex items-center">
-            {/* Add user menu here */}
-          </nav>
+          <nav className="flex items-center">{/* Add user menu here */}</nav>
         </div>
       </div>
     </header>
-  )
-} 
+  );
+}

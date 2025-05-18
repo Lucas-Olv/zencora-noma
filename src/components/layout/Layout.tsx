@@ -23,9 +23,9 @@ const Layout: React.FC = () => {
       <Navbar toggleSidebar={toggleSidebar} />
       <div className="flex flex-1 relative">
         <Sidebar isOpen={isSidebarOpen} closeSidebar={closeSidebar} />
-        <main 
+        <main
           className="flex-1 transition-all duration-300"
-          style={{ marginLeft: isMobile ? 0 : (isSidebarOpen ? '16rem' : 0) }}
+          style={{ marginLeft: isMobile ? 0 : isSidebarOpen ? "16rem" : 0 }}
         >
           <div className="container py-6 md:py-8 px-4">
             <Outlet />

@@ -4,7 +4,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { TenantProvider } from "@/contexts/TenantContext";
-import { useEffect, useState } from "react";
 import { ThemeProvider } from "next-themes";
 import Layout from "./components/layout/Layout";
 import Login from "./pages/Login";
@@ -18,8 +17,6 @@ import Calendar from "./pages/Calendar";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
-import { supabaseService } from "./services/supabaseService";
-import { Session } from "@supabase/supabase-js";
 import Landing from "./pages/Landing";
 import EditOrder from "./pages/EditOrder";
 import About from "./pages/About";
@@ -28,89 +25,288 @@ import Privacy from "./pages/Privacy";
 import Contact from "./pages/Contact";
 import CollaboratorsLogin from "./pages/CollaboratorsLogin";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { useAuthContext } from "@/contexts/AuthContext";
+import ProtectedRoute from "@/components/routing/ProtectedRoute";
 const queryClient = new QueryClient();
 
-const App = () => {
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Verifica se há uma sessão ativa
-    const checkSession = async () => {
-      try {
-        const { session } = await supabaseService.auth.getCurrentSession();
-        setSession(session);
-      } catch (error) {
-        console.error("Erro ao verificar sessão:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    // Monitora mudanças no estado de autenticação
-    const { data: { subscription } } = supabaseService.auth.onAuthStateChange((event, currentSession) => {
-      setSession(currentSession);
-    });
-
-    checkSession();
-
-    return () => {
-      subscription?.unsubscribe();
-    };
-    
-  }, []);
+const AppRoutes = () => {
+  const { isAuthenticated, isCollaborator, user, loading } = useAuthContext();
 
   if (loading) {
+    // Evita renderização prematura com dados falsos
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-10 w-10 border-4 border-primary border-t-transparent"></div>
+        <div className="animate-spin rounded-full h-10 w-10 border-4 border-primary border-t-transparent" />
       </div>
     );
   }
 
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <QueryClientProvider client={queryClient}>
-          <AuthProvider>
+    <Routes>
+      {/* Public Routes */}
+      <Route
+        path="/"
+        element={isAuthenticated ? <Navigate to="/dashboard" /> : <Landing />}
+      />
+      <Route path="/about" element={<About />} />
+      <Route path="/terms" element={<Terms />} />
+      <Route path="/privacy" element={<Privacy />} />
+      <Route path="/contact" element={<Contact />} />
+      <Route
+        path="/login"
+        element={isAuthenticated ? <Navigate to="/dashboard" /> : <Login />}
+      />
+      <Route
+        path="/collaborators/:tenantId"
+        element={
+          isAuthenticated && !isCollaborator ? (
+            <Navigate to="/dashboard" />
+          ) : (
+            <CollaboratorsLogin />
+          )
+        }
+      />
+      <Route
+        path="/collaborators"
+        element={
+          isAuthenticated && !isCollaborator ? (
+            <Navigate to="/dashboard" />
+          ) : (
+            <CollaboratorsLogin />
+          )
+        }
+      />
+
+      {/* Protected Owner Routes */}
+      {isAuthenticated && !isCollaborator && (
+        <Route path="/" element={<Layout />}>
+          <Route
+            path="dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="orders"
+            element={
+              <ProtectedRoute>
+                <Orders />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="orders/new"
+            element={
+              <ProtectedRoute>
+                <NewOrder />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="orders/edit/:id"
+            element={
+              <ProtectedRoute>
+                <EditOrder />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="orders/:id"
+            element={
+              <ProtectedRoute>
+                <OrderDetail />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="production"
+            element={
+              <ProtectedRoute>
+                <Production />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="reports"
+            element={
+              <ProtectedRoute>
+                <Reports />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="calendar"
+            element={
+              <ProtectedRoute>
+                <Calendar />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="settings"
+            element={
+              <ProtectedRoute>
+                <Settings />
+              </ProtectedRoute>
+            }
+          />
+        </Route>
+      )}
+
+      {/* Protected Collaborator Routes */}
+      {isAuthenticated && isCollaborator && (
+        <Route path="/" element={<Layout />}>
+          <Route
+            path="dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          {user?.role === "order" && (
+            <>
+              <Route
+                path="orders"
+                element={
+                  <ProtectedRoute>
+                    <Orders />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="orders/:id"
+                element={
+                  <ProtectedRoute>
+                    <OrderDetail />
+                  </ProtectedRoute>
+                }
+              />
+            </>
+          )}
+
+          {user?.role === "production" && (
+            <Route
+              path="production"
+              element={
+                <ProtectedRoute>
+                  <Production />
+                </ProtectedRoute>
+              }
+            />
+          )}
+
+          {user?.role === "admin" && (
+            <>
+              <Route
+                path="orders"
+                element={
+                  <ProtectedRoute>
+                    <Orders />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="orders/new"
+                element={
+                  <ProtectedRoute>
+                    <NewOrder />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="orders/edit/:id"
+                element={
+                  <ProtectedRoute>
+                    <EditOrder />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="orders/:id"
+                element={
+                  <ProtectedRoute>
+                    <OrderDetail />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="production"
+                element={
+                  <ProtectedRoute>
+                    <Production />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="reports"
+                element={
+                  <ProtectedRoute>
+                    <Reports />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="calendar"
+                element={
+                  <ProtectedRoute>
+                    <Calendar />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="profile"
+                element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="settings"
+                element={
+                  <ProtectedRoute>
+                    <Settings />
+                  </ProtectedRoute>
+                }
+              />
+            </>
+          )}
+        </Route>
+      )}
+
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+};
+
+export const App = () => (
+  <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
         <TenantProvider>
           <TooltipProvider>
             <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/" element={session ? <Navigate to="/dashboard" /> : <Landing />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/terms" element={<Terms />} />
-              <Route path="/privacy" element={<Privacy />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/login" element={session ? <Navigate to="/dashboard" /> : <Login />} />
-              <Route path="/collaborators/:tenantId" element={<CollaboratorsLogin />} />
-              <Route path="/collaborators" element={<CollaboratorsLogin />} />
-              
-              {/* Protected Routes */}
-              <Route path="/" element={session ? <Layout /> : <Navigate to="/login" />}>
-                <Route path="dashboard" element={<Dashboard />} />
-                <Route path="orders" element={<Orders />} />
-                <Route path="orders/new" element={<NewOrder />} />
-                <Route path="orders/edit/:id" element={<EditOrder />} />
-                <Route path="orders/:id" element={<OrderDetail />} />
-                <Route path="production" element={<Production />} />
-                <Route path="reports" element={<Reports />} />
-                <Route path="calendar" element={<Calendar />} />
-                <Route path="profile" element={<Profile />} />
-                <Route path="settings" element={<Settings />} />
-              </Route>
-
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
+            <Sonner />
+            <BrowserRouter>
+              <AppRoutes />
+            </BrowserRouter>
           </TooltipProvider>
         </TenantProvider>
-          </AuthProvider>
-      </QueryClientProvider>
-    </ThemeProvider>
-  );
-};
+      </AuthProvider>
+    </QueryClientProvider>
+  </ThemeProvider>
+);
 
 export default App;

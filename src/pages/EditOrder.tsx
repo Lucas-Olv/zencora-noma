@@ -14,10 +14,10 @@ const EditOrder = () => {
 
   useEffect(() => {
     document.title = "Editar Encomenda | Zencora Noma";
-    
+
     const fetchOrderDetails = async () => {
       if (!id) return;
-      
+
       try {
         const { data, error } = await supabaseService.orders.getOrderById(id);
 
@@ -26,7 +26,7 @@ const EditOrder = () => {
           toast({
             title: "Encomenda não encontrada",
             description: "A encomenda solicitada não existe ou foi removida.",
-            variant: "destructive"
+            variant: "destructive",
           });
           navigate("/orders");
           return;
@@ -35,7 +35,7 @@ const EditOrder = () => {
         toast({
           title: "Erro ao carregar encomenda",
           description: error.message,
-          variant: "destructive"
+          variant: "destructive",
         });
         navigate("/orders");
       } finally {
@@ -61,7 +61,9 @@ const EditOrder = () => {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Editar Encomenda</h2>
+          <h2 className="text-3xl font-bold tracking-tight">
+            Editar Encomenda
+          </h2>
           <p className="text-muted-foreground">
             Atualize os dados da encomenda conforme necessário.
           </p>
@@ -73,4 +75,4 @@ const EditOrder = () => {
   );
 };
 
-export default EditOrder; 
+export default EditOrder;

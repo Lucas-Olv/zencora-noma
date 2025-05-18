@@ -4,10 +4,32 @@ import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, Eye, Plus, Search, X, Loader2, Package, Pencil, Printer } from "lucide-react";
-import { formatDate, usePrint, getOrderCode, getStatusDisplay } from "@/lib/utils";
+import {
+  CheckCircle2,
+  Eye,
+  Plus,
+  Search,
+  X,
+  Loader2,
+  Package,
+  Pencil,
+  Printer,
+} from "lucide-react";
+import {
+  formatDate,
+  usePrint,
+  getOrderCode,
+  getStatusDisplay,
+} from "@/lib/utils";
 import { ptBR } from "date-fns/locale";
 import { supabaseService, OrderType } from "@/services/supabaseService";
 import { useTenant } from "@/contexts/TenantContext";
@@ -25,7 +47,8 @@ const OrderList = () => {
   const [orders, setOrders] = useState<OrderWithCollaborator[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedOrder, setSelectedOrder] = useState<OrderWithCollaborator | null>(null);
+  const [selectedOrder, setSelectedOrder] =
+    useState<OrderWithCollaborator | null>(null);
   const printRef = useRef<HTMLDivElement>(null);
   const handlePrint = usePrint(printRef, {
     pageStyle: `
@@ -39,7 +62,7 @@ const OrderList = () => {
           padding: 0;
         }
       }
-    `
+    `,
   });
   const { tenant, loading: tenantLoading, error: tenantError } = useTenant();
 
@@ -56,7 +79,9 @@ const OrderList = () => {
           <div className="space-y-2 flex-1">
             <div>
               <p className="text-xs text-gray-500">Código</p>
-              <p className="font-mono text-lg font-bold">{getOrderCode(order.id)}</p>
+              <p className="font-mono text-lg font-bold">
+                {getOrderCode(order.id)}
+              </p>
             </div>
 
             <div>
@@ -76,7 +101,9 @@ const OrderList = () => {
 
             <div>
               <p className="text-xs text-gray-500">Preço</p>
-              <p className="text-sm">R$ {order.price.toFixed(2).replace('.', ',')}</p>
+              <p className="text-sm">
+                R$ {order.price.toFixed(2).replace(".", ",")}
+              </p>
             </div>
 
             <div>
@@ -86,7 +113,10 @@ const OrderList = () => {
           </div>
 
           <div className="text-center text-xs text-gray-500 mt-4">
-            <p>Impresso em {formatDate(new Date().toISOString(), "dd/MM/yyyy 'às' HH:mm")}</p>
+            <p>
+              Impresso em{" "}
+              {formatDate(new Date().toISOString(), "dd/MM/yyyy 'às' HH:mm")}
+            </p>
           </div>
         </div>
       </div>
@@ -99,14 +129,16 @@ const OrderList = () => {
     }
   }, [tenantLoading, tenant]);
 
-  const fetchOrders = async () => {    
+  const fetchOrders = async () => {
     try {
       if (tenantLoading) return;
       if (tenantError || !tenant) {
-        throw new Error(tenantError || 'Tenant não encontrado');
+        throw new Error(tenantError || "Tenant não encontrado");
       }
 
-      const { data, error } = await supabaseService.orders.getTenantOrders(tenant.id);
+      const { data, error } = await supabaseService.orders.getTenantOrders(
+        tenant.id,
+      );
       if (error) throw error;
 
       setOrders(data as OrderWithCollaborator[]);
@@ -121,14 +153,22 @@ const OrderList = () => {
     }
   };
 
-  const handleStatusChange = async (id: string, targetStatus: "pending" | "production" | "done") => {
+  const handleStatusChange = async (
+    id: string,
+    targetStatus: "pending" | "production" | "done",
+  ) => {
     try {
-      const { error } = await supabaseService.orders.updateOrderStatus(id, targetStatus);
+      const { error } = await supabaseService.orders.updateOrderStatus(
+        id,
+        targetStatus,
+      );
       if (error) throw error;
 
-      setOrders(orders.map(order =>
-        order.id === id ? { ...order, status: targetStatus } : order
-      ));
+      setOrders(
+        orders.map((order) =>
+          order.id === id ? { ...order, status: targetStatus } : order,
+        ),
+      );
 
       toast({
         title: "Status atualizado!",
@@ -143,12 +183,19 @@ const OrderList = () => {
     }
   };
 
-  const filteredOrders = searchTerm.trim() === ""
-    ? orders
-    : orders.filter(order =>
-      order.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (order.description && order.description.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
+  const filteredOrders =
+    searchTerm.trim() === ""
+      ? orders
+      : orders.filter(
+          (order) =>
+            order.client_name
+              .toLowerCase()
+              .includes(searchTerm.toLowerCase()) ||
+            (order.description &&
+              order.description
+                .toLowerCase()
+                .includes(searchTerm.toLowerCase())),
+        );
 
   return (
     <div className="space-y-6">
@@ -199,7 +246,9 @@ const OrderList = () => {
             <div className="text-center py-6">
               {searchTerm ? (
                 <>
-                  <p className="text-muted-foreground">Nenhuma encomenda encontrada para "{searchTerm}"</p>
+                  <p className="text-muted-foreground">
+                    Nenhuma encomenda encontrada para "{searchTerm}"
+                  </p>
                   <Button
                     variant="link"
                     onClick={() => setSearchTerm("")}
@@ -211,7 +260,9 @@ const OrderList = () => {
               ) : (
                 <>
                   <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-medium mb-2">Nenhuma encomenda</h3>
+                  <h3 className="text-lg font-medium mb-2">
+                    Nenhuma encomenda
+                  </h3>
                   <p className="text-muted-foreground mb-4">
                     Comece registrando sua primeira encomenda.
                   </p>
@@ -238,16 +289,21 @@ const OrderList = () => {
                       const statusDisplay = getStatusDisplay(order.status);
                       return (
                         <TableRow key={order.id}>
-                          <TableCell className="font-mono text-sm text-muted-foreground">{getOrderCode(order.id)}</TableCell>
-                          <TableCell className="font-medium">{order.client_name}</TableCell>
+                          <TableCell className="font-mono text-sm text-muted-foreground">
+                            {getOrderCode(order.id)}
+                          </TableCell>
+                          <TableCell className="font-medium">
+                            {order.client_name}
+                          </TableCell>
+                          <TableCell>{formatDate(order.due_date)}</TableCell>
                           <TableCell>
-                            {formatDate(order.due_date)}
+                            R$ {order.price.toFixed(2).replace(".", ",")}
                           </TableCell>
                           <TableCell>
-                            R$ {order.price.toFixed(2).replace('.', ',')}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className={statusDisplay.className}>
+                            <Badge
+                              variant="outline"
+                              className={statusDisplay.className}
+                            >
                               {statusDisplay.label}
                             </Badge>
                           </TableCell>
@@ -256,7 +312,9 @@ const OrderList = () => {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                onClick={() => handleStatusChange(order.id, "pending")}
+                                onClick={() =>
+                                  handleStatusChange(order.id, "pending")
+                                }
                                 title="Marcar como pendente"
                                 disabled={order.status === "pending"}
                                 className="flex items-center justify-center"
@@ -266,7 +324,9 @@ const OrderList = () => {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                onClick={() => handleStatusChange(order.id, "production")}
+                                onClick={() =>
+                                  handleStatusChange(order.id, "production")
+                                }
                                 title="Marcar como Produção"
                                 disabled={order.status === "production"}
                                 className="flex items-center justify-center"
@@ -276,7 +336,9 @@ const OrderList = () => {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                onClick={() => handleStatusChange(order.id, "done")}
+                                onClick={() =>
+                                  handleStatusChange(order.id, "done")
+                                }
                                 title="Marcar como concluída"
                                 disabled={order.status === "done"}
                                 className="flex items-center justify-center"
@@ -286,7 +348,9 @@ const OrderList = () => {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                onClick={() => navigate(`/orders/edit/${order.id}`)}
+                                onClick={() =>
+                                  navigate(`/orders/edit/${order.id}`)
+                                }
                                 title="Editar encomenda"
                                 className="flex items-center justify-center"
                               >
@@ -332,14 +396,21 @@ const OrderList = () => {
                           <div className="flex items-start justify-between">
                             <div>
                               <div className="flex items-center gap-2">
-                                <p className="font-mono text-sm text-muted-foreground">{getOrderCode(order.id)}</p>
-                                <h3 className="font-medium">{order.client_name}</h3>
+                                <p className="font-mono text-sm text-muted-foreground">
+                                  {getOrderCode(order.id)}
+                                </p>
+                                <h3 className="font-medium">
+                                  {order.client_name}
+                                </h3>
                               </div>
                               <p className="text-sm text-muted-foreground">
                                 {formatDate(order.due_date)}
                               </p>
                             </div>
-                            <Badge variant="outline" className={statusDisplay.className}>
+                            <Badge
+                              variant="outline"
+                              className={statusDisplay.className}
+                            >
                               {statusDisplay.label}
                             </Badge>
                           </div>
@@ -348,7 +419,9 @@ const OrderList = () => {
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => handleStatusChange(order.id, "pending")}
+                              onClick={() =>
+                                handleStatusChange(order.id, "pending")
+                              }
                               title="Marcar como pendente"
                               disabled={order.status === "pending"}
                             >
@@ -357,7 +430,9 @@ const OrderList = () => {
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => handleStatusChange(order.id, "production")}
+                              onClick={() =>
+                                handleStatusChange(order.id, "production")
+                              }
                               title="Marcar como Produção"
                               disabled={order.status === "production"}
                             >
@@ -366,7 +441,9 @@ const OrderList = () => {
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => handleStatusChange(order.id, "done")}
+                              onClick={() =>
+                                handleStatusChange(order.id, "done")
+                              }
                               title="Marcar como concluída"
                               disabled={order.status === "done"}
                             >
@@ -375,7 +452,9 @@ const OrderList = () => {
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => navigate(`/orders/edit/${order.id}`)}
+                              onClick={() =>
+                                navigate(`/orders/edit/${order.id}`)
+                              }
                               title="Editar encomenda"
                             >
                               <Pencil className="h-4 w-4" />

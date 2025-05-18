@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 
 const Profile = () => {
@@ -14,10 +13,13 @@ const Profile = () => {
           Gerencie suas informações pessoais e preferências.
         </p>
       </div>
-      
+
       <div className="bg-card border rounded-lg p-8 text-center text-muted-foreground">
         <p>Gerenciamento de perfil em desenvolvimento.</p>
-        <p>Em breve você poderá atualizar suas informações pessoais e preferências.</p>
+        <p>
+          Em breve você poderá atualizar suas informações pessoais e
+          preferências.
+        </p>
       </div>
     </div>
   );

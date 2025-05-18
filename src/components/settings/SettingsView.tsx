@@ -2,37 +2,84 @@ import { useEffect, useState } from "react";
 import { useTenant } from "@/contexts/TenantContext";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Plus, Pencil, Trash, UserPlus, Users, Link } from "lucide-react";
 import { supabaseService, CollaboratorType } from "@/services/supabaseService";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { LoadingState } from "@/components/ui/loading-state";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { hashPassword } from "@/lib/utils";
 
 type CollaboratorRole = "admin" | "production" | "order";
 
 const collaboratorSchema = z.object({
-  name: z.string()
+  name: z
+    .string()
     .min(1, "O nome é obrigatório")
     .min(3, "O nome deve ter pelo menos 3 caracteres"),
-  email: z.string()
+  email: z
+    .string()
     .min(1, "O email é obrigatório")
     .email("Email inválido")
     .regex(
       /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-      "Digite um email válido (exemplo: nome@dominio.com)"
+      "Digite um email válido (exemplo: nome@dominio.com)",
     ),
-  password: z.string()
+  password: z
+    .string()
     .min(6, "A senha deve ter pelo menos 6 caracteres")
     .optional()
     .or(z.literal("")),
@@ -50,7 +97,8 @@ const SettingsView = () => {
   const [collaborators, setCollaborators] = useState<CollaboratorType[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingCollaborator, setEditingCollaborator] = useState<CollaboratorType | null>(null);
+  const [editingCollaborator, setEditingCollaborator] =
+    useState<CollaboratorType | null>(null);
 
   const form = useForm<CollaboratorFormData>({
     resolver: zodResolver(collaboratorSchema),
@@ -89,15 +137,16 @@ const SettingsView = () => {
   const fetchCollaborators = async () => {
     try {
       if (tenantError || !tenant) {
-        throw new Error(tenantError || 'Tenant não encontrado');
+        throw new Error(tenantError || "Tenant não encontrado");
       }
 
-      const { data, error } = await supabaseService.collaborators.getTenantCollaborators(tenant.id);
+      const { data, error } =
+        await supabaseService.collaborators.getTenantCollaborators(tenant.id);
       if (error) throw error;
 
-      const collaboratorsWithRole = (data || []).map(collaborator => ({
+      const collaboratorsWithRole = (data || []).map((collaborator) => ({
         ...collaborator,
-        role: "order" as CollaboratorRole
+        role: "order" as CollaboratorRole,
       }));
 
       setCollaborators(collaboratorsWithRole);
@@ -131,7 +180,9 @@ const SettingsView = () => {
     }
 
     try {
-      const hashedPassword = data.password ? await hashPassword(data.password) : undefined;
+      const hashedPassword = data.password
+        ? await hashPassword(data.password)
+        : undefined;
 
       const collaboratorData = {
         name: data.name,
@@ -143,20 +194,24 @@ const SettingsView = () => {
       };
 
       if (editingCollaborator) {
-        const { error } = await supabaseService.collaborators.updateCollaborator(
-          editingCollaborator.id,
-          collaboratorData
-        );
+        const { error } =
+          await supabaseService.collaborators.updateCollaborator(
+            editingCollaborator.id,
+            collaboratorData,
+          );
         if (error) throw error;
-        
+
         toast({
           title: "Colaborador atualizado",
           description: "O colaborador foi atualizado com sucesso.",
         });
       } else {
-        const { error } = await supabaseService.collaborators.createCollaborator(collaboratorData);
+        const { error } =
+          await supabaseService.collaborators.createCollaborator(
+            collaboratorData,
+          );
         if (error) throw error;
-        
+
         toast({
           title: "Colaborador criado",
           description: "O colaborador foi criado com sucesso.",
@@ -188,14 +243,15 @@ const SettingsView = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      const { error } = await supabaseService.collaborators.deleteCollaborator(id);
+      const { error } =
+        await supabaseService.collaborators.deleteCollaborator(id);
       if (error) throw error;
 
       toast({
         title: "Colaborador excluído",
         description: "O colaborador foi removido com sucesso.",
       });
-      
+
       fetchCollaborators();
     } catch (error: any) {
       toast({
@@ -225,11 +281,18 @@ const SettingsView = () => {
         {isMobile ? (
           <div className="space-y-4">
             {collaborators.map((collaborator) => (
-              <div key={collaborator.id} className="grid grid-cols-1 gap-4 rounded-lg border p-4">
+              <div
+                key={collaborator.id}
+                className="grid grid-cols-1 gap-4 rounded-lg border p-4"
+              >
                 <div className="grid grid-cols-[minmax(0,1fr),auto] gap-4">
                   <div className="min-w-0">
-                    <h3 className="font-semibold truncate">{collaborator.name}</h3>
-                    <p className="text-sm text-muted-foreground truncate">{collaborator.email}</p>
+                    <h3 className="font-semibold truncate">
+                      {collaborator.name}
+                    </h3>
+                    <p className="text-sm text-muted-foreground truncate">
+                      {collaborator.email}
+                    </p>
                     <div className="mt-2">
                       <span className="text-sm text-muted-foreground">
                         Função:{" "}
@@ -352,7 +415,7 @@ const SettingsView = () => {
           Gerencie as configurações da sua conta e colaboradores.
         </p>
       </div>
-      
+
       <Card>
         <CardHeader>
           <div className="flex justify-between items-center">
@@ -366,7 +429,7 @@ const SettingsView = () => {
         </CardHeader>
         <CardContent>
           <div className="flex flex-col md:flex-row sm:justify-center md:justify-end mb-4 gap-4">
-          <Button
+            <Button
               variant="outline"
               onClick={() => {
                 const baseUrl = import.meta.env.VITE_NOMA_BASE_URL;
@@ -379,18 +442,22 @@ const SettingsView = () => {
                   return;
                 }
                 const url = `${baseUrl}collaborators/${tenant?.id}`;
-                navigator.clipboard.writeText(url).then(() => {
-                  toast({
-                    title: "Link copiado!",
-                    description: "O link foi copiado para a área de transferência.",
+                navigator.clipboard
+                  .writeText(url)
+                  .then(() => {
+                    toast({
+                      title: "Link copiado!",
+                      description:
+                        "O link foi copiado para a área de transferência.",
+                    });
+                  })
+                  .catch(() => {
+                    toast({
+                      title: "Erro",
+                      description: "Não foi possível copiar o link",
+                      variant: "destructive",
+                    });
                   });
-                }).catch(() => {
-                  toast({
-                    title: "Erro",
-                    description: "Não foi possível copiar o link",
-                    variant: "destructive",
-                  });
-                });
               }}
             >
               <Link className="w-4 h-4 mr-2" />
@@ -406,7 +473,9 @@ const SettingsView = () => {
               <DialogContent className="w-[calc(100%-2rem)] max-w-[425px] mx-auto rounded-xl">
                 <DialogHeader>
                   <DialogTitle>
-                    {editingCollaborator ? "Editar Colaborador" : "Novo Colaborador"}
+                    {editingCollaborator
+                      ? "Editar Colaborador"
+                      : "Novo Colaborador"}
                   </DialogTitle>
                   <DialogDescription>
                     {editingCollaborator
@@ -415,7 +484,10 @@ const SettingsView = () => {
                   </DialogDescription>
                 </DialogHeader>
                 <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  <form
+                    onSubmit={form.handleSubmit(onSubmit)}
+                    className="space-y-4"
+                  >
                     <FormField
                       control={form.control}
                       name="name"
@@ -448,8 +520,12 @@ const SettingsView = () => {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>
-                            {editingCollaborator ? "Nova Senha (opcional)" : "Senha"}
-                            {!editingCollaborator && <span className="text-destructive ml-1">*</span>}
+                            {editingCollaborator
+                              ? "Nova Senha (opcional)"
+                              : "Senha"}
+                            {!editingCollaborator && (
+                              <span className="text-destructive ml-1">*</span>
+                            )}
                           </FormLabel>
                           <FormControl>
                             <Input type="password" {...field} />
@@ -474,8 +550,12 @@ const SettingsView = () => {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="admin">Administrador</SelectItem>
-                              <SelectItem value="production">Produção</SelectItem>
+                              <SelectItem value="admin">
+                                Administrador
+                              </SelectItem>
+                              <SelectItem value="production">
+                                Produção
+                              </SelectItem>
                               <SelectItem value="order">Pedidos</SelectItem>
                             </SelectContent>
                           </Select>
@@ -501,4 +581,4 @@ const SettingsView = () => {
   );
 };
 
-export default SettingsView; 
+export default SettingsView;
