@@ -16,11 +16,10 @@ import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { supabaseService } from "@/services/supabaseService";
 import { useAuthContext } from "@/contexts/AuthContext";
 
-const CollaboratorLoginForm = () => {
+const CollaboratorsLoginForm = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { tenant } = useAuthContext();
-  const { setAsCollaborator, isAuthenticated } = useAuthContext();
+  const { setAsCollaborator } = useAuthContext();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -77,7 +76,7 @@ const CollaboratorLoginForm = () => {
 
   return (
     <div className="w-full md:max-w-[20.5dvw] mx-auto">
-      <h2 className="text-3xl font-bold text-center">Área do Colaborador</h2>
+      <h2 className="text-3xl font-bold text-center">Seja bem-vindo!</h2>
 
       <Card className="w-full mt-6">
         <form onSubmit={handleSignIn}>
@@ -146,4 +145,4 @@ const CollaboratorLoginForm = () => {
   );
 };
 
-export default CollaboratorLoginForm;
+export default CollaboratorsLoginForm;
