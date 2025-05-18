@@ -25,7 +25,7 @@ export default function CollaboratorsLogin() {
       navigate("/", { replace: true });
       return;
     }
-
+    sessionStorage.setItem("tempTenantId", tenantId);
     setTenant({ id: tenantId } as any);
 
   }, [tenantId, tenant?.id, setTenant, setAsCollaborator, navigate, toast]);

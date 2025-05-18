@@ -19,7 +19,7 @@ import { useAuthContext } from "@/contexts/AuthContext";
 const CollaboratorsLoginForm = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { setAsCollaborator } = useAuthContext();
+  const { setAsCollaborator, tenant } = useAuthContext();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -44,15 +44,33 @@ const CollaboratorsLoginForm = () => {
     e.preventDefault();
     try {
       setLoading(true);
-      const { data, error } = await supabaseService.auth.signInWithEmail(
-        email,
-        password,
-      );
+      const loginHandlerUrl = import.meta.env.VITE_COLABORATOR_LOGIN_HANDLER_URL;
+      
+      if (!loginHandlerUrl) {
+        throw new Error("URL do handler de login não configurada");
+      }
 
-      if (error) throw error;
+      const response = await fetch(loginHandlerUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          tenantId: tenant?.id,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Erro ao fazer login');
+      }
+
+      const data = await response.json();
 
       if (data.session?.access_token) {
-        setAsCollaborator(
+        await setAsCollaborator(
           data.session,
           data.session.access_token,
           data.session.user.role,
