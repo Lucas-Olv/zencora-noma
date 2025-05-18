@@ -378,7 +378,7 @@ const SettingsView = () => {
                   });
                   return;
                 }
-                const url = `${baseUrl}${tenant?.id}/collaborators`;
+                const url = `${baseUrl}collaborators/${tenant?.id}`;
                 navigator.clipboard.writeText(url).then(() => {
                   toast({
                     title: "Link copiado!",

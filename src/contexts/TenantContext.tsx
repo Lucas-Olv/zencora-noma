@@ -9,6 +9,7 @@ interface TenantContextType {
   loading: boolean;
   error: string | null;
   refreshTenant: () => Promise<void>;
+  setTenant: (tenant: Tenant | null) => void;
 }
 
 const TenantContext = createContext<TenantContextType | undefined>(undefined);
@@ -52,7 +53,8 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     tenant,
     loading,
     error,
-    refreshTenant: fetchTenant
+    refreshTenant: fetchTenant,
+    setTenant
   };
 
   return (

@@ -26,6 +26,7 @@ import About from "./pages/About";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import Contact from "./pages/Contact";
+import CollaboratorsLogin from "./pages/CollaboratorsLogin";
 
 const queryClient = new QueryClient();
 
@@ -83,6 +84,8 @@ const App = () => {
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/login" element={session ? <Navigate to="/dashboard" /> : <Login />} />
+              <Route path="/collaborators/:tenantId" element={<CollaboratorsLogin />} />
+              <Route path="/collaborators" element={<CollaboratorsLogin />} />
               
               {/* Protected Routes */}
               <Route path="/" element={session ? <Layout /> : <Navigate to="/login" />}>
