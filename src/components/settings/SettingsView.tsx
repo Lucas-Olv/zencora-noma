@@ -17,6 +17,7 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { hashPassword } from "@/lib/utils";
 
 type CollaboratorRole = "admin" | "production" | "order";
 
@@ -130,10 +131,12 @@ const SettingsView = () => {
     }
 
     try {
+      const hashedPassword = data.password ? await hashPassword(data.password) : undefined;
+
       const collaboratorData = {
         name: data.name,
         email: data.email,
-        password: editingCollaborator ? (data.password || undefined) : data.password,
+        password: hashedPassword,
         tenant_id: tenant.id,
         can_login: true,
         role: data.role,
@@ -375,7 +378,7 @@ const SettingsView = () => {
                   });
                   return;
                 }
-                const url = `${baseUrl}/${tenant?.id}/collaborators`;
+                const url = `${baseUrl}${tenant?.id}/collaborators`;
                 navigator.clipboard.writeText(url).then(() => {
                   toast({
                     title: "Link copiado!",

@@ -3,6 +3,8 @@ import { twMerge } from "tailwind-merge"
 import { format, parseISO } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { useReactToPrint, type UseReactToPrintOptions } from "react-to-print"
+import bcrypt from "bcryptjs"
+
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -84,3 +86,29 @@ export function getStatusDisplay(status: string | null) {
       };
   }
 };
+
+export async function hashPassword(password: string): Promise<string> {
+  const SALT_ROUNDS = 12
+  const salt = await bcrypt.genSalt(SALT_ROUNDS)
+  return bcrypt.hash(password, salt)
+}
+
+export function decodeJwt(token: string) {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map(function (c) {
+          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        })
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch (error) {
+    console.error('Erro ao decodificar token:', error);
+    return null;
+  }
+}
+
