@@ -2,13 +2,13 @@ import { useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import CollaboratorLoginForm from "@/components/auth/CollaboratorLoginForm";
 import ThemeToggle from "@/components/layout/ThemeToggle";
-import { useTenant } from "@/contexts/TenantContext";
+import { useAuthContext } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function CollaboratorsLogin() {
   const { tenantId } = useParams();
   const navigate = useNavigate();
-  const { setTenant } = useTenant();
+  const { setAsCollaborator } = useAuthContext();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -25,11 +25,11 @@ export default function CollaboratorsLogin() {
     }
 
     // Define o tenant no contexto sem fazer requisição
-    setTenant({ id: tenantId } as any);
+    setAsCollaborator({ id: tenantId } as any);
 
     // Remove o tenantId da URL
     navigate("/collaborators", { replace: true });
-  }, [tenantId, setTenant, navigate, toast]);
+  }, [tenantId, setAsCollaborator, navigate, toast]);
 
   return (
     <div className="min-h-screen grid md:grid-cols-2">

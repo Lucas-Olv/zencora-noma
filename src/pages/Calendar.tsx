@@ -9,7 +9,7 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import ptBrLocale from "@fullcalendar/core/locales/pt-br";
 import "@/styles/calendar.css";
-import { useTenant } from "@/contexts/TenantContext";
+import { useAuthContext } from "@/contexts/AuthContext";
 
 interface Order {
   id: string;
@@ -48,7 +48,7 @@ const getStatusTextColor = (status: string | null) => {
 const CalendarPage = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { tenant, loading: tenantLoading, error: tenantError } = useTenant();
+  const { tenant, loading: tenantLoading, error: tenantError } = useAuthContext();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 

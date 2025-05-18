@@ -32,7 +32,7 @@ import {
 } from "@/lib/utils";
 import { ptBR } from "date-fns/locale";
 import { supabaseService, OrderType } from "@/services/supabaseService";
-import { useTenant } from "@/contexts/TenantContext";
+import { useAuthContext } from "@/contexts/AuthContext";
 
 // Interface para a ordem com dados do colaborador
 interface OrderWithCollaborator extends OrderType {
@@ -64,7 +64,7 @@ const OrderList = () => {
       }
     `,
   });
-  const { tenant, loading: tenantLoading, error: tenantError } = useTenant();
+  const { tenant, loading: tenantLoading, error: tenantError } = useAuthContext();
 
   const OrderLabel = ({ order }: { order: OrderWithCollaborator }) => {
     const statusDisplay = getStatusDisplay(order.status);

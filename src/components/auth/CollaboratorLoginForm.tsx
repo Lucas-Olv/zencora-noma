@@ -14,13 +14,12 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { supabaseService } from "@/services/supabaseService";
-import { useTenant } from "@/contexts/TenantContext";
 import { useAuthContext } from "@/contexts/AuthContext";
 
 const CollaboratorLoginForm = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { tenant } = useTenant();
+  const { tenant } = useAuthContext();
   const { setAsCollaborator, isAuthenticated } = useAuthContext();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

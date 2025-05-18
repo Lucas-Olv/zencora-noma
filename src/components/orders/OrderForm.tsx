@@ -16,7 +16,7 @@ import { useNavigate } from "react-router-dom";
 import { supabaseService } from "@/services/supabaseService";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { useTenant } from "@/contexts/TenantContext";
+import { useAuthContext } from "@/contexts/AuthContext";
 import { formatDate } from "@/lib/utils";
 
 interface OrderFormProps {
@@ -45,7 +45,7 @@ interface FormErrors {
 const OrderForm = ({ mode = "create", orderId }: OrderFormProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { tenant, loading: tenantLoading, error: tenantError } = useTenant();
+  const { tenant, loading: tenantLoading, error: tenantError } = useAuthContext();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(mode === "edit");
   const [errors, setErrors] = useState<FormErrors>({});

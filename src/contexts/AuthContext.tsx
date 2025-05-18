@@ -1,10 +1,14 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import supabase from "@/services/supabaseService";
 import { Session, User } from "@supabase/supabase-js";
+import { Tables } from "@/integrations/supabase/types";
+type Tenant = Tables<"tenants">;
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
+  tenant: Tenant | null;
+  setTenant: (tenant: Tenant | null) => void;
   isAuthenticated: boolean;
   isCollaborator: boolean;
   role: "owner" | "admin" | "production" | "order" | null;
@@ -15,6 +19,7 @@ interface AuthContextType {
     collaboratorRole: string,
   ) => Promise<void>;
   logout: () => Promise<void>;
+  error: string | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -27,36 +32,42 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     "owner" | "admin" | "production" | "order" | null
   >(null);
   const [loading, setLoading] = useState(true);
+  const [tenant, setTenant] = useState<Tenant | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   // Handle normal Supabase login (owner)
   useEffect(() => {
-    const loadSession = async () => {
-      const { session, error } = await supabase.auth.getCurrentSession();
-      if (session) {
-        setSession(session);
-        setUser(session.user);
-        setIsCollaborator(false);
-        setRole("owner");
-      }
-      setLoading(false);
-    };
-
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
+    try {
+      const loadSession = async () => {
+        const { session, error } = await supabase.auth.getCurrentSession();
         if (session) {
+          setSession(session);
+          setUser(session.user);
           setIsCollaborator(false);
           setRole("owner");
         }
-      },
-    );
-
-    loadSession();
-
-    return () => {
-      listener.subscription.unsubscribe();
-    };
+        setLoading(false);
+      };
+  
+      const { data: listener } = supabase.auth.onAuthStateChange(
+        (event, session) => {
+          setSession(session);
+          setUser(session?.user ?? null);
+          if (session) {
+            setIsCollaborator(false);
+            setRole("owner");
+          }
+        },
+      );
+  
+      loadSession();
+  
+      return () => {
+        listener.subscription.unsubscribe();
+      };
+    } catch (error) {
+      setError(error.message);
+    }
   }, []);
 
   // Handle collaborator login via JWT (Edge Function)
@@ -102,7 +113,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         isAuthenticated: !!user,
         isCollaborator,
         role,
+        error,
         loading,
+        tenant,
+        setTenant,
         setAsCollaborator,
         logout,
       }}

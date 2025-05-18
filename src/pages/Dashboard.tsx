@@ -6,7 +6,6 @@ import { Calendar, ClipboardList, FileText, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import { formatDate, parseDate, getOrderCode } from "@/lib/utils";
-import { useTenant } from "@/contexts/TenantContext";
 import { supabaseService } from "@/services/supabaseService";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useAuthenticatedEffect } from "@/hooks/use-authenticated";
@@ -29,7 +28,7 @@ const formatCurrency = (value: number) => {
 };
 
 const Dashboard = () => {
-  const { tenant, loading: tenantLoading, error: tenantError } = useTenant();
+  const { tenant, loading: tenantLoading, error: tenantError } = useAuthContext();
   const [orders, setOrders] = useState<Order[]>([]);
   const [stats, setStats] = useState<DashboardStats>({
     activeOrders: 0,

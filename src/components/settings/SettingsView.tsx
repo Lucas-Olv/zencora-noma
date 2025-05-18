@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useTenant } from "@/contexts/TenantContext";
+import { useAuthContext } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import {
@@ -91,7 +91,7 @@ const collaboratorSchema = z.object({
 type CollaboratorFormData = z.infer<typeof collaboratorSchema>;
 
 const SettingsView = () => {
-  const { tenant, loading: tenantLoading, error: tenantError } = useTenant();
+  const { tenant, loading: tenantLoading, error: tenantError } = useAuthContext();
   const { toast } = useToast();
   const isMobile = useMediaQuery("(max-width: 768px)");
   const [collaborators, setCollaborators] = useState<CollaboratorType[]>([]);

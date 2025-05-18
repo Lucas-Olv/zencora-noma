@@ -1,12 +1,13 @@
+// useAuthenticatedEffect.ts
 import { useEffect } from "react";
-import { useAuthContext } from "@/contexts/AuthContext";
+import { useAppReady } from "@/hooks/use-app-ready";
 
 export function useAuthenticatedEffect(callback: () => void, deps: any[] = []) {
-  const { isAuthenticated, loading } = useAuthContext();
+  const { ready } = useAppReady();
 
   useEffect(() => {
-    if (!loading && isAuthenticated) {
+    if (ready) {
       callback();
     }
-  }, [loading, isAuthenticated, ...deps]);
+  }, [ready, ...deps]);
 }
