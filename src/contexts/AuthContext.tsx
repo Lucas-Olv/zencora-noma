@@ -2,7 +2,16 @@ import { createContext, useContext, useEffect, useState } from "react";
 import supabase from "@/services/supabaseService";
 import { Session, User } from "@supabase/supabase-js";
 import { Tables } from "@/integrations/supabase/types";
+import { jwtDecode } from "jwt-decode";
 type Tenant = Tables<"tenants">;
+
+interface Collaborator {
+  id: string;
+  tenantId: string;
+  role: string;
+  isCollaborator: boolean;
+  email: string;
+}
 
 interface AuthContextType {
   user: User | null;
@@ -14,9 +23,7 @@ interface AuthContextType {
   role: "owner" | "admin" | "production" | "order" | null;
   loading: boolean;
   setAsCollaborator: (
-    session: Session,
-    jwt: string,
-    collaboratorRole: string,
+    token: string,
   ) => Promise<void>;
   logout: () => Promise<void>;
   error: string | null;
@@ -72,20 +79,36 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Handle collaborator login via JWT (Edge Function)
   const setAsCollaborator = async (
-    session: Session,
-    collaboratorRole: string,
+    token: string,
   ) => {
     setLoading(true);
     try {
+      const decodedToken: Collaborator = jwtDecode(token);
+      const session: Session = {
+        access_token: token,
+        refresh_token: token,
+        user: {
+          id: decodedToken.id,
+          email: decodedToken.email,
+          role: decodedToken.role,
+          app_metadata: {},
+          user_metadata: {},
+          aud: "",
+          created_at: "",
+        },
+        expires_in: 3600,
+        token_type: "Bearer",
+      };
       const { error } = await supabase.auth.setSession(session);
-
       if (error) throw error;
 
       const { user } = await supabase.auth.getCurrentUser();
       setUser(user ?? null);
+      console.log(user);
       setSession((await supabase.auth.getCurrentSession()).session ?? null);
-      setIsCollaborator(true);
-      setRole(collaboratorRole as any);
+      setIsCollaborator(decodedToken.isCollaborator);
+      setRole(decodedToken.role as "owner" | "admin" | "production" | "order");
+      setTenant(decodedToken.tenantId as any);
     } catch (error) {
       console.error("Erro ao setar colaborador:", error);
       setUser(null);

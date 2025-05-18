@@ -70,7 +70,7 @@ export default function CollaboratorsLogin() {
           </div>
         </div>
 
-        <div className="flex-1 flex items-center justify-center">
+        <div className="flex-1 flex items-center justify-center p-8">
           <CollaboratorsLoginForm />
         </div>
       </div>

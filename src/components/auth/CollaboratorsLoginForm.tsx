@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
-import { supabaseService } from "@/services/supabaseService";
 import { useAuthContext } from "@/contexts/AuthContext";
 
 const CollaboratorsLoginForm = () => {
@@ -69,11 +68,9 @@ const CollaboratorsLoginForm = () => {
 
       const data = await response.json();
 
-      if (data.session?.access_token) {
+      if (data) {
         await setAsCollaborator(
-          data.session,
-          data.session.access_token,
-          data.session.user.role,
+          data.token
         );
         toast({
           title: "Login realizado com sucesso!",
