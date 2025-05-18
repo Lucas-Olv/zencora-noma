@@ -30,10 +30,9 @@ import ProtectedRoute from "@/components/routing/ProtectedRoute";
 const queryClient = new QueryClient();
 
 const AppRoutes = () => {
-  const { isAuthenticated, isCollaborator, user, loading } = useAuthContext();
+  const { isAuthenticated, isCollaborator, loading, role } = useAuthContext();
 
   if (loading) {
-    // Evita renderização prematura com dados falsos
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="animate-spin rounded-full h-10 w-10 border-4 border-primary border-t-transparent" />
@@ -165,17 +164,8 @@ const AppRoutes = () => {
 
       {/* Protected Collaborator Routes */}
       {isAuthenticated && isCollaborator && (
-        <Route path="/" element={<Layout />}>
-          <Route
-            path="dashboard"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
-
-          {user?.role === "order" && (
+        <Route path="/collaborators" element={<Layout />}>
+          {role === "order" && (
             <>
               <Route
                 path="orders"
@@ -193,22 +183,56 @@ const AppRoutes = () => {
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="orders/new"
+                element={
+                  <ProtectedRoute>
+                    <NewOrder />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="orders/edit/:id"
+                element={
+                  <ProtectedRoute>
+                    <EditOrder />
+                  </ProtectedRoute>
+                }
+              />
             </>
           )}
 
-          {user?.role === "production" && (
-            <Route
-              path="production"
-              element={
-                <ProtectedRoute>
-                  <Production />
-                </ProtectedRoute>
-              }
-            />
+          {role === "production" && (
+            <>
+              <Route
+                path="production"
+                element={
+                  <ProtectedRoute>
+                    <Production />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="orders/:id"
+                element={
+                  <ProtectedRoute>
+                    <OrderDetail />
+                  </ProtectedRoute>
+                }
+              />
+            </>
           )}
 
-          {user?.role === "admin" && (
+          {role === "admin" && (
             <>
+              <Route
+                path="dashboard"
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
               <Route
                 path="orders"
                 element={

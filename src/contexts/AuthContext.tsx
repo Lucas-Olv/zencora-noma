@@ -1,8 +1,9 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useRef } from "react";
 import supabase from "@/services/supabaseService";
 import { Session, User } from "@supabase/supabase-js";
 import { Tables } from "@/integrations/supabase/types";
 import { jwtDecode } from "jwt-decode";
+
 type Tenant = Tables<"tenants">;
 
 interface Collaborator {
@@ -11,6 +12,9 @@ interface Collaborator {
   role: string;
   isCollaborator: boolean;
   email: string;
+  iss: string;
+  sub: string;
+  exp: number;
 }
 
 interface AuthContextType {
@@ -22,9 +26,7 @@ interface AuthContextType {
   isCollaborator: boolean;
   role: "owner" | "admin" | "production" | "order" | null;
   loading: boolean;
-  setAsCollaborator: (
-    token: string,
-  ) => Promise<void>;
+  setAsCollaborator: (token: string) => Promise<void>;
   logout: () => Promise<void>;
   error: string | null;
 }
@@ -35,97 +37,95 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isCollaborator, setIsCollaborator] = useState(false);
-  const [role, setRole] = useState<
-    "owner" | "admin" | "production" | "order" | null
-  >(null);
-  const [loading, setLoading] = useState(true);
+  const [role, setRole] = useState<"owner" | "admin" | "production" | "order" | null>(null);
   const [tenant, setTenant] = useState<Tenant | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Handle normal Supabase login (owner)
+  const isCollaboratorRef = useRef(isCollaborator);
+
   useEffect(() => {
-    try {
+    isCollaboratorRef.current = isCollaborator;
+  }, [isCollaborator]);
+
+  useEffect(() => {
+    const collaboratorToken = sessionStorage.getItem("collaboratorToken");
+
+    if (collaboratorToken) {
+      setAsCollaborator(collaboratorToken);
+    } else {
       const loadSession = async () => {
         const { session, error } = await supabase.auth.getCurrentSession();
+        if (error) {
+          setError(error.message);
+          setLoading(false);
+          return;
+        }
+
         if (session) {
           setSession(session);
           setUser(session.user);
-          setIsCollaborator(false);
           setRole("owner");
+          setIsCollaborator(false);
+          setIsAuthenticated(true);
         }
         setLoading(false);
       };
-  
-      const { data: listener } = supabase.auth.onAuthStateChange(
-        (event, session) => {
-          setSession(session);
-          setUser(session?.user ?? null);
-          if (session) {
-            setIsCollaborator(false);
-            setRole("owner");
-          }
-        },
-      );
-  
+
+      const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+        // Evita sobrescrever se estiver autenticado como colaborador
+        if (isCollaboratorRef.current) return;
+
+        setSession(session);
+        setUser(session?.user ?? null);
+        setIsCollaborator(false);
+        setRole(session ? "owner" : null);
+        setIsAuthenticated(!!session?.user);
+      });
+
       loadSession();
-  
+
       return () => {
         listener.subscription.unsubscribe();
       };
-    } catch (error) {
-      setError(error.message);
     }
   }, []);
 
-  // Handle collaborator login via JWT (Edge Function)
-  const setAsCollaborator = async (
-    token: string,
-  ) => {
-    setLoading(true);
+  const setAsCollaborator = async (token: string) => {
     try {
-      const decodedToken: Collaborator = jwtDecode(token);
-      const session: Session = {
-        access_token: token,
-        refresh_token: token,
-        user: {
-          id: decodedToken.id,
-          email: decodedToken.email,
-          role: decodedToken.role,
-          app_metadata: {},
-          user_metadata: {},
-          aud: "",
-          created_at: "",
-        },
-        expires_in: 3600,
-        token_type: "Bearer",
-      };
-      const { error } = await supabase.auth.setSession(session);
-      if (error) throw error;
+      setLoading(true);
+      const decoded: Collaborator = jwtDecode(token);
+      sessionStorage.setItem("collaboratorToken", token);
 
-      const { user } = await supabase.auth.getCurrentUser();
-      setUser(user ?? null);
-      console.log(user);
-      setSession((await supabase.auth.getCurrentSession()).session ?? null);
-      setIsCollaborator(decodedToken.isCollaborator);
-      setRole(decodedToken.role as "owner" | "admin" | "production" | "order");
-      setTenant(decodedToken.tenantId as any);
-    } catch (error) {
-      console.error("Erro ao setar colaborador:", error);
-      setUser(null);
+      setIsCollaborator(true);
+      setRole(decoded.role as any);
+      setTenant({ id: decoded.tenantId } as any);
+      setUser(null); // colaborador não é user do Supabase
       setSession(null);
+      setIsAuthenticated(true);
+    } catch (err) {
+      console.error("Erro ao setar colaborador:", err);
+      setError("Token inválido ou expirado");
       setIsCollaborator(false);
       setRole(null);
+      setTenant(null);
+      setIsAuthenticated(false);
     } finally {
       setLoading(false);
     }
   };
 
   const logout = async () => {
+    sessionStorage.removeItem("collaboratorToken");
     await supabase.auth.signOut();
+
     setUser(null);
     setSession(null);
     setIsCollaborator(false);
     setRole(null);
+    setTenant(null);
+    setIsAuthenticated(false);
   };
 
   return (
@@ -133,15 +133,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       value={{
         user,
         session,
-        isAuthenticated: !!user,
+        isAuthenticated,
         isCollaborator,
         role,
-        error,
-        loading,
         tenant,
         setTenant,
+        loading,
         setAsCollaborator,
         logout,
+        error,
       }}
     >
       {children}
@@ -149,10 +149,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-export const useAuthContext = () => {
+const useAuthContext = () => {
   const context = useContext(AuthContext);
   if (!context) {
     throw new Error("useAuth precisa ser usado dentro do AuthProvider");
   }
   return context;
 };
+
+export { useAuthContext };

@@ -1,4 +1,4 @@
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,29 +15,53 @@ import { useToast } from "@/components/ui/use-toast";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useAuthContext } from "@/contexts/AuthContext";
 
+const getErrorMessage = (error: any) => {
+  const errorMessages: { [key: string]: string } = {
+    "Invalid login credentials": "Credenciais de login inválidas",
+    "Email not confirmed": "Email não confirmado",
+    "User not found": "Usuário não encontrado",
+    "Invalid email or password": "Email ou senha inválidos",
+    "Email already registered": "Email já cadastrado",
+    "Password should be at least 6 characters":
+      "A senha deve ter pelo menos 6 caracteres",
+    "Invalid email": "Email inválido",
+  };
+
+  return (
+    errorMessages[error.message] ||
+    error.message ||
+    "Ocorreu um erro. Por favor, tente novamente."
+  );
+};
+
 const CollaboratorsLoginForm = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { setAsCollaborator, tenant } = useAuthContext();
+  const { setAsCollaborator, tenant, role } = useAuthContext();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const getErrorMessage = (error: any) => {
-    const errorMessages: { [key: string]: string } = {
-      "Invalid login credentials": "Credenciais de login inválidas",
-      "Email not confirmed": "Email não confirmado",
-      "User not found": "Usuário não encontrado",
-      "Invalid email or password": "Email ou senha inválidos",
-    };
+  useEffect(() => {
+    if (loading) return;
 
-    return (
-      errorMessages[error.message] ||
-      error.message ||
-      "Ocorreu um erro. Por favor, tente novamente."
-    );
-  };
+    if (role) {
+      switch (role) {
+        case "admin":
+          navigate("/collaborators/dashboard");
+          break;
+        case "production":
+          navigate("/collaborators/production");
+          break;
+        case "order":
+          navigate("/collaborators/orders");
+          break;
+        default:
+          navigate("/");
+      }
+    }
+  }, [role, loading, navigate]);
 
   const handleSignIn = async (e: FormEvent) => {
     e.preventDefault();
@@ -69,14 +93,12 @@ const CollaboratorsLoginForm = () => {
       const data = await response.json();
 
       if (data) {
-        await setAsCollaborator(
-          data.token
-        );
+        setAsCollaborator(data.token);
         toast({
           title: "Login realizado com sucesso!",
           description: "Bem-vindo de volta ao Zencora Noma.",
         });
-        navigate("/collaborators/dashboard");
+        sessionStorage.removeItem("tenantId");
       }
     } catch (error: any) {
       toast({

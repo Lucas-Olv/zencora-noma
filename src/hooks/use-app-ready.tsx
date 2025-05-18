@@ -1,6 +1,6 @@
 import { useAuthContext } from "@/contexts/AuthContext";
 
-export function useAppReady() {
+const useAppReady = () => {
   const {
     isAuthenticated,
     loading,
@@ -22,4 +22,6 @@ export function useAppReady() {
     tenant,
     isCollaborator,
   };
-}
+};
+
+export { useAppReady };
