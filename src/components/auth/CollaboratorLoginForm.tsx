@@ -15,11 +15,13 @@ import { useToast } from "@/components/ui/use-toast";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { supabaseService } from "@/services/supabaseService";
 import { useTenant } from "@/contexts/TenantContext";
+import { useAuthContext } from "@/contexts/AuthContext";
 
 const CollaboratorLoginForm = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { tenant } = useTenant();
+  const { login, isAuthenticated } = useAuthContext();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -44,12 +46,14 @@ const CollaboratorLoginForm = () => {
       
       if (error) throw error;
       
-      toast({
-        title: "Login realizado com sucesso!",
-        description: "Bem-vindo de volta ao Zencora Noma.",
-      });
-      
-      navigate("/collaborators/dashboard");
+      if (data.session?.access_token) {
+        login(data.session.access_token);
+        toast({
+          title: "Login realizado com sucesso!",
+          description: "Bem-vindo de volta ao Zencora Noma.",
+        });
+        navigate("/collaborators/dashboard");
+      }
     } catch (error: any) {
       toast({
         title: "Erro ao fazer login",

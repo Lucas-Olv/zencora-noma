@@ -15,7 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { supabaseService } from "@/services/supabaseService";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuthContext } from "@/contexts/AuthContext";
 
 const LoginForm = () => {
   const { toast } = useToast();
@@ -27,13 +27,19 @@ const LoginForm = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
+  const { login, isAuthenticated } = useAuthContext();
   
   useEffect(() => {
     // Check if register=true is in the URL
     if (searchParams.get("register") === "true") {
       setActiveTab("register");
     }
-  }, [searchParams]);
+
+    // Se já estiver autenticado, redireciona para o dashboard
+    if (isAuthenticated) {
+      navigate("/dashboard");
+    }
+  }, [searchParams, isAuthenticated, navigate]);
   
   const getErrorMessage = (error: any) => {
     const errorMessages: { [key: string]: string } = {
@@ -55,7 +61,7 @@ const LoginForm = () => {
       setLoading(true);
       
       // Criar o usuário na autenticação
-      const { data: authData, error: authError } = await supabaseService.auth.signUpWithEmail(email, password, { name,  product: import.meta.env.VITE_PRODUCT_CODE });
+      const { data: authData, error: authError } = await supabaseService.auth.signUpWithEmail(email, password, { name, product: import.meta.env.VITE_PRODUCT_CODE });
       
       if (authError) throw authError;
       
@@ -73,12 +79,15 @@ const LoginForm = () => {
         return;
       }
       
-      toast({
-        title: "Conta criada com sucesso!",
-        description: "Bem-vindo ao Zencora Noma.",
-      });
-      
-      navigate("/dashboard");
+      // Se o email não precisa ser confirmado, faz login automaticamente
+      if (authData.session?.access_token) {
+        login(authData.session.access_token);
+        toast({
+          title: "Conta criada com sucesso!",
+          description: "Bem-vindo ao Zencora Noma.",
+        });
+        navigate("/dashboard");
+      }
     } catch (error: any) {
       console.error("Erro ao criar conta:", error);
       toast({
@@ -99,12 +108,14 @@ const LoginForm = () => {
       
       if (error) throw error;
       
-      toast({
-        title: "Login realizado com sucesso!",
-        description: "Bem-vindo de volta ao Zencora Noma.",
-      });
-      
-      navigate("/dashboard");
+      if (data.session?.access_token) {
+        login(data.session.access_token);
+        toast({
+          title: "Login realizado com sucesso!",
+          description: "Bem-vindo de volta ao Zencora Noma.",
+        });
+        navigate("/dashboard");
+      }
     } catch (error: any) {
       toast({
         title: "Erro ao fazer login",
