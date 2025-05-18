@@ -27,11 +27,12 @@ import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import Contact from "./pages/Contact";
 import CollaboratorsLogin from "./pages/CollaboratorsLogin";
-
+import { AuthProvider } from "@/contexts/AuthContext";
 const queryClient = new QueryClient();
 
 const App = () => {
   const [session, setSession] = useState<Session | null>(null);
+  const [collaboratorSession, setCollaboratorSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -71,6 +72,7 @@ const App = () => {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <QueryClientProvider client={queryClient}>
+          <AuthProvider>
         <TenantProvider>
           <TooltipProvider>
             <Toaster />
@@ -106,6 +108,7 @@ const App = () => {
           </BrowserRouter>
           </TooltipProvider>
         </TenantProvider>
+          </AuthProvider>
       </QueryClientProvider>
     </ThemeProvider>
   );
