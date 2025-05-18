@@ -17,7 +17,7 @@ import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { supabaseService } from "@/services/supabaseService";
 import { useAuthContext } from "@/contexts/AuthContext";
 
-const LoginForm = () => {
+export const LoginForm = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -299,5 +299,3 @@ const LoginForm = () => {
     </div>
   );
 };
-
-export default LoginForm;

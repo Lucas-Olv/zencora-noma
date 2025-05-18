@@ -41,9 +41,12 @@ const Dashboard = () => {
   });
   const [loading, setLoading] = useState(true);
 
+  
   useAuthenticatedEffect(() => {
+    document.title = "Dashboard | Zencora Noma";
     fetchStats();
-  });
+  }, [tenant, tenantLoading, tenantError]);
+
 
   const fetchStats = async () => {
     try {
@@ -112,10 +115,6 @@ const Dashboard = () => {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    document.title = "Dashboard | Zencora Noma";
-  });
 
   return (
     <div className="space-y-6">

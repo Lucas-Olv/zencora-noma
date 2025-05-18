@@ -1,4 +1,4 @@
-import LoginForm from "@/components/auth/LoginForm";
+import { LoginForm } from "@/components/auth/LoginForm";
 import ThemeToggle from "@/components/layout/ThemeToggle";
 import { Link } from "react-router-dom";
 
