@@ -217,6 +217,9 @@ const OrderList = () => {
       ? orders
       : orders.filter(
         (order) =>
+          getOrderCode(order.id)
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
           order.client_name
             .toLowerCase()
             .includes(searchTerm.toLowerCase()) ||
