@@ -10,7 +10,6 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Orders from "./pages/Orders";
 import OrderDetail from "./pages/OrderDetail";
-import NewOrder from "./pages/NewOrder";
 import Production from "./pages/Production";
 import Reports from "./pages/Reports";
 import Calendar from "./pages/Calendar";
@@ -18,19 +17,18 @@ import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import Landing from "./pages/Landing";
-import EditOrder from "./pages/EditOrder";
 import About from "./pages/About";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import Contact from "./pages/Contact";
-import CollaboratorsLogin from "./pages/CollaboratorsLogin";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { useAuthContext } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/routing/ProtectedRoute";
+
 const queryClient = new QueryClient();
 
 const AppRoutes = () => {
-  const { isAuthenticated, isCollaborator, loading, role } = useAuthContext();
+  const { isAuthenticated, loading } = useAuthContext();
 
   if (loading) {
     return (
@@ -55,29 +53,9 @@ const AppRoutes = () => {
         path="/login"
         element={isAuthenticated ? <Navigate to="/dashboard" /> : <Login />}
       />
-      <Route
-        path="/collaborators/:tenantId"
-        element={
-          isAuthenticated && !isCollaborator ? (
-            <Navigate to="/dashboard" />
-          ) : (
-            <CollaboratorsLogin />
-          )
-        }
-      />
-      <Route
-        path="/collaborators"
-        element={
-          isAuthenticated && !isCollaborator ? (
-            <Navigate to="/dashboard" />
-          ) : (
-            <CollaboratorsLogin />
-          )
-        }
-      />
 
-      {/* Protected Owner Routes */}
-      {isAuthenticated && !isCollaborator && (
+      {/* Protected Routes */}
+      {isAuthenticated && (
         <Route path="/" element={<Layout />}>
           <Route
             path="dashboard"
@@ -92,22 +70,6 @@ const AppRoutes = () => {
             element={
               <ProtectedRoute>
                 <Orders />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="orders/new"
-            element={
-              <ProtectedRoute>
-                <NewOrder />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="orders/edit/:id"
-            element={
-              <ProtectedRoute>
-                <EditOrder />
               </ProtectedRoute>
             }
           />
@@ -159,154 +121,6 @@ const AppRoutes = () => {
               </ProtectedRoute>
             }
           />
-        </Route>
-      )}
-
-      {/* Protected Collaborator Routes */}
-      {isAuthenticated && isCollaborator && (
-        <Route path="/collaborators" element={<Layout />}>
-          {role === "order" && (
-            <>
-              <Route
-                path="orders"
-                element={
-                  <ProtectedRoute>
-                    <Orders />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="orders/:id"
-                element={
-                  <ProtectedRoute>
-                    <OrderDetail />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="orders/new"
-                element={
-                  <ProtectedRoute>
-                    <NewOrder />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="orders/edit/:id"
-                element={
-                  <ProtectedRoute>
-                    <EditOrder />
-                  </ProtectedRoute>
-                }
-              />
-            </>
-          )}
-
-          {role === "production" && (
-            <>
-              <Route
-                path="production"
-                element={
-                  <ProtectedRoute>
-                    <Production />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="orders/:id"
-                element={
-                  <ProtectedRoute>
-                    <OrderDetail />
-                  </ProtectedRoute>
-                }
-              />
-            </>
-          )}
-
-          {role === "admin" && (
-            <>
-              <Route
-                path="dashboard"
-                element={
-                  <ProtectedRoute>
-                    <Dashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="orders"
-                element={
-                  <ProtectedRoute>
-                    <Orders />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="orders/new"
-                element={
-                  <ProtectedRoute>
-                    <NewOrder />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="orders/edit/:id"
-                element={
-                  <ProtectedRoute>
-                    <EditOrder />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="orders/:id"
-                element={
-                  <ProtectedRoute>
-                    <OrderDetail />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="production"
-                element={
-                  <ProtectedRoute>
-                    <Production />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="reports"
-                element={
-                  <ProtectedRoute>
-                    <Reports />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="calendar"
-                element={
-                  <ProtectedRoute>
-                    <Calendar />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="profile"
-                element={
-                  <ProtectedRoute>
-                    <Profile />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="settings"
-                element={
-                  <ProtectedRoute>
-                    <Settings />
-                  </ProtectedRoute>
-                }
-              />
-            </>
-          )}
         </Route>
       )}
 

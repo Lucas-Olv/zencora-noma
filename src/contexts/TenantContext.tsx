@@ -20,7 +20,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   const [tenant, setTenantState] = useState<Tenant | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { user, isCollaborator } = useAuthContext(); // usa o user do contexto
+  const { user } = useAuthContext();
   const { setTenant: setTenantAuth } = useAuthContext();
   const [tenantError, setTenantError] = useState<string | null>(null);
   const [loadingTenant, setLoadingTenant] = useState(true);
@@ -55,12 +55,10 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    if (!isCollaborator && user) {
+    if (user) {
       fetchTenant();
-    } else if (isCollaborator) {
-      setLoading(false);
     }
-  }, [isCollaborator, user]); // 🔥 importante observar user
+  }, [user]);
 
   return (
     <TenantContext.Provider

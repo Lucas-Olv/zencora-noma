@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/components/ui/use-toast";
 import { supabaseService, OrderType } from "@/services/supabaseService";
+import OrderDialog from "@/components/orders/OrderDialog";
 
 // Interface para a ordem com dados do colaborador
 interface OrderWithCollaborator extends OrderType {
@@ -107,6 +108,7 @@ const OrderDetail = () => {
   const { toast } = useToast();
   const [order, setOrder] = useState<OrderWithCollaborator | null>(null);
   const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   useEffect(() => {
     document.title = "Detalhes da Encomenda | Zencora Noma";
@@ -256,11 +258,11 @@ const OrderDetail = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex gap-2">
           <Button
             variant="outline"
             size="sm"
-            onClick={() => navigate(`/orders/edit/${id}`)}
+            onClick={() => setDialogOpen(true)}
           >
             <Edit className="h-4 w-4 mr-1" />
             Editar
@@ -278,7 +280,7 @@ const OrderDetail = () => {
                 <AlertDialogTitle>Confirma exclusão?</AlertDialogTitle>
                 <AlertDialogDescription>
                   Esta ação não poderá ser desfeita. Isso excluirá
-                  permanentemente a encomenda do cliente {order.client_name}.
+                  permanentemente a encomenda do cliente {order?.client_name}.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -391,6 +393,14 @@ const OrderDetail = () => {
           </div>
         </CardFooter>
       </Card>
+
+      <OrderDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        mode="edit"
+        orderId={id}
+        orderData={order || undefined}
+      />
     </div>
   );
 };

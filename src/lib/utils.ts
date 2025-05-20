@@ -74,24 +74,28 @@ export function getStatusDisplay(status: string | null) {
     case "pending":
       return {
         label: "Pendente",
+        variant: "outline" as const,
         className:
           "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50",
       };
     case "production":
       return {
         label: "Produção",
+        variant: "secondary" as const,
         className:
           "bg-purple-100/80 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200 hover:bg-purple-200 dark:hover:bg-purple-900/50",
       };
     case "done":
       return {
         label: "Concluído",
+        variant: "default" as const,
         className:
           "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50",
       };
     default:
       return {
         label: "Pendente",
+        variant: "outline" as const,
         className:
           "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50",
       };

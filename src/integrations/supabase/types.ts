@@ -48,51 +48,9 @@ export type Database = {
           }
         ]
       }
-      collaborators: {
-        Row: {
-          can_login: boolean | null
-          created_at: string | null
-          email: string | null
-          id: string
-          name: string
-          tenant_id: string | null
-          password: string | null
-          role: string | null
-        }
-        Insert: {
-          can_login?: boolean | null
-          created_at?: string | null
-          email?: string | null
-          id?: string
-          name: string
-          tenant_id?: string | null
-          password?: string | null
-          role?: string | null
-        }
-        Update: {
-          can_login?: boolean | null
-          created_at?: string | null
-          email?: string | null
-          id?: string
-          name?: string
-          tenant_id?: string | null
-          password?: string | null
-          role?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "collaborators_tenant_id_fkey"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
       orders: {
         Row: {
           client_name: string
-          collaborator_id: string | null
           created_at: string | null
           description: string | null
           due_date: string
@@ -104,7 +62,6 @@ export type Database = {
         }
         Insert: {
           client_name: string
-          collaborator_id?: string | null
           created_at?: string | null
           description?: string | null
           due_date: string
@@ -116,7 +73,6 @@ export type Database = {
         }
         Update: {
           client_name?: string
-          collaborator_id?: string | null
           created_at?: string | null
           description?: string | null
           due_date?: string
@@ -127,13 +83,6 @@ export type Database = {
           phone?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "orders_collaborator_id_fkey"
-            columns: ["collaborator_id"]
-            isOneToOne: false
-            referencedRelation: "collaborators"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "orders_tenant_id_fkey"
             columns: ["tenant_id"]

@@ -22,6 +22,7 @@ import { formatDate } from "@/lib/utils";
 interface OrderFormProps {
   mode?: "create" | "edit";
   orderId?: string;
+  onSuccess?: () => void;
 }
 
 interface FormData {
@@ -42,7 +43,7 @@ interface FormErrors {
   deliveryTime?: string;
 }
 
-const OrderForm = ({ mode = "create", orderId }: OrderFormProps) => {
+const OrderForm = ({ mode = "create", orderId, onSuccess }: OrderFormProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { tenant, loading: tenantLoading, error: tenantError } = useAuthContext();
@@ -256,64 +257,49 @@ const OrderForm = ({ mode = "create", orderId }: OrderFormProps) => {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-
-    if (!validateForm()) {
-      toast({
-        title: "Erro de validação",
-        description: "Por favor, corrija os erros no formulário.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (tenantLoading || tenantError || !tenant) {
-      toast({
-        title: "Erro de tenant",
-        description: "Não foi possível identificar o tenant atual.",
-        variant: "destructive",
-      });
-      return;
-    }
+    if (!validateForm()) return;
 
     setIsSubmitting(true);
 
     try {
+      const numericValue = parseFloat(formData.value.replace(",", "."));
+      const dueDate = new Date(
+        `${formData.deliveryDate}T${formData.deliveryTime}:00`,
+      );
+
       const orderData = {
         client_name: formData.customerName,
         phone: formData.phone || null,
         description: formData.description,
-        price: parseFloat(formData.value.replace(",", ".")),
-        due_date: `${formData.deliveryDate}T${formData.deliveryTime}:00`,
-        tenant_id: tenant.id,
-        collaborator_id: null,
+        price: numericValue,
+        due_date: dueDate.toISOString(),
+        tenant_id: tenant?.id,
         status: "pending" as const,
       };
 
       if (mode === "create") {
         const { error } = await supabaseService.orders.createOrder(orderData);
         if (error) throw error;
-
         toast({
           title: "Encomenda criada",
-          description: "A encomenda foi criada com sucesso.",
+          description: "A encomenda foi registrada com sucesso.",
         });
-        navigate("/orders");
       } else if (mode === "edit" && orderId) {
         const { error } = await supabaseService.orders.updateOrder(
           orderId,
           orderData,
         );
         if (error) throw error;
-
         toast({
           title: "Encomenda atualizada",
           description: "A encomenda foi atualizada com sucesso.",
         });
-        navigate("/orders");
       }
+
+      onSuccess?.();
     } catch (error: any) {
       toast({
-        title: "Erro ao salvar encomenda",
+        title: "Erro",
         description: error.message,
         variant: "destructive",
       });

@@ -6,21 +6,19 @@ const useAppReady = () => {
     loading,
     user,
     tenant,
-    isCollaborator,
   } = useAuthContext();
 
   const ready =
     isAuthenticated &&
     !loading &&
     !!user &&
-    (isCollaborator || !!tenant); // se não for colaborador, precisa de tenant
+    !!tenant;
 
   return {
     ready,
     loading,
     user,
     tenant,
-    isCollaborator,
   };
 };
 

@@ -11,28 +11,13 @@ export type OrderType = {
   price: number;
   due_date: string;
   tenant_id: string;
-  collaborator_id: string | null;
   status: "pending" | "production" | "done";
   phone?: string;
   product?: string;
-  collaborator?: {
-    name: string | null;
-  } | null;
 };
 export type TenantType = Database["public"]["Tables"]["tenants"]["Row"];
-export type CollaboratorType = {
-  id: string;
-  name: string;
-  email: string | null;
-  password: string | null;
-  tenant_id: string | null;
-  created_at: string | null;
-  can_login: boolean | null;
-  role: string | null;
-};
 export type UserType = Database["public"]["Tables"]["users"]["Row"];
-export type SubscriptionType =
-  Database["public"]["Tables"]["subscriptions"]["Row"];
+export type SubscriptionType = Database["public"]["Tables"]["subscriptions"]["Row"];
 
 // Serviço de autenticação
 export const authService = {
@@ -173,53 +158,13 @@ export const tenantsService = {
   },
 };
 
-// Serviço de colaboradores
-export const collaboratorsService = {
-  // Obtém todos os colaboradores de um tenant
-  getTenantCollaborators: async (tenantId: string) => {
-    return await supabase
-      .from("collaborators")
-      .select("*")
-      .eq("tenant_id", tenantId);
-  },
-
-  // Cria um novo colaborador
-  createCollaborator: async (
-    collaborator: Omit<CollaboratorType, "id" | "created_at">,
-  ) => {
-    return await supabase.from("collaborators").insert(collaborator);
-  },
-
-  // Atualiza um colaborador
-  updateCollaborator: async (
-    id: string,
-    data: Partial<Omit<CollaboratorType, "id" | "created_at">>,
-  ) => {
-    return await supabase.from("collaborators").update(data).eq("id", id);
-  },
-
-  // Exclui um colaborador
-  deleteCollaborator: async (id: string) => {
-    return await supabase.from("collaborators").delete().eq("id", id);
-  },
-
-  // Obtém um colaborador pelo ID
-  getCollaboratorById: async (id: string) => {
-    return await supabase
-      .from("collaborators")
-      .select("*")
-      .eq("id", id)
-      .single();
-  },
-};
-
 // Serviço de encomendas
 export const ordersService = {
   // Obtém todas as encomendas de um tenant
   getTenantOrders: async (tenantId: string) => {
     return await supabase
       .from("orders")
-      .select("*, collaborator:collaborators(name)")
+      .select("*")
       .eq("tenant_id", tenantId)
       .order("due_date", { ascending: true });
   },
@@ -233,7 +178,7 @@ export const ordersService = {
   getOrderById: async (id: string) => {
     return await supabase
       .from("orders")
-      .select("*, collaborator:collaborators(name)")
+      .select("*")
       .eq("id", id)
       .single();
   },
@@ -252,10 +197,7 @@ export const ordersService = {
   },
 
   // Atualiza o status de uma encomenda
-  updateOrderStatus: async (
-    id: string,
-    status: "pending" | "production" | "done",
-  ) => {
+  updateOrderStatus: async (id: string, status: "pending" | "production" | "done") => {
     return await supabase.from("orders").update({ status }).eq("id", id);
   },
 };
@@ -267,7 +209,6 @@ export const supabaseService = {
   tenants: tenantsService,
   subscriptions: subscriptionsService,
   products: productsService,
-  collaborators: collaboratorsService,
   orders: ordersService,
 };
 

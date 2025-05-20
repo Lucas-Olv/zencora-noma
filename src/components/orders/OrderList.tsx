@@ -14,9 +14,9 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import {
-  CheckCircle2,
-  Eye,
+  CheckCircle2,  Eye,
   Plus,
+
   Search,
   X,
   Loader2,
@@ -33,6 +33,7 @@ import {
 import { ptBR } from "date-fns/locale";
 import { supabaseService, OrderType } from "@/services/supabaseService";
 import { useAuthContext } from "@/contexts/AuthContext";
+import OrderDialog from "./OrderDialog";
 
 // Interface para a ordem com dados do colaborador
 interface OrderWithCollaborator extends OrderType {
@@ -49,6 +50,9 @@ const OrderList = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedOrder, setSelectedOrder] =
     useState<OrderWithCollaborator | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
+  const [dialogOrderId, setDialogOrderId] = useState<string | undefined>();
   const printRef = useRef<HTMLDivElement>(null);
   const handlePrint = usePrint(printRef, {
     pageStyle: `
@@ -183,6 +187,25 @@ const OrderList = () => {
     }
   };
 
+  const handleNewOrder = () => {
+    setDialogMode("create");
+    setDialogOrderId(undefined);
+    setDialogOpen(true);
+  };
+
+  const handleEditOrder = (order: OrderWithCollaborator) => {
+    setDialogMode("edit");
+    setDialogOrderId(order.id);
+    setSelectedOrder(order);
+    setDialogOpen(true);
+  };
+
+  const handleOrderUpdate = (updatedOrder: OrderType) => {
+    setOrders(orders.map(order => 
+      order.id === updatedOrder.id ? { ...order, ...updatedOrder, id: order.id } : order
+    ));
+  };
+
   const filteredOrders =
     searchTerm.trim() === ""
       ? orders
@@ -207,7 +230,7 @@ const OrderList = () => {
           </p>
         </div>
 
-        <Button onClick={() => navigate("/orders/new")} className="shrink-0">
+        <Button onClick={handleNewOrder} className="shrink-0">
           <Plus className="mr-2 h-4 w-4" /> Nova Encomenda
         </Button>
       </div>
@@ -349,7 +372,7 @@ const OrderList = () => {
                                 variant="ghost"
                                 size="icon"
                                 onClick={() =>
-                                  navigate(`/orders/edit/${order.id}`)
+                                  handleEditOrder(order)
                                 }
                                 title="Editar encomenda"
                                 className="flex items-center justify-center"
@@ -453,7 +476,7 @@ const OrderList = () => {
                               variant="ghost"
                               size="icon"
                               onClick={() =>
-                                navigate(`/orders/edit/${order.id}`)
+                                handleEditOrder(order)
                               }
                               title="Editar encomenda"
                             >
@@ -489,6 +512,15 @@ const OrderList = () => {
           )}
         </CardContent>
       </Card>
+
+      <OrderDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        mode={dialogMode}
+        orderId={dialogOrderId}
+        orderData={selectedOrder}
+        onSuccess={handleOrderUpdate}
+      />
 
       {/* Hidden print content */}
       <div className="hidden">
