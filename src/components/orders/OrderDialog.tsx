@@ -34,6 +34,7 @@ interface OrderDialogProps {
   mode: "create" | "edit";
   orderId?: string;
   orderData?: OrderType;
+  onSuccess?: (updatedOrder: OrderType) => void;
 }
 
 const formSchema = z.object({
@@ -72,6 +73,7 @@ const OrderDialog = ({
   mode,
   orderId,
   orderData,
+  onSuccess,
 }: OrderDialogProps) => {
   const { toast } = useToast();
   const { tenant } = useAuthContext();
@@ -190,11 +192,14 @@ const OrderDialog = ({
 
         // Atualiza a lista otimisticamente
         queryClient.setQueryData<OrderType[]>(["orders", tenant.id], (old = []) => {
-          return old.map((order) => (order.id === orderId ? updatedOrder : order));
+          return old.map((order) => (order.id === orderId ? updatedOrder as OrderType : order));
         });
 
         // Invalida a query para forçar uma nova busca
         await queryClient.invalidateQueries({ queryKey: ["orders", tenant.id] });
+
+        // Notifica o componente pai sobre a atualização
+        onSuccess?.(updatedOrder as OrderType);
 
         toast({
           title: "Encomenda atualizada!",

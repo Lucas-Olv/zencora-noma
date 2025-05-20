@@ -110,6 +110,10 @@ const OrderDetail = () => {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
 
+  const handleOrderUpdate = (updatedOrder: OrderType) => {
+    setOrder(updatedOrder);
+  };  
+
   useEffect(() => {
     document.title = "Detalhes da Encomenda | Zencora Noma";
 
@@ -400,6 +404,7 @@ const OrderDetail = () => {
         mode="edit"
         orderId={id}
         orderData={order || undefined}
+        onSuccess={handleOrderUpdate}
       />
     </div>
   );

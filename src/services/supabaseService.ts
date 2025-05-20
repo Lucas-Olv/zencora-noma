@@ -188,7 +188,7 @@ export const ordersService = {
     id: string,
     data: Partial<Omit<OrderType, "id" | "created_at">>,
   ) => {
-    return await supabase.from("orders").update(data).eq("id", id);
+    return await supabase.from("orders").update(data).eq("id", id).select().single();
   },
 
   // Exclui uma encomenda
