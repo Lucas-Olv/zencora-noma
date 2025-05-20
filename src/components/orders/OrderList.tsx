@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import {
-  CheckCircle2,  Eye,
+  CheckCircle2, Eye,
   Plus,
 
   Search,
@@ -200,25 +200,31 @@ const OrderList = () => {
     setDialogOpen(true);
   };
 
-  const handleOrderUpdate = (updatedOrder: OrderType) => {
-    setOrders(orders.map(order => 
-      order.id === updatedOrder.id ? { ...order, ...updatedOrder, id: order.id } : order
-    ));
+  const handleListUpdate = (updatedOrder: OrderType) => {
+    if (dialogMode === "create") {
+      let newOrders = [updatedOrder as OrderType, ...orders];
+      newOrders.sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime());
+      setOrders(newOrders);
+    } else {
+      setOrders(orders.map(order =>
+        order.id === updatedOrder.id ? { ...order, ...updatedOrder, id: order.id } : order
+      ));
+    }
   };
 
   const filteredOrders =
     searchTerm.trim() === ""
       ? orders
       : orders.filter(
-          (order) =>
-            order.client_name
+        (order) =>
+          order.client_name
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          (order.description &&
+            order.description
               .toLowerCase()
-              .includes(searchTerm.toLowerCase()) ||
-            (order.description &&
-              order.description
-                .toLowerCase()
-                .includes(searchTerm.toLowerCase())),
-        );
+              .includes(searchTerm.toLowerCase())),
+      );
 
   return (
     <div className="space-y-6">
@@ -519,7 +525,7 @@ const OrderList = () => {
         mode={dialogMode}
         orderId={dialogOrderId}
         orderData={selectedOrder}
-        onSuccess={handleOrderUpdate}
+        onSuccess={handleListUpdate}
       />
 
       {/* Hidden print content */}

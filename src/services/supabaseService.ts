@@ -171,7 +171,7 @@ export const ordersService = {
 
   // Cria uma nova encomenda
   createOrder: async (order: Omit<OrderType, "id" | "created_at">) => {
-    return await supabase.from("orders").insert(order);
+    return await supabase.from("orders").insert(order).select().single();
   },
 
   // Obtém uma encomenda pelo ID

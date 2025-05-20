@@ -46,10 +46,14 @@ const formSchema = z.object({
   description: z.string().min(1, "Por favor, descreva a encomenda"),
   due_date: z.string().min(1, "Por favor, selecione a data de entrega")
     .refine((date) => {
+      // Criar as datas no fuso horário local
       const today = new Date();
+      const selectedDate = new Date(date + 'T00:00:00');
+      
+      // Reset hours to 0 for both dates to compare only the dates
       today.setHours(0, 0, 0, 0);
-      const selectedDate = new Date(date);
       selectedDate.setHours(0, 0, 0, 0);
+      
       return selectedDate.getTime() >= today.getTime();
     }, "A data de entrega não pode ser anterior a hoje"),
   due_time: z.string().min(1, "Por favor, selecione a hora de entrega"),
@@ -153,7 +157,8 @@ const OrderDialog = ({
     setLoading(true);
     try {
       const [hours, minutes] = data.due_time.split(":");
-      const dueDate = new Date(data.due_date);
+      // Criar a data no fuso horário local
+      const dueDate = new Date(data.due_date + 'T00:00:00');
       dueDate.setHours(parseInt(hours), parseInt(minutes));
 
       const orderData = {
@@ -173,11 +178,13 @@ const OrderDialog = ({
 
         // Atualiza a lista otimisticamente
         queryClient.setQueryData<OrderType[]>(["orders", tenant.id], (old = []) => {
-          return [newOrder, ...old];
+          return [newOrder as OrderType, ...old];
         });
 
         // Invalida a query para forçar uma nova busca
         await queryClient.invalidateQueries({ queryKey: ["orders", tenant.id] });
+
+        onSuccess?.(newOrder as OrderType);
 
         toast({
           title: "Encomenda criada!",
