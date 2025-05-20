@@ -261,53 +261,11 @@ const OrderDetail = () => {
             </p>
           </div>
         </div>
-
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setDialogOpen(true)}
-          >
-            <Edit className="h-4 w-4 mr-1" />
-            Editar
-          </Button>
-
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="destructive" size="sm">
-                <Trash className="h-4 w-4 mr-1" />
-                Excluir
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent className="w-[calc(100%-2rem)] max-w-[400px] mx-auto rounded-xl">
-              <AlertDialogHeader>
-                <AlertDialogTitle>Confirma exclusão?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Esta ação não poderá ser desfeita. Isso excluirá
-                  permanentemente a encomenda do cliente {order?.client_name}.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDelete}>
-                  Excluir
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
       </div>
 
       <Card>
         <CardHeader className="flex flex-row items-start justify-between">
-          <div>
             <CardTitle className="text-xl">{order.client_name}</CardTitle>
-            <p className="text-muted-foreground text-sm mt-1">
-              {order.collaborator?.name
-                ? `Responsável: ${order.collaborator.name}`
-                : "Sem responsável designado"}
-            </p>
-          </div>
           <Badge variant="outline" className={statusDisplay.className}>
             {statusDisplay.label}
           </Badge>
@@ -361,7 +319,7 @@ const OrderDetail = () => {
 
         <CardFooter className="flex flex-col gap-3 pt-6 border-t">
           <div className="w-full">
-            <h3 className="font-semibold mb-3">Atualizar Status</h3>
+            <h3 className="font-semibold mb-3">Ações</h3>
             <div className="grid grid-rows-2 sm:grid-cols-1 gap-3">
               {order.status !== "pending" && (
                 <Button
@@ -385,8 +343,8 @@ const OrderDetail = () => {
               )}
               {order.status !== "done" && (
                 <Button
-                  variant="default"
-                  className="w-full bg-green-600 hover:bg-green-700"
+                  variant="outline"
+                  className="w-full"
                   onClick={() => updateOrderStatus("done")}
                 >
                   <CheckCircle className="h-4 w-4 row-span-full mr-2" />
@@ -396,6 +354,44 @@ const OrderDetail = () => {
             </div>
           </div>
         </CardFooter>
+      </Card>
+      <Card>
+      <CardContent className="flex flex-col gap-3 pt-6">
+        <div className="grid grid-rows-2 sm:grid-cols-1 gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setDialogOpen(true)}
+          >
+            <Edit className="h-4 w-4 mr-1" />
+            Editar
+          </Button>
+
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" size="sm">
+                <Trash className="h-4 w-4 mr-1" />
+                Excluir
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent className="w-[calc(100%-2rem)] max-w-[400px] mx-auto rounded-xl">
+              <AlertDialogHeader>
+                <AlertDialogTitle>Confirma exclusão?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Esta ação não poderá ser desfeita. Isso excluirá
+                  permanentemente a encomenda do cliente {order?.client_name}.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete}>
+                  Excluir
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+          </div>
+        </CardContent>
       </Card>
 
       <OrderDialog

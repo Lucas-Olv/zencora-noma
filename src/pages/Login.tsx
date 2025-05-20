@@ -43,7 +43,7 @@ export default function Login() {
 
       {/* Right side - Login form */}
       <div className="flex flex-col p-4">
-        <div className="flex justify-between items-center py-4">
+        <div className="flex justify-between items-center">
           <Link
             to="/"
             className="flex items-center text-2xl font-bold zencora-gradient-text md:hidden"
