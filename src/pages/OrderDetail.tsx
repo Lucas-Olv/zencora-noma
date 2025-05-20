@@ -265,7 +265,7 @@ const OrderDetail = () => {
 
       <Card>
         <CardHeader className="flex flex-row items-start justify-between">
-            <CardTitle className="text-xl">{order.client_name}</CardTitle>
+            <CardTitle className="text-xl truncate max-w-[60dvw]">{order.client_name}</CardTitle>
           <Badge variant="outline" className={statusDisplay.className}>
             {statusDisplay.label}
           </Badge>

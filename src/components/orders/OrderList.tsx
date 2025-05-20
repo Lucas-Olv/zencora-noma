@@ -74,7 +74,7 @@ const OrderList = () => {
     const statusDisplay = getStatusDisplay(order.status);
     return (
       <div className="p-4 w-[100mm] h-[150mm] bg-white text-black">
-        <div className="border-2 border-black h-full p-4 flex flex-col">
+        <div className="border-2 h-full p-4 flex flex-col">
           <div className="text-center mb-4">
             <h1 className="text-2xl font-bold">ZENCORA</h1>
             <p className="text-sm">Etiqueta de Encomenda</p>
@@ -90,7 +90,7 @@ const OrderList = () => {
 
             <div>
               <p className="text-xs text-gray-500">Cliente</p>
-              <p className="font-medium">{order.client_name}</p>
+              <p className="font-medium truncate max-w-[40dvw]">{order.client_name}</p>
             </div>
 
             <div>
@@ -321,7 +321,7 @@ const OrderList = () => {
                           <TableCell className="font-mono text-sm text-muted-foreground">
                             {getOrderCode(order.id)}
                           </TableCell>
-                          <TableCell className="font-medium">
+                          <TableCell className="font-medium truncate max-w-[20dvw]">
                             {order.client_name}
                           </TableCell>
                           <TableCell>{formatDate(order.due_date)}</TableCell>
@@ -428,7 +428,7 @@ const OrderList = () => {
                                 <p className="font-mono text-sm text-muted-foreground">
                                   {getOrderCode(order.id)}
                                 </p>
-                                <h3 className="font-medium">
+                                <h3 className="font-medium truncate max-w-[40dvw]">
                                   {order.client_name}
                                 </h3>
                               </div>
