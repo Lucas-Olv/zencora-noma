@@ -1,11 +1,10 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import StatsCard from "@/components/dashboard/StatsCard";
 import PerformanceMetrics from "@/components/dashboard/PerformanceMetrics";
 import DeliveryCalendar from "@/components/dashboard/DeliveryCalendar";
 import { Calendar, ClipboardList, FileText, Users } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
-import { formatDate, parseDate, getOrderCode } from "@/lib/utils";
+import { parseDate } from "@/lib/utils";
 import { supabaseService } from "@/services/supabaseService";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useAuthenticatedEffect } from "@/hooks/use-authenticated";

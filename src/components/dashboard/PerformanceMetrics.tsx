@@ -155,7 +155,6 @@ export default function PerformanceMetrics({ orders, loading }: PerformanceMetri
               <LineChart data={dailyData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="date" />
-                <YAxis tickFormatter={(value) => formatCurrency(value)} />
                 <Tooltip formatter={(value) => formatCurrency(Number(value))} />
                 <Line type="monotone" dataKey="revenue" stroke="#8884d8" />
               </LineChart>
@@ -168,7 +167,6 @@ export default function PerformanceMetrics({ orders, loading }: PerformanceMetri
               <BarChart data={dailyData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="date" />
-                <YAxis />
                 <Tooltip />
                 <Bar dataKey="orders" fill="#82ca9d" />
               </BarChart>

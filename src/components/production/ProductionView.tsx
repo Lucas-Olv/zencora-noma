@@ -351,18 +351,18 @@ export function ProductionView() {
           Painel de Produção
         </h2>
         <p className="text-muted-foreground">
-          Acompanhe as encomendas Produção e concluídas.
+          Acompanhe as encomendas pendentes e concluídas.
         </p>
       </div>
       <Card>
         <CardHeader>
-          <CardTitle>Encomendas Produção</CardTitle>
+          <CardTitle>Encomendas</CardTitle>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="pending" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="pending">
-                Produção
+                Pendentes
                 {pendingOrders.length > 0 && (
                   <Badge className="ml-2">{pendingOrders.length}</Badge>
                 )}
@@ -379,7 +379,7 @@ export function ProductionView() {
               <LoadingState
                 loading={loading}
                 empty={!pendingOrders.length}
-                emptyText="Nenhuma encomenda Produção"
+                emptyText="Nenhuma encomenda pendente"
                 emptyIcon={
                   <FileText className="h-12 w-12 text-muted-foreground" />
                 }
