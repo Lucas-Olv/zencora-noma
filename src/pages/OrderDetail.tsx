@@ -377,7 +377,7 @@ const OrderDetail = () => {
             <AlertDialogContent className="w-[calc(100%-2rem)] max-w-[400px] mx-auto rounded-xl">
               <AlertDialogHeader>
                 <AlertDialogTitle>Confirma exclusão?</AlertDialogTitle>
-                <AlertDialogDescription>
+                <AlertDialogDescription className="line-clamp-3 max-w-[18dvw]">
                   Esta ação não poderá ser desfeita. Isso excluirá
                   permanentemente a encomenda do cliente {order?.client_name}.
                 </AlertDialogDescription>

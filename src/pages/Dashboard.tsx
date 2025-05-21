@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import StatsCard from "@/components/dashboard/StatsCard";
-import RecentOrders from "@/components/dashboard/RecentOrders";
+import PerformanceMetrics from "@/components/dashboard/PerformanceMetrics";
 import DeliveryCalendar from "@/components/dashboard/DeliveryCalendar";
 import { Calendar, ClipboardList, FileText, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -161,7 +161,7 @@ const Dashboard = () => {
 
       <div className="grid gap-6 grid-cols-1 lg:grid-cols-4">
         <div className="lg:col-span-3">
-          <RecentOrders orders={orders} loading={loading} />
+          <PerformanceMetrics orders={orders} loading={loading} />
         </div>
         <div className="lg:col-span-1">
           <DeliveryCalendar orders={orders} loading={loading} />
