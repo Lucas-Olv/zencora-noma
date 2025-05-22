@@ -14,7 +14,9 @@ export default {
       center: true,
       padding: "2rem",
       screens: {
-        "2xl": "1400px",
+        "1xl": "1400px",
+        "2xl": "1600px",
+        "3xl": "2000px",
       },
     },
     extend: {
@@ -51,7 +53,7 @@ export default {
           DEFAULT: "hsl(var(--accent))",
           foreground: "hsl(var(--accent-foreground))",
         },
-        popover: {
+        popover: {  
           DEFAULT: "hsl(var(--popover))",
           foreground: "hsl(var(--popover-foreground))",
         },

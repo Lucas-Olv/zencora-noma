@@ -21,9 +21,12 @@ import About from "./pages/About";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import Contact from "./pages/Contact";
+import { SubscriptionExpired } from "./pages/SubscriptionExpired";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { useAuthContext } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/routing/ProtectedRoute";
+import { SubscriptionProvider } from "./contexts/SubscriptionContext";
+import { SubscriptionGate } from "./components/subscription/SubscriptionGate";
 
 const queryClient = new QueryClient();
 
@@ -60,65 +63,74 @@ const AppRoutes = () => {
           <Route
             path="dashboard"
             element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
             }
           />
           <Route
             path="orders"
             element={
-              <ProtectedRoute>
-                <Orders />
-              </ProtectedRoute>
+                <ProtectedRoute>
+                  <Orders />
+                </ProtectedRoute>
             }
           />
           <Route
             path="orders/:id"
             element={
-              <ProtectedRoute>
-                <OrderDetail />
-              </ProtectedRoute>
+                <ProtectedRoute>
+                  <OrderDetail />
+                </ProtectedRoute>
             }
           />
           <Route
             path="production"
             element={
               <ProtectedRoute>
-                <Production />
-              </ProtectedRoute>
+                  <Production />
+
+                </ProtectedRoute>
             }
           />
           <Route
             path="reports"
             element={
-              <ProtectedRoute>
-                <Reports />
-              </ProtectedRoute>
+                <ProtectedRoute>
+                  <Reports />
+                </ProtectedRoute>
             }
           />
           <Route
             path="calendar"
             element={
-              <ProtectedRoute>
-                <Calendar />
-              </ProtectedRoute>
+                <ProtectedRoute>
+                  <Calendar />
+                </ProtectedRoute>
             }
           />
           <Route
             path="profile"
             element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
             }
           />
           <Route
             path="settings"
             element={
-              <ProtectedRoute>
-                <Settings />
-              </ProtectedRoute>
+                <ProtectedRoute>
+                  <Settings />
+                </ProtectedRoute>
+            }
+          />
+          <Route
+            path="subscription-expired"
+            element={
+                <ProtectedRoute>
+                  <SubscriptionExpired />
+                </ProtectedRoute>
             }
           />
         </Route>
@@ -134,13 +146,20 @@ export const App = () => (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <TenantProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <AppRoutes />
-            </BrowserRouter>
-          </TooltipProvider>
+          <SubscriptionProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <SubscriptionGate 
+                  blockedRoutes={["/dashboard", "/orders/:id", "/production", "/reports", "/calendar", "/settings"]}
+                  redirectTo="/subscription-expired"
+                >
+                  <AppRoutes />
+                </SubscriptionGate>
+              </BrowserRouter>
+            </TooltipProvider>
+          </SubscriptionProvider>
         </TenantProvider>
       </AuthProvider>
     </QueryClientProvider>

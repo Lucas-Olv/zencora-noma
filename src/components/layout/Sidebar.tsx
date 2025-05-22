@@ -25,6 +25,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Link } from "react-router-dom";
+import { SubscriptionGate } from "../subscription/SubscriptionGate";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -186,25 +187,25 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
           </Link>
         </div>
 
-        <div className="space-y-1 py-4 flex-1">
-          {mainNavItems.map((item) => (
-            <button
-              key={item.href}
-              onClick={() => handleNavigation(item.href)}
-              className={cn(
-                "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium",
-                "transition-all duration-200 ease-in-out",
-                "hover:bg-muted/80 active:scale-[0.98]",
-                location.pathname === item.href
-                  ? "bg-secondary text-secondary-foreground hover:bg-secondary/90"
-                  : "opacity-80 hover:opacity-100",
-              )}
-            >
-              <item.icon className="h-5 w-5 transition-transform duration-200 group-hover:scale-110" />
-              {item.title}
-            </button>
-          ))}
-        </div>
+          <div className="space-y-1 py-4 flex-1">
+            {mainNavItems.map((item) => (
+              <button
+                key={item.href}
+                onClick={() => handleNavigation(item.href)}
+                className={cn(
+                  "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium",
+                  "transition-all duration-200 ease-in-out",
+                  "hover:bg-muted/80 active:scale-[0.98]",
+                  location.pathname === item.href
+                    ? "bg-secondary text-secondary-foreground hover:bg-secondary/90"
+                    : "opacity-80 hover:opacity-100",
+                )}
+              >
+                <item.icon className="h-5 w-5 transition-transform duration-200 group-hover:scale-110" />
+                {item.title}
+              </button>
+            ))}
+          </div>
 
         <div className="mt-auto border-t border-border pt-4">
           {bottomNavItems.map((item) => (

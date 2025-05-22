@@ -84,8 +84,8 @@ const getDailyData = (orders: Order[]) => {
     date.setDate(lastWeek.getDate() + i);
     return {
       date: date.toLocaleDateString('pt-BR', { weekday: 'short' }),
-      revenue: 0,
-      orders: 0
+      Receita: 0,
+      Encomendas: 0
     };
   });
 
@@ -94,8 +94,8 @@ const getDailyData = (orders: Order[]) => {
     if (orderDate && orderDate >= lastWeek && orderDate <= today) {
       const dayIndex = Math.floor((orderDate.getTime() - lastWeek.getTime()) / (1000 * 60 * 60 * 24));
       if (dayIndex >= 0 && dayIndex < 7) {
-        dailyData[dayIndex].revenue += order.price || 0;
-        dailyData[dayIndex].orders += 1;
+        dailyData[dayIndex].Receita += order.price || 0;
+        dailyData[dayIndex].Encomendas += 1;
       }
     }
   });
@@ -154,7 +154,7 @@ export default function PerformanceMetrics({ orders, loading }: PerformanceMetri
                 <XAxis dataKey="date" />
                 
                 <Tooltip formatter={(value) => formatCurrency(Number(value))} />
-                <Line type="monotone" dataKey="revenue" stroke="#8884d8" />
+                <Line type="monotone" dataKey="Receita" stroke="#8884d8" />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -173,7 +173,7 @@ export default function PerformanceMetrics({ orders, loading }: PerformanceMetri
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="date" />
                 <Tooltip />
-                <Bar dataKey="orders" fill="#82ca9d" />
+                <Bar dataKey="Encomendas" fill="#82ca9d" />
               </BarChart>
             </ResponsiveContainer>
           </div>

@@ -65,7 +65,7 @@ interface ReportData {
   totalRevenue: number;
   completedOrders: number;
   pendingOrders: number;
-  dailyRevenue: { day: string; value: number }[];
+  dailyRevenue: { day: string; Total: number }[];
   categoryData: { name: string; value: number }[];
 }
 
@@ -188,7 +188,7 @@ const MonthlyReports = () => {
             });
             return {
               day: format(day, "dd/MM"),
-              value: dayOrders.reduce(
+              Total: dayOrders.reduce(
                 (sum, order) => sum + (order.price || 0),
                 0,
               ),
@@ -293,7 +293,7 @@ const MonthlyReports = () => {
       head: [["Data", "Receita"]],
       body: reportData.dailyRevenue.map((item) => [
         item.day,
-        formatCurrency(item.value),
+        formatCurrency(item.Total),
       ]),
       theme: "grid",
       headStyles: {
@@ -563,7 +563,7 @@ const MonthlyReports = () => {
                         />
                         <Line
                           type="monotone"
-                          dataKey="value"
+                          dataKey="Total"
                           stroke="hsl(var(--primary))"
                           strokeWidth={2}
                           dot={{ r: 4 }}

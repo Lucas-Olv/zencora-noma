@@ -122,24 +122,12 @@ export type Database = {
           started_at: string | null
           status: string | null
           user_id: string | null
-        }
-        Insert: {
-          expires_at?: string | null
-          id?: string
-          plan: string
-          product_id?: string | null
-          started_at?: string | null
-          status?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          expires_at?: string | null
-          id?: string
-          plan?: string
-          product_id?: string | null
-          started_at?: string | null
-          status?: string | null
-          user_id?: string | null
+          is_trial: boolean,
+          cancel_at_period_end: boolean,
+          canceled_at: string | null,
+          payment_failed_at: string | null,
+          grace_period_until: string | null,
+
         }
         Relationships: [
           {
