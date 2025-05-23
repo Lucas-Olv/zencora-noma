@@ -1,7 +1,24 @@
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { Loader2 } from 'lucide-react';
-import { ReactNode, useEffect, cloneElement } from 'react';
+import { ReactNode, useEffect, cloneElement, createContext, useContext } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAppReady } from '@/hooks/use-app-ready';
+import { useAuthContext } from '@/contexts/AuthContext';
+
+interface SubscriptionRoutesContextType {
+  blockedRoutes: string[];
+  allowedRoutes: string[];
+}
+
+const SubscriptionRoutesContext = createContext<SubscriptionRoutesContextType | undefined>(undefined);
+
+export const useSubscriptionRoutes = () => {
+  const context = useContext(SubscriptionRoutesContext);
+  if (!context) {
+    throw new Error('useSubscriptionRoutes deve ser usado dentro do SubscriptionGate');
+  }
+  return context;
+};
 
 type Props = {
   children: ReactNode;
@@ -22,12 +39,14 @@ export const SubscriptionGate = ({
   fallback = <div className="flex justify-center items-center h-screen"><Loader2 className="animate-spin w-10 h-10" /></div>,
   redirectTo,
   onlyActive = false,
-  blockedRoutes,
-  allowedRoutes,
+  blockedRoutes = [],
+  allowedRoutes = [],
   blockMode = 'hide',
   onBlock,
 }: Props) => {
-  const { isLoading, isTrial, isActive, isBlocked } = useSubscription();
+  const { isLoading: subscriptionLoading, isTrial, isActive, isBlocked } = useSubscription();
+  const { ready: appReady, loading: appLoading } = useAppReady();
+  const { isAuthenticated } = useAuthContext();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -68,7 +87,7 @@ export const SubscriptionGate = ({
   const allowedByStatus = onlyActive ? isActive : isTrial || isActive;
 
   // Determina se deve bloquear o acesso
-  const shouldBlock = path !== DEFAULT_ALLOWED_ROUTE && (
+  const shouldBlock = isAuthenticated && path !== DEFAULT_ALLOWED_ROUTE && (
     // Se a assinatura é válida (não está bloqueada e tem status permitido), permite acesso por padrão
     // Se a assinatura é inválida, aplica as regras do Gate
     (isBlocked || !allowedByStatus) && (
@@ -81,6 +100,9 @@ export const SubscriptionGate = ({
     )
   );
 
+  // Verifica se ainda está carregando
+  const isLoading = isAuthenticated && (subscriptionLoading || appLoading || !appReady);
+
   useEffect(() => {
     if (!isLoading && shouldBlock && redirectTo && path !== redirectTo) {
       navigate(redirectTo);
@@ -91,6 +113,11 @@ export const SubscriptionGate = ({
     }
   }, [isLoading, shouldBlock, redirectTo, navigate, onBlock, path]);
 
+  // Se não estiver autenticado, renderiza normalmente
+  if (!isAuthenticated) {
+    return <>{children}</>;
+  }
+
   // Se estiver carregando, mostra o fallback
   if (isLoading) {
     return fallback;
@@ -98,7 +125,11 @@ export const SubscriptionGate = ({
 
   // Se não deve bloquear, renderiza normalmente
   if (!shouldBlock) {
-    return <>{children}</>;
+    return (
+      <SubscriptionRoutesContext.Provider value={{ blockedRoutes, allowedRoutes }}>
+        {children}
+      </SubscriptionRoutesContext.Provider>
+    );
   }
 
   // Se deve bloquear e tem redirectTo, mostra o fallback enquanto redireciona

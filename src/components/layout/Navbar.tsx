@@ -1,8 +1,9 @@
-import { Bell, Menu } from "lucide-react";
+import { Menu, InfoIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import ThemeToggle from "./ThemeToggle";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useSubscription } from "@/contexts/SubscriptionContext";
+import SubscriptionInfo from "./SubscriptionInfo";
 
 interface NavbarProps {
   toggleSidebar: () => void;
@@ -10,7 +11,6 @@ interface NavbarProps {
 
 const Navbar = ({ toggleSidebar }: NavbarProps) => {
   const isMobile = useIsMobile();
-
   return (
     <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
       <div className=" mx-auto px-8 flex h-14 items-center">
@@ -29,6 +29,7 @@ const Navbar = ({ toggleSidebar }: NavbarProps) => {
         </div>
         <div className="flex-1"></div>
         <div className="flex items-center justify-center gap-2">
+          <SubscriptionInfo />
           <ThemeToggle />
           {/* <Button variant="ghost" size="icon" className="rounded-full relative">
             <Bell className="h-5 w-5" />

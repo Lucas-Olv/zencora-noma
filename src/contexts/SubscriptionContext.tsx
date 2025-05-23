@@ -95,7 +95,7 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
   // 2. Tem falha de pagamento
   // 3. Está cancelado
   // 4. Não tem assinatura
-  const isBlocked = !subscription || isPaymentFailed || isCancelled || (isExpired && !inGracePeriod);
+  const isBlocked = !subscription || (isPaymentFailed && !inGracePeriod) || isCancelled || (isExpired && !inGracePeriod);
 
   // Mostra alerta se está prestes a expirar ou com falha de pagamento
   const showWarning =

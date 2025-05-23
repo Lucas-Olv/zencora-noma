@@ -30,6 +30,8 @@ import { SubscriptionGate } from "./components/subscription/SubscriptionGate";
 
 const queryClient = new QueryClient();
 
+const BLOCKED_ROUTES = ["/dashboard", "/production", "/reports", "/calendar", "/settings", "/notes", "/profile"];
+
 const AppRoutes = () => {
   const { isAuthenticated, loading } = useAuthContext();
 
@@ -63,74 +65,73 @@ const AppRoutes = () => {
           <Route
             path="dashboard"
             element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
             }
           />
           <Route
             path="orders"
             element={
-                <ProtectedRoute>
-                  <Orders />
-                </ProtectedRoute>
+              <ProtectedRoute>
+                <Orders />
+              </ProtectedRoute>
             }
           />
           <Route
             path="orders/:id"
             element={
-                <ProtectedRoute>
-                  <OrderDetail />
-                </ProtectedRoute>
+              <ProtectedRoute>
+                <OrderDetail />
+              </ProtectedRoute>
             }
           />
           <Route
             path="production"
             element={
               <ProtectedRoute>
-                  <Production />
-
-                </ProtectedRoute>
+                <Production />
+              </ProtectedRoute>
             }
           />
           <Route
             path="reports"
             element={
-                <ProtectedRoute>
-                  <Reports />
-                </ProtectedRoute>
+              <ProtectedRoute>
+                <Reports />
+              </ProtectedRoute>
             }
           />
           <Route
             path="calendar"
             element={
-                <ProtectedRoute>
-                  <Calendar />
-                </ProtectedRoute>
+              <ProtectedRoute>
+                <Calendar />
+              </ProtectedRoute>
             }
           />
           <Route
             path="profile"
             element={
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
             }
           />
           <Route
             path="settings"
             element={
-                <ProtectedRoute>
-                  <Settings />
-                </ProtectedRoute>
+              <ProtectedRoute>
+                <Settings />
+              </ProtectedRoute>
             }
           />
           <Route
             path="subscription-expired"
             element={
-                <ProtectedRoute>
-                  <SubscriptionExpired />
-                </ProtectedRoute>
+              <ProtectedRoute>
+                <SubscriptionExpired />
+              </ProtectedRoute>
             }
           />
         </Route>
@@ -152,7 +153,7 @@ export const App = () => (
               <Sonner />
               <BrowserRouter>
                 <SubscriptionGate 
-                  blockedRoutes={["/dashboard", "/orders/:id", "/production", "/reports", "/calendar", "/settings"]}
+                  blockedRoutes={BLOCKED_ROUTES}
                   redirectTo="/subscription-expired"
                 >
                   <AppRoutes />

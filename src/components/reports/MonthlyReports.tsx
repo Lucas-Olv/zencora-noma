@@ -57,6 +57,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
+import { SubscriptionGate } from "../subscription/SubscriptionGate";
 
 type Order = Tables<"orders">;
 
@@ -65,7 +66,7 @@ interface ReportData {
   totalRevenue: number;
   completedOrders: number;
   pendingOrders: number;
-  dailyRevenue: { day: string; Total: number }[];
+  dailyRevenue: { day: string; Total: number; Encomendas: number }[];
   categoryData: { name: string; value: number }[];
 }
 
@@ -192,6 +193,7 @@ const MonthlyReports = () => {
                 (sum, order) => sum + (order.price || 0),
                 0,
               ),
+              Encomendas: dayOrders.length
             };
           });
         }
@@ -406,6 +408,7 @@ const MonthlyReports = () => {
       <div className="flex flex-col w-full gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <div className="flex flex-col sm:flex-row gap-4">
+            <SubscriptionGate blockMode="disable">
             <Select
               value={dateRange?.from ? format(dateRange.from, "yyyy-MM") : ""}
               onValueChange={(value) => {
@@ -431,14 +434,18 @@ const MonthlyReports = () => {
                     </SelectItem>
                   );
                 })}
-              </SelectContent>
-            </Select>
+                </SelectContent>
+              </Select>
+            </SubscriptionGate>
             <div className="flex gap-2">
-              <DateRangePicker
+              <SubscriptionGate>
+                <DateRangePicker
                 value={dateRange}
                 onChange={setDateRange}
                 className="w-full sm:w-[300px]"
               />
+              </SubscriptionGate>
+              <SubscriptionGate blockMode="disable">               
               <Button
                 variant="outline"
                 size="icon"
@@ -452,6 +459,7 @@ const MonthlyReports = () => {
                   <Download className="h-4 w-4" />
                 )}
               </Button>
+              </SubscriptionGate>
             </div>
           </div>
         </div>
@@ -570,6 +578,43 @@ const MonthlyReports = () => {
                           activeDot={{ r: 6 }}
                         />
                       </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2 sm:space-y-3">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold">Encomendas por Dia</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Quantidade de encomendas por dia no período
+                    </p>
+                  </div>
+                </div>
+
+                <div className="w-full overflow-x-auto">
+                  <div className="min-w-[280px] h-[25dvh] sm:min-w-[600px] sm:h-[30dvh]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={reportData.dailyRevenue}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis
+                          dataKey="day"
+                          tick={{ fontSize: 12 }}
+                          interval="preserveStartEnd"
+                        />
+                        <YAxis
+                          tick={{ fontSize: 12 }}
+                        />
+                        <Tooltip
+                          labelStyle={{ fontSize: 12 }}
+                        />
+                        <Bar
+                          dataKey="Encomendas"
+                          fill="hsl(var(--primary))"
+                          radius={[4, 4, 0, 0]}
+                        />
+                      </BarChart>
                     </ResponsiveContainer>
                   </div>
                 </div>

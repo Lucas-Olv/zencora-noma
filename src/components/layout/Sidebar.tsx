@@ -7,6 +7,7 @@ import {
   LogOut,
   Settings,
   FileText,
+  Lock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -25,7 +26,9 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Link } from "react-router-dom";
-import { SubscriptionGate } from "../subscription/SubscriptionGate";
+import { SubscriptionGate, useSubscriptionRoutes } from "@/components/subscription/SubscriptionGate";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -78,6 +81,65 @@ const bottomNavItems: NavItem[] = [
     icon: Settings,
   },
 ];
+
+interface NavButtonProps {
+  item: NavItem;
+  isActive: boolean;
+  onClick: () => void;
+}
+
+const NavButton = ({ item, isActive, onClick }: NavButtonProps) => {
+  const { blockedRoutes, allowedRoutes } = useSubscriptionRoutes();
+  const { isBlocked: isSubscriptionBlocked } = useSubscription();
+  const isRouteBlocked = blockedRoutes.includes(item.href);
+  const isRouteAllowed = allowedRoutes.includes(item.href);
+
+  // Só mostra o cadeado se a rota estiver bloqueada E a assinatura não estiver ativa
+  const shouldShowLock = isSubscriptionBlocked && (isRouteBlocked || isRouteAllowed);
+
+  const button = (
+    <button
+      onClick={onClick}
+      className={cn(
+        "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium",
+        "transition-all duration-200 ease-in-out",
+        "hover:bg-muted/80 active:scale-[0.98]",
+        isActive
+          ? "bg-secondary text-secondary-foreground hover:bg-secondary/90"
+          : "opacity-80 hover:opacity-100",
+      )}
+    >
+      <item.icon className="h-5 w-5 transition-transform duration-200 group-hover:scale-110" />
+      {item.title}
+      {shouldShowLock && <Lock className="h-4 w-4 ml-auto text-muted-foreground" />}
+    </button>
+  );
+
+  if (isRouteBlocked || isRouteAllowed) {
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div>
+              <SubscriptionGate
+                blockedRoutes={blockedRoutes}
+                blockMode="disable"
+                fallback={button}
+              >
+                {button}
+              </SubscriptionGate>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Recurso disponível apenas para assinantes</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+
+  return button;
+};
 
 const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
   const location = useLocation();
@@ -187,43 +249,25 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
           </Link>
         </div>
 
-          <div className="space-y-1 py-4 flex-1">
-            {mainNavItems.map((item) => (
-              <button
-                key={item.href}
-                onClick={() => handleNavigation(item.href)}
-                className={cn(
-                  "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium",
-                  "transition-all duration-200 ease-in-out",
-                  "hover:bg-muted/80 active:scale-[0.98]",
-                  location.pathname === item.href
-                    ? "bg-secondary text-secondary-foreground hover:bg-secondary/90"
-                    : "opacity-80 hover:opacity-100",
-                )}
-              >
-                <item.icon className="h-5 w-5 transition-transform duration-200 group-hover:scale-110" />
-                {item.title}
-              </button>
-            ))}
-          </div>
+        <div className="space-y-1 py-4 flex-1">
+          {mainNavItems.map((item) => (
+            <NavButton
+              key={item.href}
+              item={item}
+              isActive={location.pathname === item.href}
+              onClick={() => handleNavigation(item.href)}
+            />
+          ))}
+        </div>
 
         <div className="mt-auto border-t border-border pt-4">
           {bottomNavItems.map((item) => (
-            <button
+            <NavButton
               key={item.href}
+              item={item}
+              isActive={location.pathname === item.href}
               onClick={() => handleNavigation(item.href)}
-              className={cn(
-                "flex w-full items-center gap-3 h-10 rounded-md px-3 py-2 text-sm font-medium",
-                "transition-all duration-200 ease-in-out",
-                "hover:bg-muted/80 active:scale-[0.98]",
-                location.pathname === item.href
-                  ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                  : "opacity-80 hover:opacity-100",
-              )}
-            >
-              <item.icon className="h-5 w-5 transition-transform duration-200 group-hover:scale-110" />
-              {item.title}
-            </button>
+            />
           ))}
 
           <AlertDialog>

@@ -30,26 +30,19 @@ import {
   getOrderCode,
   getStatusDisplay,
 } from "@/lib/utils";
-import { ptBR } from "date-fns/locale";
 import { supabaseService, OrderType } from "@/services/supabaseService";
 import { useAuthContext } from "@/contexts/AuthContext";
 import OrderDialog from "./OrderDialog";
-
-// Interface para a ordem com dados do colaborador
-interface OrderWithCollaborator extends OrderType {
-  collaborator?: {
-    name: string | null;
-  } | null;
-}
+import { SubscriptionGate } from "../subscription/SubscriptionGate";
 
 const OrderList = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [orders, setOrders] = useState<OrderWithCollaborator[]>([]);
+  const [orders, setOrders] = useState<OrderType[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedOrder, setSelectedOrder] =
-    useState<OrderWithCollaborator | null>(null);
+    useState<OrderType | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
   const [dialogOrderId, setDialogOrderId] = useState<string | undefined>();
@@ -70,62 +63,55 @@ const OrderList = () => {
   });
   const { tenant, loading: tenantLoading, error: tenantError } = useAuthContext();
 
-  const OrderLabel = ({ order }: { order: OrderWithCollaborator }) => {
+  const OrderLabel = ({ order }: { order: OrderType }) => {
     const statusDisplay = getStatusDisplay(order.status);
+
     return (
-      <div className="p-4 w-[100mm] h-[150mm] bg-white text-black">
-        <div className="border-2 h-full p-4 flex flex-col">
-          <div className="text-center mb-4">
-            <h1 className="text-2xl font-bold">ZENCORA</h1>
-            <p className="text-sm">Etiqueta de Encomenda</p>
+      <div className="w-[100mm] h-[150mm] bg-white text-black p-6">
+        <div className="border border-gray-300 rounded-xl shadow-sm h-full flex flex-col justify-between p-6 space-y-4">
+
+          {/* Bloco do código da encomenda */}
+          <div className="text-center py-4">
+            <p className="text-[10px] uppercase font-medium text-zinc-400 tracking-wide">Código</p>
+            <h1 className="font-mono text-2xl font-bold tracking-widest text-zinc-800">
+              {getOrderCode(order.id)}
+            </h1>
           </div>
 
-          <div className="space-y-2 flex-1">
-            <div>
-              <p className="text-xs text-gray-500">Código</p>
-              <p className="font-mono text-lg font-bold">
-                {getOrderCode(order.id)}
-              </p>
+          {/* Informações principais */}
+          <div className="flex-1 flex flex-col gap-4 text-zinc-800">
+
+            <div className="grid grid-cols-2 gap-4">
+              <LabelItem title="Cliente" content={order.client_name} />
+              <LabelItem title="Entrega" content={formatDate(order.due_date)} />
             </div>
 
-            <div>
-              <p className="text-xs text-gray-500">Cliente</p>
-              <p className="font-medium truncate max-w-[40dvw]">{order.client_name}</p>
+            <div className="grid grid-cols-2 gap-4">
+              <LabelItem title="Valor" content={`R$ ${order.price.toFixed(2).replace(".", ",")}`} />
+              <LabelItem title="Status" content={statusDisplay.label} />
             </div>
 
-            <div>
-              <p className="text-xs text-gray-500">Descrição</p>
-              <p className="text-sm">{order.description || "Sem descrição"}</p>
-            </div>
-
-            <div>
-              <p className="text-xs text-gray-500">Data de Entrega</p>
-              <p className="text-sm">{formatDate(order.due_date)}</p>
-            </div>
-
-            <div>
-              <p className="text-xs text-gray-500">Preço</p>
-              <p className="text-sm">
-                R$ {order.price.toFixed(2).replace(".", ",")}
-              </p>
-            </div>
-
-            <div>
-              <p className="text-xs text-gray-500">Status</p>
-              <p className="text-sm font-medium">{statusDisplay.label}</p>
-            </div>
+            <LabelItem title="Descrição" content={order.description || "Sem descrição"} />
           </div>
 
-          <div className="text-center text-xs text-gray-500 mt-4">
-            <p>
-              Impresso em{" "}
-              {formatDate(new Date().toISOString(), "dd/MM/yyyy 'às' HH:mm")}
-            </p>
+          {/* Rodapé */}
+          <div className="text-center text-[10px] text-zinc-400 border-t pt-2">
+            <p>Gerado em {formatDate(new Date().toISOString(), "dd/MM/yyyy 'às' HH:mm")}</p>
+            <p className="mt-0.5">Por Zencora Noma</p>
           </div>
         </div>
       </div>
     );
   };
+
+  const LabelItem = ({ title, content }: { title: string; content: React.ReactNode }) => (
+    <div className="flex flex-col">
+      <span className="text-[10px] uppercase font-medium text-zinc-400 tracking-wide">{title}</span>
+      <span className="text-sm leading-tight break-words">{content}</span>
+    </div>
+  );
+
+
 
   useEffect(() => {
     if (!tenantLoading && tenant) {
@@ -145,7 +131,7 @@ const OrderList = () => {
       );
       if (error) throw error;
 
-      setOrders(data as OrderWithCollaborator[]);
+      setOrders(data as OrderType[]);
     } catch (error: any) {
       toast({
         title: "Erro ao carregar encomendas",
@@ -193,7 +179,7 @@ const OrderList = () => {
     setDialogOpen(true);
   };
 
-  const handleEditOrder = (order: OrderWithCollaborator) => {
+  const handleEditOrder = (order: OrderType) => {
     setDialogMode("edit");
     setDialogOrderId(order.id);
     setSelectedOrder(order);
@@ -239,9 +225,11 @@ const OrderList = () => {
           </p>
         </div>
 
-        <Button onClick={handleNewOrder} className="shrink-0">
-          <Plus className="mr-2 h-4 w-4" /> Nova Encomenda
-        </Button>
+        <SubscriptionGate>
+          <Button onClick={handleNewOrder} className="shrink-0">
+            <Plus className="mr-2 h-4 w-4" /> Nova Encomenda
+          </Button>
+        </SubscriptionGate>
       </div>
 
       <Card>
@@ -341,53 +329,63 @@ const OrderList = () => {
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-2">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() =>
-                                  handleStatusChange(order.id, "pending")
-                                }
-                                title="Marcar como pendente"
-                                disabled={order.status === "pending"}
-                                className="flex items-center justify-center"
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() =>
-                                  handleStatusChange(order.id, "production")
-                                }
-                                title="Marcar como Produção"
-                                disabled={order.status === "production"}
-                                className="flex items-center justify-center"
-                              >
-                                <Package className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() =>
-                                  handleStatusChange(order.id, "done")
-                                }
-                                title="Marcar como concluída"
-                                disabled={order.status === "done"}
-                                className="flex items-center justify-center"
-                              >
-                                <CheckCircle2 className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() =>
-                                  handleEditOrder(order)
-                                }
-                                title="Editar encomenda"
-                                className="flex items-center justify-center"
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Button>
+                              <SubscriptionGate blockMode="disable">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() =>
+                                    handleStatusChange(order.id, "pending")
+                                  }
+                                  title="Marcar como pendente"
+                                  disabled={order.status === "pending"}
+                                  className="flex items-center justify-center"
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+
+                              </SubscriptionGate>
+                              <SubscriptionGate blockMode="disable">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() =>
+                                    handleStatusChange(order.id, "production")
+                                  }
+                                  title="Marcar como Produção"
+                                  disabled={order.status === "production"}
+                                  className="flex items-center justify-center"
+                                >
+                                  <Package className="h-4 w-4" />
+                                </Button>
+                              </SubscriptionGate>
+                              <SubscriptionGate blockMode="disable">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() =>
+                                    handleStatusChange(order.id, "done")
+                                  }
+                                  title="Marcar como concluída"
+                                  disabled={order.status === "done"}
+                                  className="flex items-center justify-center"
+                                >
+                                  <CheckCircle2 className="h-4 w-4" />
+                                </Button>
+                              </SubscriptionGate>
+                              <SubscriptionGate blockMode="disable">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() =>
+                                    handleEditOrder(order)
+                                  }
+                                  title="Editar encomenda"
+                                  className="flex items-center justify-center"
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                              </SubscriptionGate>
+
                               <Button
                                 variant="ghost"
                                 size="icon"
@@ -397,17 +395,20 @@ const OrderList = () => {
                               >
                                 <Eye className="h-4 w-4" />
                               </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => {
-                                  setSelectedOrder(order);
-                                  setTimeout(handlePrint, 100);
-                                }}
-                                title="Imprimir"
-                              >
-                                <Printer className="h-4 w-4" />
-                              </Button>
+
+                              <SubscriptionGate blockMode="disable">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => {
+                                    setSelectedOrder(order);
+                                    setTimeout(handlePrint, 100);
+                                  }}
+                                  title="Imprimir"
+                                >
+                                  <Printer className="h-4 w-4" />
+                                </Button>
+                              </SubscriptionGate>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -448,49 +449,58 @@ const OrderList = () => {
                           </div>
 
                           <div className="flex items-center justify-between gap-2">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() =>
-                                handleStatusChange(order.id, "pending")
-                              }
-                              title="Marcar como pendente"
-                              disabled={order.status === "pending"}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() =>
-                                handleStatusChange(order.id, "production")
-                              }
-                              title="Marcar como Produção"
-                              disabled={order.status === "production"}
-                            >
-                              <Package className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() =>
-                                handleStatusChange(order.id, "done")
-                              }
-                              title="Marcar como concluída"
-                              disabled={order.status === "done"}
-                            >
-                              <CheckCircle2 className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() =>
-                                handleEditOrder(order)
-                              }
-                              title="Editar encomenda"
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
+                            <SubscriptionGate blockMode="disable">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() =>
+                                  handleStatusChange(order.id, "pending")
+                                }
+                                title="Marcar como pendente"
+                                disabled={order.status === "pending"}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </SubscriptionGate>
+                            <SubscriptionGate blockMode="disable">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() =>
+                                  handleStatusChange(order.id, "production")
+                                }
+                                title="Marcar como Produção"
+                                disabled={order.status === "production"}
+                              >
+                                <Package className="h-4 w-4" />
+                              </Button>
+                            </SubscriptionGate>
+                            <SubscriptionGate blockMode="disable">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() =>
+                                  handleStatusChange(order.id, "done")
+                                }
+                                title="Marcar como concluída"
+                                disabled={order.status === "done"}
+                              >
+                                <CheckCircle2 className="h-4 w-4" />
+                              </Button>
+                            </SubscriptionGate>
+                            <SubscriptionGate blockMode="disable">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() =>
+                                  handleEditOrder(order)
+                                }
+                                title="Editar encomenda"
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                            </SubscriptionGate>
+
                             <Button
                               variant="ghost"
                               size="icon"
@@ -499,17 +509,20 @@ const OrderList = () => {
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => {
-                                setSelectedOrder(order);
-                                setTimeout(handlePrint, 100);
-                              }}
-                              title="Imprimir"
-                            >
-                              <Printer className="h-4 w-4" />
-                            </Button>
+
+                            <SubscriptionGate blockMode="disable">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  setSelectedOrder(order);
+                                  setTimeout(handlePrint, 100);
+                                }}
+                                title="Imprimir"
+                              >
+                                <Printer className="h-4 w-4" />
+                              </Button>
+                            </SubscriptionGate>
                           </div>
                         </div>
                       </CardContent>

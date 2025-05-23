@@ -26,6 +26,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { supabaseService, OrderType } from "@/services/supabaseService";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { SubscriptionGate } from "../subscription/SubscriptionGate";
 
 export function ProductionView() {
   const { toast } = useToast();
@@ -151,6 +152,7 @@ export function ProductionView() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <SubscriptionGate blockMode="disable">
             <Button
               variant={order.status === "pending" ? "outline" : "default"}
               size="sm"
@@ -158,9 +160,11 @@ export function ProductionView() {
               className="flex-1"
             >
               {order.status === "pending" ? "Iniciar Produção" : "Finalizar"}
-            </Button>
-            <Button
-              variant="ghost"
+              </Button>
+            </SubscriptionGate>
+            <SubscriptionGate blockMode="disable">
+              <Button
+                variant="ghost"
               size="icon"
               onClick={() => {
                 setSelectedOrder(order);
@@ -168,8 +172,9 @@ export function ProductionView() {
               }}
               title="Imprimir"
             >
-              <Printer className="h-4 w-4" />
-            </Button>
+                <Printer className="h-4 w-4" />
+              </Button>
+            </SubscriptionGate>
           </div>
         </div>
       );
@@ -216,25 +221,29 @@ export function ProductionView() {
               {order.status === "production" ? "Produção" : "Pendente"}
             </Badge>
             <div className="flex items-center gap-2">
-              <Button
-                variant={order.status === "pending" ? "outline" : "default"}
-                size="sm"
-                onClick={() => handleChangeOrderStatus(order.id, order.status)}
-                className="flex-1 sm:flex-none"
+              <SubscriptionGate blockMode="disable">
+                <Button
+                  variant={order.status === "pending" ? "outline" : "default"}
+                  size="sm"
+                  onClick={() => handleChangeOrderStatus(order.id, order.status)}
+                  className="flex-1 sm:flex-none"
               >
                 {order.status === "pending" ? "Iniciar Produção" : "Finalizar"}
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
+              </SubscriptionGate>
+              <SubscriptionGate blockMode="disable">
+                <Button
+                  variant="ghost"
+                  size="icon"
                 onClick={() => {
                   setSelectedOrder(order);
                   setTimeout(handlePrint, 100);
                 }}
                 title="Imprimir"
               >
-                <Printer className="h-4 w-4" />
-              </Button>
+                  <Printer className="h-4 w-4" />
+                </Button>
+              </SubscriptionGate>
             </div>
           </div>
         </div>
@@ -244,60 +253,52 @@ export function ProductionView() {
 
   const OrderLabel = ({ order }: { order: OrderType }) => {
     const statusDisplay = getStatusDisplay(order.status);
+
     return (
-      <div className="p-4 w-[100mm] h-[150mm] bg-white text-black">
-        <div className="border-2 border-black h-full p-4 flex flex-col">
-          <div className="text-center mb-4">
-            <h1 className="text-2xl font-bold">ZENCORA</h1>
-            <p className="text-sm">Etiqueta de Encomenda</p>
+      <div className="w-[100mm] h-[150mm] bg-white text-black p-6">
+        <div className="border border-gray-300 rounded-xl shadow-sm h-full flex flex-col justify-between p-6 space-y-4">
+
+          {/* Bloco do código da encomenda */}
+          <div className="text-center py-4">
+            <p className="text-[10px] uppercase font-medium text-zinc-400 tracking-wide">Código</p>
+            <h1 className="font-mono text-2xl font-bold tracking-widest text-zinc-800">
+              {getOrderCode(order.id)}
+            </h1>
           </div>
 
-          <div className="space-y-2 flex-1">
-            <div>
-              <p className="text-xs text-gray-500">Código</p>
-              <p className="font-mono text-lg font-bold">
-                {getOrderCode(order.id)}
-              </p>
+          {/* Informações principais */}
+          <div className="flex-1 flex flex-col gap-4 text-zinc-800">
+
+            <div className="grid grid-cols-2 gap-4">
+              <LabelItem title="Cliente" content={order.client_name} />
+              <LabelItem title="Entrega" content={formatDate(order.due_date)} />
             </div>
 
-            <div>
-              <p className="text-xs text-gray-500">Cliente</p>
-              <p className="font-medium">{order.client_name}</p>
+            <div className="grid grid-cols-2 gap-4">
+              <LabelItem title="Valor" content={`R$ ${order.price.toFixed(2).replace(".", ",")}`} />
+              <LabelItem title="Status" content={statusDisplay.label} />
             </div>
 
-            <div>
-              <p className="text-xs text-gray-500">Descrição</p>
-              <p className="text-sm">{order.description || "Sem descrição"}</p>
-            </div>
-
-            <div>
-              <p className="text-xs text-gray-500">Data de Entrega</p>
-              <p className="text-sm">{formatDate(order.due_date)}</p>
-            </div>
-
-            <div>
-              <p className="text-xs text-gray-500">Preço</p>
-              <p className="text-sm">
-                R$ {order.price.toFixed(2).replace(".", ",")}
-              </p>
-            </div>
-
-            <div>
-              <p className="text-xs text-gray-500">Status</p>
-              <p className="text-sm font-medium">{statusDisplay.label}</p>
-            </div>
+            <LabelItem title="Descrição" content={order.description || "Sem descrição"} />
           </div>
 
-          <div className="text-center text-xs text-gray-500 mt-4">
-            <p>
-              Impresso em{" "}
-              {formatDate(new Date().toISOString(), "dd/MM/yyyy 'às' HH:mm")}
-            </p>
+          {/* Rodapé */}
+          <div className="text-center text-[10px] text-zinc-400 border-t pt-2">
+            <p>Gerado em {formatDate(new Date().toISOString(), "dd/MM/yyyy 'às' HH:mm")}</p>
+            <p className="mt-0.5">Por Zencora Noma</p>
           </div>
         </div>
       </div>
     );
   };
+
+  const LabelItem = ({ title, content }: { title: string; content: React.ReactNode }) => (
+    <div className="flex flex-col">
+      <span className="text-[10px] uppercase font-medium text-zinc-400 tracking-wide">{title}</span>
+      <span className="text-sm leading-tight break-words">{content}</span>
+    </div>
+  );
+
 
   const handleChangeOrderStatus = async (id: string, status: string) => {
     try {
