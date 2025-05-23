@@ -91,7 +91,40 @@ export type Database = {
             referencedColumns: ["id"]
           }
         ]
-      }
+      },
+      reminders: {
+        Row: {
+          id: string
+          tenant_id: string
+          title: string
+          is_done: boolean
+          content: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          tenant_id: string
+          title: string
+          is_done: boolean
+          content: string
+        }
+        Update: {
+          tenant_id: string
+          title: string
+          is_done: boolean
+          content: string
+          updated_at: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reminders_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          }
+        ]
+      },
       products: {
         Row: {
           code: string

@@ -27,10 +27,11 @@ import { useAuthContext } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/routing/ProtectedRoute";
 import { SubscriptionProvider } from "./contexts/SubscriptionContext";
 import { SubscriptionGate } from "./components/subscription/SubscriptionGate";
+import Reminders from "./pages/Reminders";
 
 const queryClient = new QueryClient();
 
-const BLOCKED_ROUTES = ["/dashboard", "/production", "/reports", "/calendar", "/settings", "/notes", "/profile"];
+const BLOCKED_ROUTES = ["/dashboard", "/production", "/reports", "/calendar", "/settings", "/notes", "/profile", "/reminders"];
 
 const AppRoutes = () => {
   const { isAuthenticated, loading } = useAuthContext();
@@ -107,6 +108,14 @@ const AppRoutes = () => {
             element={
               <ProtectedRoute>
                 <Calendar />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="reminders"
+            element={
+              <ProtectedRoute>
+                <Reminders />
               </ProtectedRoute>
             }
           />

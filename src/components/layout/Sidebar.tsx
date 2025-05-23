@@ -8,6 +8,8 @@ import {
   Settings,
   FileText,
   Lock,
+  NotepadTextDashedIcon,
+  NotepadText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -61,6 +63,11 @@ const mainNavItems: NavItem[] = [
     title: "Relatórios",
     href: "/reports",
     icon: FileText,
+  },
+  {
+    title: "Lembretes",
+    href: "/reminders",
+    icon: NotepadText,
   },
   {
     title: "Calendário",
