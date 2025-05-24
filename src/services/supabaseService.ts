@@ -18,6 +18,7 @@ export type OrderType = {
 export type TenantType = Database["public"]["Tables"]["tenants"]["Row"];
 export type UserType = Database["public"]["Tables"]["users"]["Row"];
 export type SubscriptionType = Database["public"]["Tables"]["subscriptions"]["Row"];
+export type ReminderType = Database["public"]["Tables"]["reminders"]["Row"];
 
 // Serviço de autenticação
 export const authService = {
@@ -199,6 +200,25 @@ export const ordersService = {
   // Atualiza o status de uma encomenda
   updateOrderStatus: async (id: string, status: "pending" | "production" | "done") => {
     return await supabase.from("orders").update({ status }).eq("id", id);
+  },
+};
+
+export const remindersService = {
+  // Obtém todos os lembretes de um tenant
+  getTenantReminders: async (tenantId: string) => {
+    return await supabase.from("reminders").select("*").eq("tenant_id", tenantId);
+  },
+
+  createReminder: async (reminder: Omit<ReminderType, "id" | "created_at">) => {
+    return await supabase.from("reminders").insert(reminder).select().single();
+  },
+
+  updateReminder: async (id: string, data: Partial<Omit<ReminderType, "id" | "created_at">>) => {
+    return await supabase.from("reminders").update(data).eq("id", id).select().single();
+  },
+
+  deleteReminder: async (id: string) => {
+    return await supabase.from("reminders").delete().eq("id", id);
   },
 };
 

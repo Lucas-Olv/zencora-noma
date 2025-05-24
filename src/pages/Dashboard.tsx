@@ -5,10 +5,12 @@ import DeliveryCalendar from "@/components/dashboard/DeliveryCalendar";
 import { Calendar, ClipboardList, FileText, Users } from "lucide-react";
 import { Tables } from "@/integrations/supabase/types";
 import { parseDate } from "@/lib/utils";
-import { supabaseService } from "@/services/supabaseService";
+import { remindersService, supabaseService } from "@/services/supabaseService";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useAuthenticatedEffect } from "@/hooks/use-authenticated";
+import RecentReminders from "@/components/dashboard/RecentReminders";
 type Order = Tables<"orders">;
+type Reminder = Tables<"reminders">;
 
 interface DashboardStats {
   activeOrders: number;
@@ -29,6 +31,7 @@ const formatCurrency = (value: number) => {
 const Dashboard = () => {
   const { tenant, loading: tenantLoading, error: tenantError } = useAuthContext();
   const [orders, setOrders] = useState<Order[]>([]);
+  const [reminders, setReminders] = useState<Reminder[]>([]);
   const [stats, setStats] = useState<DashboardStats>({
     activeOrders: 0,
     inProduction: 0,
@@ -43,6 +46,7 @@ const Dashboard = () => {
   useAuthenticatedEffect(() => {
     document.title = "Dashboard | Zencora Noma";
     fetchStats();
+    fetchReminders();
   }, [tenant, tenantLoading, tenantError]);
 
 
@@ -114,6 +118,20 @@ const Dashboard = () => {
     }
   };
 
+  const fetchReminders = async () => {
+
+    if (tenantLoading) return;
+    if (tenantError || !tenant) {
+      throw new Error(tenantError || "Tenant não encontrado");
+    }
+
+    const { data, error } = await remindersService.getTenantReminders(tenant.id);
+
+    if (error) throw error;
+
+    setReminders(data.filter((reminder) => reminder.is_done === false));
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -162,7 +180,8 @@ const Dashboard = () => {
         <div className="lg:col-span-3">
           <PerformanceMetrics orders={orders} loading={loading} />
         </div>
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 flex flex-col gap-6">
+          <RecentReminders reminders={reminders} loading={loading} />
           <DeliveryCalendar orders={orders} loading={loading} />
         </div>
       </div>

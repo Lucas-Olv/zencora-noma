@@ -31,7 +31,7 @@ import Reminders from "./pages/Reminders";
 
 const queryClient = new QueryClient();
 
-const BLOCKED_ROUTES = ["/dashboard", "/production", "/reports", "/calendar", "/settings", "/notes", "/profile", "/reminders"];
+const BLOCKED_ROUTES = ["/dashboard", "/production", "/reports", "/calendar", "/settings", "/profile", "/reminders"];
 
 const AppRoutes = () => {
   const { isAuthenticated, loading } = useAuthContext();

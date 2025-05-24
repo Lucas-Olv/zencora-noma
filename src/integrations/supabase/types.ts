@@ -99,8 +99,8 @@ export type Database = {
           title: string
           is_done: boolean
           content: string
-          created_at: string
-          updated_at: string
+          created_at?: string
+          updated_at?: string
         }
         Insert: {
           tenant_id: string
