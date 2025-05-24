@@ -19,6 +19,8 @@ export type TenantType = Database["public"]["Tables"]["tenants"]["Row"];
 export type UserType = Database["public"]["Tables"]["users"]["Row"];
 export type SubscriptionType = Database["public"]["Tables"]["subscriptions"]["Row"];
 export type ReminderType = Database["public"]["Tables"]["reminders"]["Row"];
+export type SettingsType = Database["public"]["Tables"]["settings"]["Row"];
+export type RoleType = Database["public"]["Tables"]["roles"]["Row"];
 
 // Serviço de autenticação
 export const authService = {
@@ -222,6 +224,66 @@ export const remindersService = {
   },
 };
 
+// Serviço de configurações
+export const settingsService = {
+  // Obtém as configurações de um tenant
+  getTenantSettings: async (tenantId: string) => {
+    return await supabase
+      .from("settings")
+      .select("*")
+      .eq("tenant_id", tenantId)
+      .single();
+  },
+
+  // Cria ou atualiza as configurações de um tenant
+  upsertSettings: async (settings: Omit<SettingsType, "id" | "created_at" | "updated_at">) => {
+    return await supabase
+      .from("settings")
+      .upsert(settings)
+      .select()
+      .single();
+  },
+};
+
+// Serviço de papéis (roles)
+export const rolesService = {
+  // Obtém todos os papéis de um tenant
+  getTenantRoles: async (tenantId: string) => {
+    return await supabase
+      .from("roles")
+      .select("*")
+      .eq("tenant_id", tenantId)
+      .order("name", { ascending: true });
+  },
+
+  // Cria um novo papel
+  createRole: async (role: Omit<RoleType, "id" | "created_at" | "updated_at">) => {
+    return await supabase
+      .from("roles")
+      .insert(role)
+      .select()
+      .single();
+  },
+
+  // Atualiza um papel existente
+  updateRole: async (id: string, role: Partial<Omit<RoleType, "id" | "created_at" | "updated_at">>) => {
+    return await supabase
+      .from("roles")
+      .update(role)
+      .eq("id", id)
+      .select()
+      .single();
+  },
+
+  // Exclui um papel
+  deleteRole: async (id: string) => {
+    return await supabase
+      .from("roles")
+      .delete()
+      .eq("id", id);
+  },
+};
+
 // Exporta todos os serviços em um único objeto
 export const supabaseService = {
   auth: authService,
@@ -230,6 +292,9 @@ export const supabaseService = {
   subscriptions: subscriptionsService,
   products: productsService,
   orders: ordersService,
+  reminders: remindersService,
+  settings: settingsService,
+  roles: rolesService,
 };
 
 export default supabaseService;

@@ -125,6 +125,96 @@ export type Database = {
           }
         ]
       },
+      settings: {
+        Row: {
+          id: string
+          tenant_id: string
+          enable_roles: boolean
+          lock_reports_by_password: boolean
+          require_password_to_switch_role: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Insert: {
+          tenant_id: string
+          enable_roles: boolean
+          lock_reports_by_password: boolean
+          require_password_to_switch_role: boolean
+        }
+        Update: {
+          tenant_id: string
+          enable_roles: boolean
+          lock_reports_by_password: boolean
+          require_password_to_switch_role: boolean
+          updated_at: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "settings_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          }
+        ]
+      },
+      roles: {
+        Row: {
+          id: string
+          name: string
+          tenant_id: string
+          created_at?: string
+          updated_at?: string
+          can_access_reports: boolean
+          can_access_calendar: boolean
+          can_access_production: boolean
+          can_access_orders: boolean
+          can_access_reminders: boolean
+          can_access_settings: boolean
+          can_access_dashboard: boolean
+          can_create_orders: boolean
+          can_delete_orders: boolean
+          can_update_orders: boolean
+        }
+        Insert: {
+          name: string
+          tenant_id: string
+          can_access_reports: boolean
+          can_access_calendar: boolean
+          can_access_production: boolean
+          can_access_orders: boolean
+          can_access_reminders: boolean
+          can_access_settings: boolean
+          can_access_dashboard: boolean
+          can_create_orders: boolean
+          can_delete_orders: boolean
+          can_update_orders: boolean
+        }
+        Update: {
+          name: string
+          tenant_id: string
+          updated_at?: string
+          can_access_reports: boolean
+          can_access_calendar: boolean
+          can_access_production: boolean
+          can_access_orders: boolean
+          can_access_reminders: boolean
+          can_access_settings: boolean
+          can_access_dashboard: boolean
+          can_create_orders: boolean
+          can_delete_orders: boolean
+          can_update_orders: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roles_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          }
+        ]
+      },
       products: {
         Row: {
           code: string
