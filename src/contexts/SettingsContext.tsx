@@ -7,6 +7,7 @@ import {
   ReactNode,
 } from 'react';
 import { useAuthContext } from '@/contexts/AuthContext';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 import { rolesService, settingsService, RoleType } from '@/services/supabaseService';
 import { Tables } from '@/integrations/supabase/types';
 
@@ -39,11 +40,16 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
   const [selectedRole, setSelectedRole] = useState<RoleType | null>(null);
   const [loading, setLoading] = useState(true);
   const [isOwner, setIsOwner] = useState(false);
+  const { subscription, isBlocked } = useSubscription();
 
   const ROLE_STORAGE_KEY = 'active_role_id';
 
   const fetchSettings = async () => {
     if (!tenant?.id) return;
+
+    if (isBlocked || !subscription && (subscription?.plan !== 'pro' && subscription?.plan !== 'enterprise' && !subscription?.is_trial)) {
+      return;
+    }
 
     try {
       const { data: settingsData, error: settingsError } = await settingsService.getTenantSettings(tenant.id);
@@ -67,7 +73,7 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
         setSelectedRole(null);
         setIsOwner(true);
       } else {
-        const found = rolesData?.find((r) => r.id === savedRoleId);
+        const found = roles.find((r) => r.id === savedRoleId);
         if (found) {
           setSelectedRole(found);
           setIsOwner(false);
