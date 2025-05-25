@@ -132,6 +132,7 @@ export type Database = {
           enable_roles: boolean
           lock_reports_by_password: boolean
           require_password_to_switch_role: boolean
+          lock_settings_by_password: boolean
           created_at?: string
           updated_at?: string
         }
@@ -140,6 +141,7 @@ export type Database = {
           enable_roles: boolean
           lock_reports_by_password: boolean
           require_password_to_switch_role: boolean
+          lock_settings_by_password: boolean
         }
         Update: {
           tenant_id: string
@@ -147,6 +149,7 @@ export type Database = {
           lock_reports_by_password: boolean
           require_password_to_switch_role: boolean
           updated_at: string
+          lock_settings_by_password: boolean
         }
         Relationships: [
           {

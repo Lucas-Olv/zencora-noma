@@ -90,16 +90,6 @@ const AppRoutes = () => {
       {isAuthenticated && (
         <Route path="/" element={<Layout />}>
           <Route
-            path="/select-role"
-            element={
-              isAuthenticated ? (
-                <RoleSelector />
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
-          />
-          <Route
             path="dashboard"
             element={
               <ProtectedRoute>
@@ -179,7 +169,7 @@ const AppRoutes = () => {
             path="settings"
             element={
               <ProtectedRoute>
-                {!location.state?.verified ? (
+                {settings?.lock_settings_by_password && !location.state?.verified ? (
                   <Navigate 
                     to="/verify-password" 
                     state={{ 
@@ -204,6 +194,20 @@ const AppRoutes = () => {
             }
           />
         </Route>
+      )}
+
+      {/* Protected Routes Outside Layout scheme*/}
+      {isAuthenticated && (
+          <Route
+          path="/select-role"
+          element={
+            isAuthenticated ? (
+              <RoleSelector />
+            ) : (
+              <Navigate to="/login" />
+            )
+          }
+        />
       )}
 
       <Route path="*" element={<NotFound />} />

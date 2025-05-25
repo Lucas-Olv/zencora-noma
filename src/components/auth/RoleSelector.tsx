@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useToast } from "@/components/ui/use-toast";
 import { RoleType } from "@/services/supabaseService";
 import { Crown } from "lucide-react";
+import ThemeToggle from "../layout/ThemeToggle";
 
 export default function RoleSelector() {
   const navigate = useNavigate();
@@ -37,7 +38,7 @@ export default function RoleSelector() {
 
       // Determine which page to redirect to based on role permissions
       let redirectTo = "/dashboard"; // Default
-      
+
       if (!role.can_access_dashboard) {
         if (role.can_access_orders) redirectTo = "/orders";
         else if (role.can_access_calendar) redirectTo = "/calendar";
@@ -71,73 +72,93 @@ export default function RoleSelector() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Selecione seu papel</CardTitle>
-          <CardDescription>
-            Escolha o papel que você deseja utilizar neste dispositivo.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Owner Option */}
-          <Button
-            variant="default"
-            className="w-full justify-start text-left h-auto py-4 bg-primary hover:bg-primary/90"
-            onClick={() => handleRoleSelect(null)}
-            disabled={loading}
-          >
-            <div className="flex items-center gap-2">
-              <Crown className="h-5 w-5" />
-              <div>
-                <p className="font-medium">Owner</p>
-                <p className="text-sm text-muted-foreground">
-                  Acesso completo ao sistema
-                </p>
-              </div>
-            </div>
-          </Button>
 
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">
-                Outros papéis
-              </span>
-            </div>
-          </div>
-
-          {/* Other Roles */}
-          {roles.map((role) => (
+    <div className="flex flex-col min-h-screen items-center p-4">
+      <div className="flex justify-between items-center w-full">
+        <Link
+          to="/"
+          className="flex items-center text-2xl font-bold zencora-gradient-text"
+        >
+          <img
+            src="/noma-logo.svg"
+            alt="Zencora Noma Logo"
+            className="h-8 mr-2"
+          />
+          Zencora Noma
+        </Link>
+        <div className="ml-auto">
+          <ThemeToggle />
+        </div>
+      </div>
+      <div className="flex items-center justify-center flex-1">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>Selecione seu papel</CardTitle>
+            <CardDescription>
+              Escolha o papel que você deseja utilizar neste dispositivo.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Owner Option */}
             <Button
-              key={role.id}
-              variant="outline"
+              variant="defaultText"
               className="w-full justify-start text-left h-auto py-4"
-              onClick={() => handleRoleSelect(role)}
+              onClick={() => handleRoleSelect(null)}
               disabled={loading}
             >
-              <div>
-                <p className="font-medium">{role.name}</p>
-                <p className="text-sm text-muted-foreground">
-                  {[
-                    role.can_access_dashboard && "Dashboard",
-                    role.can_access_orders && "Encomendas",
-                    role.can_access_calendar && "Calendário",
-                    role.can_access_production && "Produção",
-                    role.can_access_reports && "Relatórios",
-                    role.can_access_reminders && "Lembretes",
-                    role.can_access_settings && "Configurações",
-                  ]
-                    .filter(Boolean)
-                    .join(", ")}
-                </p>
+              <div className="flex items-center gap-2">
+                <Crown className="h-5 w-5" />
+                <div>
+                  <p className="font-medium">Owner</p>
+                  <p className="text-sm">
+                    Acesso completo ao sistema
+                  </p>
+                </div>
               </div>
             </Button>
-          ))}
-        </CardContent>
-      </Card>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  Outros papéis
+                </span>
+              </div>
+            </div>
+
+            {/* Other Roles */}
+            {roles.map((role) => (
+              <Button
+                key={role.id}
+                variant="outline"
+                className="w-full justify-start text-left h-auto py-4"
+                onClick={() => handleRoleSelect(role)}
+                disabled={loading}
+              >
+                <div>
+                  <p className="font-medium">{role.name}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {[
+                      role.can_access_dashboard && "Dashboard",
+                      role.can_access_orders && "Encomendas",
+                      role.can_access_calendar && "Calendário",
+                      role.can_access_production && "Produção",
+                      role.can_access_reports && "Relatórios",
+                      role.can_access_reminders && "Lembretes",
+                      role.can_access_settings && "Configurações",
+                    ]
+                      .filter(Boolean)
+                      .join(", ")}
+                  </p>
+                </div>
+              </Button>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
     </div>
+
   );
 } 

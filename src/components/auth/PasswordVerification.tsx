@@ -22,14 +22,8 @@ export default function PasswordVerification() {
   const fromRoleSwitch = location.state?.fromRoleSwitch || false;
 
   useEffect(() => {
-    console.log('PasswordVerification state:', location.state);
-    console.log('Target path:', targetPath);
-    console.log('Target name:', targetName);
-    console.log('From role switch:', fromRoleSwitch);
-
     // Se não houver state, redirecionar para o dashboard
     if (!location.state) {
-      console.log('No state found, redirecting to dashboard');
       navigate("/dashboard", { replace: true });
     }
   }, [location.state, navigate, targetPath, targetName, fromRoleSwitch]);
@@ -48,11 +42,8 @@ export default function PasswordVerification() {
 
       if (error) throw error;
 
-      console.log('Password verified, redirecting to:', targetPath);
-
       // Se for troca de papel, limpa a role atual antes de redirecionar
       if (fromRoleSwitch) {
-        console.log('Clearing role for role switch');
         localStorage.removeItem("active_role_id");
       }
 
@@ -65,7 +56,6 @@ export default function PasswordVerification() {
         }
       });
     } catch (error: any) {
-      console.error('Password verification error:', error);
       toast({
         title: "Erro na verificação",
         description: "Senha incorreta. Por favor, tente novamente.",
@@ -77,7 +67,7 @@ export default function PasswordVerification() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="flex flex-col items-center justify-center h-full">
       <Card className="w-full max-w-md">
         <form onSubmit={handleSubmit}>
           <CardHeader>

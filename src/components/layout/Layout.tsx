@@ -27,7 +27,7 @@ const Layout: React.FC = () => {
           className="flex-1 transition-all duration-300"
           style={{ marginLeft: isMobile ? 0 : isSidebarOpen ? "16rem" : 0 }}
         >
-          <div className="container py-6 md:py-8 px-4">
+          <div className="container h-full py-6 md:py-8 px-4">
             <Outlet />
           </div>
         </main>

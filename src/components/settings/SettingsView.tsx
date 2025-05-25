@@ -33,6 +33,7 @@ const DEFAULT_SETTINGS: Omit<SettingsType, "id" | "created_at" | "updated_at"> =
   enable_roles: false,
   lock_reports_by_password: false,
   require_password_to_switch_role: false,
+  lock_settings_by_password: false,
   tenant_id: "",
 };
 
@@ -219,6 +220,21 @@ export default function SettingsView() {
                 checked={settings?.lock_reports_by_password}
                 onCheckedChange={(checked) =>
                   handleUpdateSettings("lock_reports_by_password", checked)
+                }
+              />
+            </div>
+            <Separator />
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Bloquear configurações por senha</Label>
+                <p className="text-sm text-muted-foreground">
+                  Exige senha para acessar as configurações.
+                </p>
+              </div>
+              <Switch
+                checked={settings?.lock_settings_by_password}
+                onCheckedChange={(checked) =>
+                  handleUpdateSettings("lock_settings_by_password", checked)
                 }
               />
             </div>
