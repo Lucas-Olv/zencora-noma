@@ -16,6 +16,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { supabaseService } from "@/services/supabaseService";
 import { useAuthContext } from "@/contexts/AuthContext";  
+import { useSettings } from "@/contexts/SettingsContext";
 
 export const LoginForm = () => {
   const { toast } = useToast();
@@ -28,6 +29,7 @@ export const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
   const { isAuthenticated } = useAuthContext();
+  const { settings, roles } = useSettings();
   
   useEffect(() => {
     // Check if register=true is in the URL
@@ -35,11 +37,15 @@ export const LoginForm = () => {
       setActiveTab("register");
     }
 
-    // Se já estiver autenticado, redireciona para o dashboard
+    // Se já estiver autenticado, redireciona para a tela apropriada
     if (isAuthenticated) {
-      navigate("/dashboard");
+      if (settings?.enable_roles && roles.length > 0) {
+        navigate("/select-role");
+      } else {
+        navigate("/dashboard");
+      }
     }
-  }, [searchParams, isAuthenticated, navigate]);
+  }, [searchParams, isAuthenticated, settings, roles, navigate]);
   
   const getErrorMessage = (error: any) => {
     const errorMessages: { [key: string]: string } = {
@@ -121,11 +127,17 @@ export const LoginForm = () => {
       if (error) throw error;
       
       if (data.session?.access_token) {
-      toast({
-        title: "Login realizado com sucesso!",
-        description: "Bem-vindo de volta ao Zencora Noma.",
-      });
-      navigate("/dashboard");
+        toast({
+          title: "Login realizado com sucesso!",
+          description: "Bem-vindo de volta ao Zencora Noma.",
+        });
+
+        // Verifica se deve redirecionar para a tela de roles
+        if (settings?.enable_roles && roles.length > 0) {
+          navigate("/select-role");
+        } else {
+          navigate("/dashboard");
+        }
       }
     } catch (error: any) {
       toast({

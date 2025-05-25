@@ -2,14 +2,18 @@ import { createContext, useContext, useEffect, useState } from "react";
 import supabase from "@/services/supabaseService";
 import { Session, User } from "@supabase/supabase-js";
 import { Tables } from "@/integrations/supabase/types";
+import { useSettings } from "./SettingsContext";
 
 type Tenant = Tables<"tenants">;
+type Settings = Tables<"settings">;
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   tenant: Tenant | null;
   setTenant: (tenant: Tenant | null) => void;
+  settings: Settings | null;
+  setSettings: (settings: Settings | null) => void;
   isAuthenticated: boolean;
   loading: boolean;
   logout: () => Promise<void>;
@@ -22,6 +26,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [tenant, setTenant] = useState<Tenant | null>(null);
+  const [settings, setSettings] = useState<Settings | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -63,6 +68,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setSession(null);
     setTenant(null);
     setIsAuthenticated(false);
+    setSettings(null);
   };
 
   return (
@@ -73,6 +79,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         isAuthenticated,
         tenant,
         setTenant,
+        settings,
+        setSettings,
         loading,
         logout,
         error,

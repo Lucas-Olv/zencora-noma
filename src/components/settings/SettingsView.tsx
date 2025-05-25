@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuthContext } from "@/contexts/AuthContext";
+import { useSettings } from "@/contexts/SettingsContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
@@ -37,9 +38,8 @@ const DEFAULT_SETTINGS: Omit<SettingsType, "id" | "created_at" | "updated_at"> =
 
 export default function SettingsView() {
   const { tenant } = useAuthContext();
+  const { settings, roles, reloadSettings } = useSettings();
   const { toast } = useToast();
-  const [settings, setSettings] = useState<SettingsType | null>(null);
-  const [roles, setRoles] = useState<RoleType[]>([]);
   const [isCreateRoleDialogOpen, setIsCreateRoleDialogOpen] = useState(false);
   const [isEditRoleDialogOpen, setIsEditRoleDialogOpen] = useState(false);
   const [isDeleteRoleDialogOpen, setIsDeleteRoleDialogOpen] = useState(false);
@@ -55,58 +55,8 @@ export default function SettingsView() {
     can_access_dashboard: false,
     can_create_orders: false,
     can_delete_orders: false,
-    can_update_orders: false,
+    can_edit_orders: false,
   });
-
-  useEffect(() => {
-    if (tenant?.id) {
-      initializeSettings();
-      fetchRoles();
-    }
-  }, [tenant]);
-
-  const initializeSettings = async () => {
-    try {
-      const { data, error } = await settingsService.getTenantSettings(tenant?.id);
-      
-      if (error && error.code === "PGRST116") { // Registro não encontrado
-        // Criar configurações padrão
-        const { data: newSettings, error: createError } = await settingsService.upsertSettings({
-          ...DEFAULT_SETTINGS,
-          tenant_id: tenant?.id,
-        });
-
-        if (createError) throw createError;
-        setSettings(newSettings);
-      } else if (error) {
-        throw error;
-      } else {
-        setSettings(data);
-      }
-    } catch (error) {
-      toast({
-        title: "Erro ao carregar configurações",
-        description: "Não foi possível carregar as configurações. Tente novamente.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const fetchRoles = async () => {
-    if (!settings?.enable_roles) return;
-    
-    try {
-      const { data, error } = await rolesService.getTenantRoles(tenant?.id);
-      if (error) throw error;
-      setRoles(data || []);
-    } catch (error) {
-      toast({
-        title: "Erro ao carregar papéis",
-        description: "Não foi possível carregar os papéis. Tente novamente.",
-        variant: "destructive",
-      });
-    }
-  };
 
   const handleUpdateSettings = async (field: keyof SettingsType, value: boolean) => {
     try {
@@ -119,12 +69,9 @@ export default function SettingsView() {
       });
 
       if (error) throw error;
-      setSettings(data);
 
-      // Se a funcionalidade de papéis foi ativada, buscar os papéis
-      if (field === "enable_roles" && value) {
-        fetchRoles();
-      }
+      // Recarrega as configurações para atualizar o contexto
+      reloadSettings();
 
       toast({
         title: "Configurações atualizadas",
@@ -150,7 +97,9 @@ export default function SettingsView() {
 
       if (error) throw error;
 
-      setRoles((prev) => [...prev, data]);
+      // Recarrega as configurações para atualizar o contexto
+      reloadSettings();
+
       setIsCreateRoleDialogOpen(false);
       setNewRole({
         name: "",
@@ -163,7 +112,7 @@ export default function SettingsView() {
         can_access_dashboard: false,
         can_create_orders: false,
         can_delete_orders: false,
-        can_update_orders: false,
+        can_edit_orders: false,
       });
 
       toast({
@@ -187,9 +136,9 @@ export default function SettingsView() {
 
       if (error) throw error;
 
-      setRoles((prev) =>
-        prev.map((role) => (role.id === selectedRole.id ? data : role))
-      );
+      // Recarrega as configurações para atualizar o contexto
+      reloadSettings();
+
       setIsEditRoleDialogOpen(false);
       toast({
         title: "Papel atualizado",
@@ -212,7 +161,9 @@ export default function SettingsView() {
 
       if (error) throw error;
 
-      setRoles((prev) => prev.filter((role) => role.id !== selectedRole.id));
+      // Recarrega as configurações para atualizar o contexto
+      reloadSettings();
+
       setIsDeleteRoleDialogOpen(false);
       setSelectedRole(null);
       toast({
@@ -443,11 +394,11 @@ export default function SettingsView() {
                   />
                 </div>
                 <div className="flex items-center justify-between">
-                  <Label>Atualizar Encomendas</Label>
+                  <Label>Editar Encomendas</Label>
                   <Switch
-                    checked={newRole.can_update_orders}
+                      checked={newRole.can_edit_orders}
                     onCheckedChange={(checked) =>
-                      setNewRole({ ...newRole, can_update_orders: checked })
+                      setNewRole({ ...newRole, can_edit_orders: checked })
                     }
                   />
                 </div>
@@ -611,11 +562,11 @@ export default function SettingsView() {
                 <div className="flex items-center justify-between">
                   <Label>Atualizar Encomendas</Label>
                   <Switch
-                    checked={selectedRole?.can_update_orders}
+                    checked={selectedRole?.can_edit_orders}
                     onCheckedChange={(checked) =>
                       setSelectedRole(
                         selectedRole
-                          ? { ...selectedRole, can_update_orders: checked }
+                          ? { ...selectedRole, can_edit_orders: checked }
                           : null
                       )
                     }

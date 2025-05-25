@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { TenantProvider } from "@/contexts/TenantContext";
 import { ThemeProvider } from "next-themes";
 import Layout from "./components/layout/Layout";
@@ -28,6 +28,11 @@ import ProtectedRoute from "@/components/routing/ProtectedRoute";
 import { SubscriptionProvider } from "./contexts/SubscriptionContext";
 import { SubscriptionGate } from "./components/subscription/SubscriptionGate";
 import Reminders from "./pages/Reminders";
+import { SettingsProvider } from "./contexts/SettingsContext";
+import { useSettings } from "@/contexts/SettingsContext";
+import RoleSelector from "@/components/auth/RoleSelector";
+import PasswordVerification from "@/components/auth/PasswordVerification";
+import { SettingsType } from "@/services/supabaseService";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +40,8 @@ const BLOCKED_ROUTES = ["/dashboard", "/production", "/reports", "/calendar", "/
 
 const AppRoutes = () => {
   const { isAuthenticated, loading } = useAuthContext();
+  const { settings, roles } = useSettings();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -49,7 +56,17 @@ const AppRoutes = () => {
       {/* Public Routes */}
       <Route
         path="/"
-        element={isAuthenticated ? <Navigate to="/dashboard" /> : <Landing />}
+        element={
+          isAuthenticated ? (
+            settings?.enable_roles && roles.length > 0 ? (
+              <Navigate to="/select-role" />
+            ) : (
+              <Navigate to="/dashboard" />
+            )
+          ) : (
+            <Landing />
+          )
+        }
       />
       <Route path="/about" element={<About />} />
       <Route path="/terms" element={<Terms />} />
@@ -57,12 +74,31 @@ const AppRoutes = () => {
       <Route path="/contact" element={<Contact />} />
       <Route
         path="/login"
-        element={isAuthenticated ? <Navigate to="/dashboard" /> : <Login />}
+        element={
+          isAuthenticated ? (
+            settings?.enable_roles && roles.length > 0 ? (
+              <Navigate to="/select-role" />
+            ) : (
+              <Navigate to="/dashboard" />
+            )
+          ) : (
+            <Login />
+          )
+        }
       />
-
       {/* Protected Routes */}
       {isAuthenticated && (
         <Route path="/" element={<Layout />}>
+          <Route
+            path="/select-role"
+            element={
+              isAuthenticated ? (
+                <RoleSelector />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
           <Route
             path="dashboard"
             element={
@@ -96,10 +132,30 @@ const AppRoutes = () => {
             }
           />
           <Route
+            path="verify-password"
+            element={
+              <ProtectedRoute>
+                <PasswordVerification />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="reports"
             element={
               <ProtectedRoute>
-                <Reports />
+                {settings?.lock_reports_by_password && !location.state?.verified ? (
+                  <Navigate 
+                    to="/verify-password" 
+                    state={{ 
+                      redirect: "/reports",
+                      name: "os relatórios",
+                      fromRoleSwitch: false
+                    }} 
+                    replace 
+                  />
+                ) : (
+                  <Reports />
+                )}
               </ProtectedRoute>
             }
           />
@@ -120,18 +176,22 @@ const AppRoutes = () => {
             }
           />
           <Route
-            path="profile"
-            element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            }
-          />
-          <Route
             path="settings"
             element={
               <ProtectedRoute>
-                <Settings />
+                {!location.state?.verified ? (
+                  <Navigate 
+                    to="/verify-password" 
+                    state={{ 
+                      redirect: "/settings",
+                      name: "as configurações",
+                      fromRoleSwitch: false
+                    }} 
+                    replace 
+                  />
+                ) : (
+                  <Settings />
+                )}
               </ProtectedRoute>
             }
           />
@@ -157,18 +217,20 @@ export const App = () => (
       <AuthProvider>
         <TenantProvider>
           <SubscriptionProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
-                <SubscriptionGate 
-                  blockedRoutes={BLOCKED_ROUTES}
-                  redirectTo="/subscription-expired"
-                >
-                  <AppRoutes />
-                </SubscriptionGate>
-              </BrowserRouter>
-            </TooltipProvider>
+            <SettingsProvider>
+              <TooltipProvider>
+                <Toaster />
+                <Sonner />
+                <BrowserRouter>
+                  <SubscriptionGate
+                    blockedRoutes={BLOCKED_ROUTES}
+                    redirectTo="/subscription-expired"
+                  >
+                    <AppRoutes />
+                  </SubscriptionGate>
+                </BrowserRouter>
+              </TooltipProvider>
+            </SettingsProvider>
           </SubscriptionProvider>
         </TenantProvider>
       </AuthProvider>

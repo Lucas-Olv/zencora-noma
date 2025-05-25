@@ -71,6 +71,17 @@ export const authService = {
   setSession: async (session: Session) => {
     return await supabase.auth.setSession(session);
   },
+
+  // Verifica a senha do usuário atual
+  verifyPassword: async (password: string) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user?.email) throw new Error("Usuário não encontrado");
+    
+    return await supabase.auth.signInWithPassword({
+      email: user.email,
+      password,
+    });
+  },
 };
 
 // Serviço de usuários
@@ -297,4 +308,5 @@ export const supabaseService = {
   roles: rolesService,
 };
 
+// Exporta o objeto como default também
 export default supabaseService;

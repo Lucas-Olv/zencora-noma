@@ -174,7 +174,7 @@ export type Database = {
           can_access_dashboard: boolean
           can_create_orders: boolean
           can_delete_orders: boolean
-          can_update_orders: boolean
+          can_edit_orders: boolean
         }
         Insert: {
           name: string
@@ -188,7 +188,7 @@ export type Database = {
           can_access_dashboard: boolean
           can_create_orders: boolean
           can_delete_orders: boolean
-          can_update_orders: boolean
+          can_edit_orders: boolean
         }
         Update: {
           name: string
@@ -203,7 +203,7 @@ export type Database = {
           can_access_dashboard: boolean
           can_create_orders: boolean
           can_delete_orders: boolean
-          can_update_orders: boolean
+          can_edit_orders: boolean
         }
         Relationships: [
           {

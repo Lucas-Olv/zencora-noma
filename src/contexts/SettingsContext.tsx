@@ -7,30 +7,19 @@ import {
   ReactNode,
 } from 'react';
 import { useAuthContext } from '@/contexts/AuthContext';
-import { rolesService, settingsService } from '@/services/supabaseService';
+import { rolesService, settingsService, RoleType } from '@/services/supabaseService';
+import { Tables } from '@/integrations/supabase/types';
 
-type Role = {
-  id: string;
-  tenant_id: string;
-  name: string;
-  accessible_panels: string[];
-  created_at: string;
-};
-
-type Settings = {
-  id: string;
-  tenant_id: string;
-  enable_roles: boolean;
-  lock_reports_with_password: boolean;
-};
+type Settings = Tables<"settings">;
 
 type SettingsContextType = {
   settings: Settings | null;
-  roles: Role[];
-  selectedRole: Role | null;
+  roles: RoleType[];
+  selectedRole: RoleType | null;
   loading: boolean;
   setSelectedRoleById: (id: string | null) => void;
   reloadSettings: () => void;
+  isOwner: boolean;
 };
 
 const SettingsContext = createContext<SettingsContextType>({
@@ -40,40 +29,67 @@ const SettingsContext = createContext<SettingsContextType>({
   loading: true,
   setSelectedRoleById: () => {},
   reloadSettings: () => {},
+  isOwner: false,
 });
 
 export const SettingsProvider = ({ children }: { children: ReactNode }) => {
   const { tenant } = useAuthContext();
   const [settings, setSettings] = useState<Settings | null>(null);
-  const [roles, setRoles] = useState<Role[]>([]);
-  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+  const [roles, setRoles] = useState<RoleType[]>([]);
+  const [selectedRole, setSelectedRole] = useState<RoleType | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isOwner, setIsOwner] = useState(false);
 
   const ROLE_STORAGE_KEY = 'active_role_id';
 
   const fetchSettings = async () => {
     if (!tenant?.id) return;
 
-    const { data: settingsData } = await settingsService.getTenantSettings(tenant.id);
+    try {
+      const { data: settingsData, error: settingsError } = await settingsService.getTenantSettings(tenant.id);
+      if (settingsError) throw settingsError;
 
-    const { data: rolesData } = await rolesService.getTenantRoles(tenant.id);
+      setSettings(settingsData);
 
-    setSettings(settingsData);
-    setRoles(rolesData || []);
+      // Só busca roles se a funcionalidade estiver ativada
+      if (settingsData?.enable_roles) {
+        const { data: rolesData, error: rolesError } = await rolesService.getTenantRoles(tenant.id);
+        if (rolesError) throw rolesError;
+        setRoles(rolesData || []);
+      } else {
+        setRoles([]);
+      }
 
-    // Verifica role ativa no localStorage
-    const savedRoleId = localStorage.getItem(ROLE_STORAGE_KEY);
-    if (savedRoleId) {
-      const found = rolesData?.find((r) => r.id === savedRoleId);
-      if (found) setSelectedRole(found);
+      // Verifica role ativa no localStorage
+      const savedRoleId = localStorage.getItem(ROLE_STORAGE_KEY);
+      if (savedRoleId === null) {
+        // Se não há role salva, é owner
+        setSelectedRole(null);
+        setIsOwner(true);
+      } else {
+        const found = rolesData?.find((r) => r.id === savedRoleId);
+        if (found) {
+          setSelectedRole(found);
+          setIsOwner(false);
+        } else {
+          // Se a role salva não existe mais, limpa e define como owner
+          localStorage.removeItem(ROLE_STORAGE_KEY);
+          setSelectedRole(null);
+          setIsOwner(true);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching settings:', error);
+      // Em caso de erro, mantém o estado anterior
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   const setSelectedRoleById = (id: string | null) => {
     if (id === null) {
       setSelectedRole(null);
+      setIsOwner(true);
       localStorage.removeItem(ROLE_STORAGE_KEY);
       return;
     }
@@ -81,6 +97,7 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     const role = roles.find((r) => r.id === id);
     if (role) {
       setSelectedRole(role);
+      setIsOwner(false);
       localStorage.setItem(ROLE_STORAGE_KEY, id);
     }
   };
@@ -92,7 +109,7 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     fetchSettings();
-  }, [tenant?.id]);
+  }, [tenant]);
 
   return (
     <SettingsContext.Provider
@@ -103,6 +120,7 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
         loading,
         setSelectedRoleById,
         reloadSettings,
+        isOwner,
       }}
     >
       {children}
