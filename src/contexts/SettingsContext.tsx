@@ -62,12 +62,28 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
       }
 
       const { data: settingsData, error: settingsError } = await settingsService.getTenantSettings(tenant.id);
-      if (settingsError) throw settingsError;
-
-      setSettings(settingsData);
+      if (settingsError) {
+        // Se não encontrou settings, cria padrão
+        if (settingsError.code === 'PGRST116') {
+          const defaultSettings = {
+            tenant_id: tenant.id,
+            enable_roles: false,
+            lock_reports_by_password: false,
+            require_password_to_switch_role: false,
+            lock_settings_by_password: false,
+          };
+          const { data: createdSettings, error: createError } = await settingsService.upsertSettings(defaultSettings);
+          if (createError) throw createError;
+          setSettings(createdSettings);
+        } else {
+          throw settingsError;
+        }
+      } else {
+        setSettings(settingsData);
+      }
 
       // Só busca roles se a funcionalidade estiver ativada
-      if (settingsData?.enable_roles) {
+      if ((settingsData?.enable_roles || (settingsError && settingsError.code === 'PGRST116' && false)) && tenant.id) {
         const { data: rolesData, error: rolesError } = await rolesService.getTenantRoles(tenant.id);
         if (rolesError) throw rolesError;
         setRoles(rolesData || []);

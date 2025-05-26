@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { useAuthContext } from '@/contexts/AuthContext'; // ou onde estiver seu auth context
 import { supabase } from '@/integrations/supabase/client'; // ajuste conforme sua estrutura
 import dayjs from 'dayjs';
+import { supabaseService } from '@/services/supabaseService';
 
 type SubscriptionStatus =
   | 'trial'
@@ -66,8 +67,26 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
         .single();
 
       if (error) {
-        console.error('Erro ao buscar assinatura:', error);
-        setSubscription(null);
+        // Se não encontrou a subscription, cria uma nova de trial
+        if (error.code === 'PGRST116') {
+          const trialEndDate = dayjs().add(7, 'day').toISOString();
+          const { data: newSubscription, error: createError } = await supabaseService.subscriptions.createSubscription(
+            user.id,
+            null, // productId pode ser null ou ajustado conforme necessário
+            'trial',
+            'trial',
+            trialEndDate
+          );
+          if (createError) {
+            console.error('Erro ao criar assinatura:', createError);
+            setSubscription(null);
+          } else {
+            setSubscription(newSubscription);
+          }
+        } else {
+          console.error('Erro ao buscar assinatura:', error);
+          setSubscription(null);
+        }
       } else {
         setSubscription(data);
       }

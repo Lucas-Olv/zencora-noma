@@ -170,6 +170,15 @@ export const tenantsService = {
       .eq("owner_id", ownerId)
       .single();
   },
+
+  // Cria um novo tenant
+  createTenant: async (tenant: Omit<TenantType, "id" | "created_at">) => {
+    return await supabase
+      .from("tenants")
+      .insert(tenant)
+      .select()
+      .single();
+  },
 };
 
 // Serviço de encomendas
