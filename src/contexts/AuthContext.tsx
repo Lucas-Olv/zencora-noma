@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import supabase from "@/services/supabaseService";
+import { supabaseService } from "@/services/supabaseService";
 import { Session, User } from "@supabase/supabase-js";
 import { Tables } from "@/integrations/supabase/types";
 import { useSettings } from "./SettingsContext";
@@ -30,45 +30,117 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isSettingUp, setIsSettingUp] = useState(false);
 
   useEffect(() => {
-    const loadSession = async () => {
-      const { session, error } = await supabase.auth.getCurrentSession();
-      if (error) {
-        setError(error.message);
-        setLoading(false);
-        return;
-      }
+    let mounted = true;
 
-      if (session) {
-        setSession(session);
-        setUser(session.user);
-        setIsAuthenticated(true);
+    const loadSession = async () => {
+      if (!mounted) return;
+      
+      try {
+        setLoading(true);
+        const { session, error } = await supabaseService.auth.getCurrentSession();
+        if (error) {
+          if (mounted) {
+            setError(error.message);
+            setLoading(false);
+          }
+          return;
+        }
+
+        if (session?.user) {
+          const { success, data: workspaceData } = await supabaseService.auth.setupUserWorkspace(session.user);
+          if (success && workspaceData && mounted) {
+            setSession(session);
+            setUser(session.user);
+            setTenant(workspaceData.tenant);
+            setSettings(workspaceData.settings);
+            setIsAuthenticated(true);
+          } else if (mounted) {
+            await supabaseService.auth.signOut();
+            setError('Falha ao configurar workspace');
+          }
+        }
+      } catch (error: any) {
+        console.error('Erro ao carregar sessão:', error);
+        if (mounted) {
+          setError('Erro ao carregar sessão');
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
       }
-      setLoading(false);
     };
 
-    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setIsAuthenticated(!!session?.user);
+    const { data: listener } = supabaseService.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted) return;
+      if (isSettingUp) return;
+
+      if (event === 'SIGNED_IN') {
+        setIsSettingUp(true);
+        try {
+          if (session?.user) {
+            const { success, data: workspaceData } = await supabaseService.auth.setupUserWorkspace(session.user);
+            if (success && workspaceData && mounted) {
+              setSession(session);
+              setUser(session.user);
+              setTenant(workspaceData.tenant);
+              setSettings(workspaceData.settings);
+              setIsAuthenticated(true);
+            } else if (mounted) {
+              await supabaseService.auth.signOut();
+              setError('Falha ao configurar workspace');
+            }
+          }
+        } catch (error: any) {
+          console.error('Erro no setup do workspace:', error);
+          if (mounted) {
+            await supabaseService.auth.signOut();
+            setError('Falha ao configurar workspace');
+          }
+        } finally {
+          if (mounted) {
+            setIsSettingUp(false);
+          }
+        }
+      } else if (event === 'SIGNED_OUT' && mounted) {
+        setSession(null);
+        setUser(null);
+        setTenant(null);
+        setIsAuthenticated(false);
+        setSettings(null);
+        setError(null);
+      }
     });
 
     loadSession();
 
     return () => {
+      mounted = false;
       listener.subscription.unsubscribe();
     };
-  }, []);
+  }, [isSettingUp]);
 
   const logout = async () => {
-    await supabase.auth.signOut();
+    try {
+      setLoading(true);
+      const { error } = await supabaseService.auth.signOut();
+      if (error) throw error;
 
-    setUser(null);
-    setSession(null);
-    setTenant(null);
-    setIsAuthenticated(false);
-    setSettings(null);
+      setUser(null);
+      setSession(null);
+      setTenant(null);
+      setSettings(null);
+      setIsAuthenticated(false);
+      setError(null);
+    } catch (error: any) {
+      console.error('Erro ao fazer logout:', error);
+      setError('Erro ao fazer logout. Por favor, tente novamente.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
