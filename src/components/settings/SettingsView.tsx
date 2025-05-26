@@ -37,8 +37,7 @@ const DEFAULT_SETTINGS: Omit<SettingsType, "id" | "created_at" | "updated_at"> =
 };
 
 export default function SettingsView() {
-  const { tenant } = useWorkspaceContext();
-  const { settings, roles, reloadSettings } = useWorkspaceContext();
+  const { tenant, settings, roles, updateSettings } = useWorkspaceContext();
   const { toast } = useToast();
   const [isCreateRoleDialogOpen, setIsCreateRoleDialogOpen] = useState(false);
   const [isEditRoleDialogOpen, setIsEditRoleDialogOpen] = useState(false);
@@ -62,16 +61,11 @@ export default function SettingsView() {
     try {
       if (!settings || !tenant?.id) return;
 
-      const { data, error } = await settingsService.upsertSettings({
+      await updateSettings({
         ...settings,
         [field]: value,
         tenant_id: tenant.id,
       });
-
-      if (error) throw error;
-
-      // Recarrega as configurações para atualizar o contexto
-      reloadSettings();
 
       toast({
         title: "Configurações atualizadas",
@@ -97,8 +91,10 @@ export default function SettingsView() {
 
       if (error) throw error;
 
-      // Recarrega as configurações para atualizar o contexto
-      reloadSettings();
+      // Atualiza as settings para refletir a mudança
+      if (settings) {
+        await updateSettings(settings);
+      }
 
       setIsCreateRoleDialogOpen(false);
       setNewRole({
@@ -136,8 +132,10 @@ export default function SettingsView() {
 
       if (error) throw error;
 
-      // Recarrega as configurações para atualizar o contexto
-      reloadSettings();
+      // Atualiza as settings para refletir a mudança
+      if (settings) {
+        await updateSettings(settings);
+      }
 
       setIsEditRoleDialogOpen(false);
       toast({
@@ -161,8 +159,10 @@ export default function SettingsView() {
 
       if (error) throw error;
 
-      // Recarrega as configurações para atualizar o contexto
-      reloadSettings();
+      // Atualiza as settings para refletir a mudança
+      if (settings) {
+        await updateSettings(settings);
+      }
 
       setIsDeleteRoleDialogOpen(false);
       setSelectedRole(null);
