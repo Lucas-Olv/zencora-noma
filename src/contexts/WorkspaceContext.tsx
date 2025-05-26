@@ -232,6 +232,17 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
         settings = newSettings;
       }
 
+      // Fetch roles if enabled
+      let roles: RoleType[] = [];
+      if (settings.enable_roles) {
+        const { data: rolesData, error: rolesError } = await rolesService.getTenantRoles(tenant.id);
+        if (rolesError) {
+          console.error('Error fetching roles:', rolesError);
+        } else {
+          roles = rolesData || [];
+        }
+      }
+
       // Atualiza todos os estados de uma vez
       setSession(session);
       setUser(user);
@@ -239,6 +250,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
       setTenant(tenant);
       setSettings(settings);
       setSubscription(subscription);
+      setRoles(roles);
 
     } catch (error: any) {
       console.error('Error initializing workspace:', error);
