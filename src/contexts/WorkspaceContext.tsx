@@ -57,6 +57,7 @@ interface WorkspaceContextType {
   setSelectedRoleById: (id: string | null) => void;
   reloadSettings: () => void;
   isOwner: boolean;
+  updateRoles: (newRoles: RoleType[]) => void;
 }
 
 const WorkspaceContext = createContext<WorkspaceContextType | undefined>(undefined);
@@ -457,6 +458,23 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
     }
   };
 
+  const updateRoles = async (newRoles: RoleType[]) => {
+    try {
+      // Atualiza apenas os roles sem recarregar todo o estado
+      setRoles(newRoles);
+      
+      // Se a role selecionada foi removida, limpa a seleção
+      if (selectedRole && !newRoles.find(r => r.id === selectedRole.id)) {
+        setSelectedRole(null);
+        setIsOwner(true);
+        localStorage.removeItem(ROLE_STORAGE_KEY);
+      }
+    } catch (error) {
+      console.error('Error updating roles:', error);
+      throw error;
+    }
+  };
+
   return (
     <WorkspaceContext.Provider
       value={{
@@ -486,6 +504,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
         setSelectedRoleById,
         reloadSettings,
         isOwner,
+        updateRoles,
       }}
     >
       {children}

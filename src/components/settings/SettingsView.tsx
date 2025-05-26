@@ -37,7 +37,7 @@ const DEFAULT_SETTINGS: Omit<SettingsType, "id" | "created_at" | "updated_at"> =
 };
 
 export default function SettingsView() {
-  const { tenant, settings, roles, updateSettings } = useWorkspaceContext();
+  const { tenant, settings, roles, updateSettings, updateRoles } = useWorkspaceContext();
   const { toast } = useToast();
   const [isCreateRoleDialogOpen, setIsCreateRoleDialogOpen] = useState(false);
   const [isEditRoleDialogOpen, setIsEditRoleDialogOpen] = useState(false);
@@ -91,10 +91,8 @@ export default function SettingsView() {
 
       if (error) throw error;
 
-      // Atualiza as settings para refletir a mudança
-      if (settings) {
-        await updateSettings(settings);
-      }
+      // Atualiza a lista de roles
+      updateRoles([...roles, data]);
 
       setIsCreateRoleDialogOpen(false);
       setNewRole({
@@ -132,10 +130,8 @@ export default function SettingsView() {
 
       if (error) throw error;
 
-      // Atualiza as settings para refletir a mudança
-      if (settings) {
-        await updateSettings(settings);
-      }
+      // Atualiza a lista de roles
+      updateRoles(roles.map(r => r.id === data.id ? data : r));
 
       setIsEditRoleDialogOpen(false);
       toast({
@@ -159,10 +155,8 @@ export default function SettingsView() {
 
       if (error) throw error;
 
-      // Atualiza as settings para refletir a mudança
-      if (settings) {
-        await updateSettings(settings);
-      }
+      // Atualiza a lista de roles
+      updateRoles(roles.filter(r => r.id !== selectedRole.id));
 
       setIsDeleteRoleDialogOpen(false);
       setSelectedRole(null);
