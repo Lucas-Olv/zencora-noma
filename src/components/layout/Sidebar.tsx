@@ -95,12 +95,23 @@ interface NavButtonProps {
 
 const NavButton = ({ item, isActive, onClick }: NavButtonProps) => {
   const { blockedRoutes, allowedRoutes } = useSubscriptionRoutes();
-  const { settings } = useWorkspaceContext();
+  const { settings, isBlocked, isTrial, isActive: subscriptionActive, subscription } = useWorkspaceContext();
   const isRouteBlocked = blockedRoutes.includes(item.href);
   const isRouteAllowed = allowedRoutes.includes(item.href);
 
-  // Só mostra o cadeado se a rota estiver bloqueada E a assinatura não estiver ativa
-  const shouldShowLock = isRouteBlocked || isRouteAllowed;
+  // Verifica se o item é settings e se o usuário tem acesso baseado no plano
+  const isSettingsItem = item.href === '/settings';
+  const hasPlanAccess = !isSettingsItem || 
+    isTrial || // Permite acesso durante o trial
+    subscription?.plan === 'pro' || 
+    subscription?.plan === 'enterprise';
+
+  // Só mostra o cadeado se:
+  // 1. A rota estiver bloqueada E a assinatura estiver bloqueada
+  // 2. A rota não estiver na lista de permitidas E a assinatura estiver bloqueada
+  // 3. É um item de settings e o usuário não tem acesso ao plano
+  const shouldShowLock = ((isRouteBlocked || (!isRouteAllowed && isBlocked)) && !isTrial && !subscriptionActive) || 
+    (isSettingsItem && !hasPlanAccess);
 
   // Verifica se a tela requer senha baseado no item
   const requiresPassword = (() => {
@@ -132,7 +143,36 @@ const NavButton = ({ item, isActive, onClick }: NavButtonProps) => {
     </button>
   );
 
-  if (isRouteBlocked || isRouteAllowed) {
+  // Se for settings e não tiver acesso ao plano, mostra o botão bloqueado
+  if (isSettingsItem && !hasPlanAccess) {
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div>
+              <SubscriptionGate
+                blockedRoutes={blockedRoutes}
+                blockMode="disable"
+                fallback={button}
+              >
+                <SettingsGate
+                  requirePanelAccess={item.href.replace('/', '')}
+                  fallback={button}
+                >
+                  {button}
+                </SettingsGate>
+              </SubscriptionGate>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Configurações disponíveis apenas para planos Pro e Enterprise</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+
+  if (isRouteBlocked && !isRouteAllowed && isBlocked && !isTrial && !subscriptionActive) {
     return (
       <TooltipProvider>
         <Tooltip>
@@ -342,8 +382,28 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
             />
           ))}
 
-          {/* Perfil ou Trocar Papel - Sempre visível */}
-          {isOwner ? (
+          {/* Perfil ou Trocar Papel */}
+          {settings?.enable_roles ? (
+            isOwner ? (
+              <Button
+                variant="ghost"
+                className="w-full flex gap-3 justify-start h-10"
+                onClick={handleProfileClick}
+              >
+                <User className="h-4 w-4" />
+                Meu Perfil
+              </Button>
+            ) : (
+              <Button
+                variant="ghost"
+                className="w-full flex gap-3 justify-start h-10"
+                onClick={handleRoleSwitch}
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Trocar Papel
+              </Button>
+            )
+          ) : (
             <Button
               variant="ghost"
               className="w-full flex gap-3 justify-start h-10"
@@ -351,15 +411,6 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
             >
               <User className="h-4 w-4" />
               Meu Perfil
-            </Button>
-          ) : (
-            <Button
-              variant="ghost"
-              className="w-full flex gap-3 justify-start h-10"
-              onClick={handleRoleSwitch}
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Trocar Papel
             </Button>
           )}
 

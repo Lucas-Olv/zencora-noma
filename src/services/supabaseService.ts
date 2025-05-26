@@ -30,117 +30,6 @@ export const authService = {
     return { session: data.session, error };
   },
 
-  // Setup completo do workspace do usuário
-  setupUserWorkspace: async (user: User) => {
-    try {
-      // 1. Check/Create user record
-      const { data: userData, error: userError } = await usersService.getUserById(user.id);
-
-      if (userError && userError.code !== 'PGRST116') { // PGRST116 is "not found" error
-        throw userError;
-      }
-
-      if (!userData) {
-        const { error: createUserError } = await usersService.createUserRecord(
-          user.id,
-          user.user_metadata?.name ?? 'Usuário',
-          user.email ?? '',
-          'admin'
-        );
-        
-        if (createUserError) throw createUserError;
-      }
-
-      // 2. Busca o produto pelo código
-      const { data: product, error: productError } = await productsService.getProductByCode('noma');
-      if (productError || !product) {
-        throw new Error('Produto não encontrado');
-      }
-
-      // 3. Check/Create subscription
-      const { data: subData, error: subError } = await subscriptionsService.getUserSubscription(user.id);
-
-      if (subError && subError.code !== 'PGRST116') {
-        throw subError;
-      }
-
-      if (!subData) {
-        const { error: createSubError } = await subscriptionsService.createSubscription(
-          user.id,
-          product.id,
-          'trial',
-          'trial',
-          new Date(new Date().getTime() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 dias
-        );
-        
-        if (createSubError) throw createSubError;
-      }
-
-      // 4. Check/Create tenant
-      const { data: tenantData, error: tenantError } = await tenantsService.getUserTenant(user.id);
-
-      if (tenantError && tenantError.code !== 'PGRST116') {
-        throw tenantError;
-      }
-
-      let tenant = tenantData;
-      if (!tenant) {
-        const { data: newTenant, error: createTenantError } = await supabase
-          .from('tenants')
-          .insert({
-            owner_id: user.id,
-            name: `${user.user_metadata?.name ?? 'Usuário'}'s Workspace`,
-            product_id: product.id
-          })
-          .select()
-          .single();
-        
-        if (createTenantError) throw createTenantError;
-        tenant = newTenant;
-      }
-
-      // 5. Check/Create settings
-      const { data: settingsData, error: settingsError } = await settingsService.getTenantSettings(tenant.id);
-
-      if (settingsError && settingsError.code !== 'PGRST116') {
-        throw settingsError;
-      }
-
-      if (!settingsData) {
-        const { error: createSettingsError } = await settingsService.upsertSettings({
-          tenant_id: tenant.id,
-          enable_roles: false,
-          lock_reports_by_password: false,
-          require_password_to_switch_role: false,
-          lock_settings_by_password: false
-        });
-        
-        if (createSettingsError) throw createSettingsError;
-      }
-
-      // 6. Busca os dados atualizados para retornar
-      const [userResult, subscriptionResult, tenantResult, settingsResult] = await Promise.all([
-        usersService.getUserById(user.id),
-        subscriptionsService.getUserSubscription(user.id),
-        tenantsService.getUserTenant(user.id),
-        settingsService.getTenantSettings(tenant.id)
-      ]);
-
-      return {
-        success: true,
-        data: {
-          user: userResult.data,
-          subscription: subscriptionResult.data,
-          tenant: tenantResult.data,
-          settings: settingsResult.data
-        }
-      };
-    } catch (error: any) {
-      console.error('Erro ao configurar workspace:', error);
-      return { success: false, error };
-    }
-  },
-
   // Obtém o usuário atual
   getCurrentUser: async () => {
     const { data, error } = await supabase.auth.getUser();
@@ -187,7 +76,7 @@ export const authService = {
   verifyPassword: async (password: string) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user?.email) throw new Error("Usuário não encontrado");
-    
+
     return await supabase.auth.signInWithPassword({
       email: user.email,
       password,
@@ -221,7 +110,7 @@ export const subscriptionsService = {
     productId: string,
     plan: string,
     status = "trial",
-    expiresAt?: string,
+    expiresAt: string,
   ) => {
     return await supabase.from("subscriptions").insert({
       user_id: userId,
@@ -229,7 +118,7 @@ export const subscriptionsService = {
       plan,
       status,
       expires_at: expiresAt,
-    });
+    }).select().single();
   },
 
   // Obtém a assinatura de um usuário
