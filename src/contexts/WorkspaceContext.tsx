@@ -253,6 +253,23 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
       setSubscription(subscription);
       setRoles(roles);
 
+      // Verifica role ativa no localStorage
+      const savedRoleId = localStorage.getItem(ROLE_STORAGE_KEY);
+      if (savedRoleId === null) {
+        setSelectedRole(null);
+        setIsOwner(true);
+      } else {
+        const found = roles.find((r) => r.id === savedRoleId);
+        if (found) {
+          setSelectedRole(found);
+          setIsOwner(false);
+        } else {
+          localStorage.removeItem(ROLE_STORAGE_KEY);
+          setSelectedRole(null);
+          setIsOwner(true);
+        }
+      }
+
     } catch (error: any) {
       console.error('Error initializing workspace:', error);
       setError(error.message);

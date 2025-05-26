@@ -31,8 +31,7 @@ const queryClient = new QueryClient();
 const BLOCKED_ROUTES = ["/dashboard", "/production", "/reports", "/calendar", "/settings", "/profile", "/reminders"];
 
 const AppRoutes = () => {
-  const { isAuthenticated, loading } = useWorkspaceContext();
-  const { settings, roles } = useWorkspaceContext();
+  const { isAuthenticated, loading, settings, roles, selectedRole } = useWorkspaceContext();
   const location = useLocation();
 
   if (loading) {
@@ -43,6 +42,9 @@ const AppRoutes = () => {
     );
   }
 
+  // Se estiver autenticado, tem roles habilitados e roles disponíveis, mas não tem role selecionada
+  const shouldSelectRole = isAuthenticated && settings?.enable_roles && roles.length > 0 && !selectedRole;
+
   return (
     <Routes>
       {/* Public Routes */}
@@ -50,7 +52,7 @@ const AppRoutes = () => {
         path="/"
         element={
           isAuthenticated ? (
-            settings?.enable_roles && roles.length > 0 ? (
+            shouldSelectRole ? (
               <Navigate to="/select-role" />
             ) : (
               <Navigate to="/dashboard" />
@@ -68,7 +70,7 @@ const AppRoutes = () => {
         path="/login"
         element={
           isAuthenticated ? (
-            settings?.enable_roles && roles.length > 0 ? (
+            shouldSelectRole ? (
               <Navigate to="/select-role" />
             ) : (
               <Navigate to="/dashboard" />
@@ -86,7 +88,11 @@ const AppRoutes = () => {
             path="dashboard"
             element={
               <ProtectedRoute>
-                <Dashboard />
+                {shouldSelectRole ? (
+                  <Navigate to="/select-role" replace />
+                ) : (
+                  <Dashboard />
+                )}
               </ProtectedRoute>
             }
           />
@@ -94,7 +100,11 @@ const AppRoutes = () => {
             path="orders"
             element={
               <ProtectedRoute>
-                <Orders />
+                {shouldSelectRole ? (
+                  <Navigate to="/select-role" replace />
+                ) : (
+                  <Orders />
+                )}
               </ProtectedRoute>
             }
           />
@@ -102,7 +112,11 @@ const AppRoutes = () => {
             path="orders/:id"
             element={
               <ProtectedRoute>
-                <OrderDetail />
+                {shouldSelectRole ? (
+                  <Navigate to="/select-role" replace />
+                ) : (
+                  <OrderDetail />
+                )}
               </ProtectedRoute>
             }
           />
@@ -110,7 +124,11 @@ const AppRoutes = () => {
             path="production"
             element={
               <ProtectedRoute>
-                <Production />
+                {shouldSelectRole ? (
+                  <Navigate to="/select-role" replace />
+                ) : (
+                  <Production />
+                )}
               </ProtectedRoute>
             }
           />
@@ -118,7 +136,11 @@ const AppRoutes = () => {
             path="verify-password"
             element={
               <ProtectedRoute>
-                <PasswordVerification />
+                {shouldSelectRole ? (
+                  <Navigate to="/select-role" replace />
+                ) : (
+                  <PasswordVerification />
+                )}
               </ProtectedRoute>
             }
           />
@@ -126,7 +148,9 @@ const AppRoutes = () => {
             path="reports"
             element={
               <ProtectedRoute>
-                {settings?.lock_reports_by_password && !location.state?.verified ? (
+                {shouldSelectRole ? (
+                  <Navigate to="/select-role" replace />
+                ) : settings?.lock_reports_by_password && !location.state?.verified ? (
                   <Navigate
                     to="/verify-password"
                     state={{
@@ -146,7 +170,11 @@ const AppRoutes = () => {
             path="calendar"
             element={
               <ProtectedRoute>
-                <Calendar />
+                {shouldSelectRole ? (
+                  <Navigate to="/select-role" replace />
+                ) : (
+                  <Calendar />
+                )}
               </ProtectedRoute>
             }
           />
@@ -154,7 +182,11 @@ const AppRoutes = () => {
             path="reminders"
             element={
               <ProtectedRoute>
-                <Reminders />
+                {shouldSelectRole ? (
+                  <Navigate to="/select-role" replace />
+                ) : (
+                  <Reminders />
+                )}
               </ProtectedRoute>
             }
           />
@@ -162,7 +194,9 @@ const AppRoutes = () => {
             path="settings"
             element={
               <ProtectedRoute>
-                {settings?.lock_settings_by_password && !location.state?.verified ? (
+                {shouldSelectRole ? (
+                  <Navigate to="/select-role" replace />
+                ) : settings?.lock_settings_by_password && !location.state?.verified ? (
                   <Navigate
                     to="/verify-password"
                     state={{
