@@ -10,18 +10,17 @@ export type OrderType = {
   description: string;
   price: number;
   due_date: string;
-  user_id: string;
-  collaborator_id: string | null;
+  tenant_id: string;
   status: "pending" | "production" | "done";
   phone?: string;
   product?: string;
-  collaborator?: {
-    name: string | null;
-  } | null;
 };
-export type CollaboratorType = Database['public']['Tables']['collaborators']['Row'];
-export type UserType = Database['public']['Tables']['users']['Row'];
-export type SubscriptionType = Database['public']['Tables']['subscriptions']['Row'];
+export type TenantType = Database["public"]["Tables"]["tenants"]["Row"];
+export type UserType = Database["public"]["Tables"]["users"]["Row"];
+export type SubscriptionType = Database["public"]["Tables"]["subscriptions"]["Row"];
+export type ReminderType = Database["public"]["Tables"]["reminders"]["Row"];
+export type SettingsType = Database["public"]["Tables"]["settings"]["Row"];
+export type RoleType = Database["public"]["Tables"]["roles"]["Row"];
 
 // Serviço de autenticação
 export const authService = {
@@ -30,221 +29,284 @@ export const authService = {
     const { data, error } = await supabase.auth.getSession();
     return { session: data.session, error };
   },
-  
+
   // Obtém o usuário atual
   getCurrentUser: async () => {
     const { data, error } = await supabase.auth.getUser();
     return { user: data.user, error };
   },
-  
+
   // Login com email e senha
   signInWithEmail: async (email: string, password: string) => {
     return await supabase.auth.signInWithPassword({ email, password });
   },
-  
+
   // Cadastro com email e senha
-  signUpWithEmail: async (email: string, password: string, userData: { name: string, product: string }) => {
+  signUpWithEmail: async (
+    email: string,
+    password: string,
+    userData: { name: string; product: string },
+  ) => {
     return await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: userData
-      }
+        data: userData,
+      },
     });
   },
-  
+
   // Logout
   signOut: async () => {
     return await supabase.auth.signOut();
   },
-  
+
   // Observa mudanças no estado de autenticação
-  onAuthStateChange: (callback: (event: string, session: Session | null) => void) => {
+  onAuthStateChange: (
+    callback: (event: string, session: Session | null) => void,
+  ) => {
     return supabase.auth.onAuthStateChange(callback);
-  }
+  },
+
+  setSession: async (session: Session) => {
+    return await supabase.auth.setSession(session);
+  },
+
+  // Verifica a senha do usuário atual
+  verifyPassword: async (password: string) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user?.email) throw new Error("Usuário não encontrado");
+    
+    return await supabase.auth.signInWithPassword({
+      email: user.email,
+      password,
+    });
+  },
 };
 
 // Serviço de usuários
 export const usersService = {
   // Cria um usuário no banco de dados público
-  createUserRecord: async (id: string, name: string, email: string, role = 'admin') => {
-    return await supabase
-      .from('users')
-      .insert({ id, name, email, role });
+  createUserRecord: async (
+    id: string,
+    name: string,
+    email: string,
+    role = "admin",
+  ) => {
+    return await supabase.from("users").insert({ id, name, email, role });
   },
-  
+
   // Obtém um usuário pelo ID
   getUserById: async (id: string) => {
-    return await supabase
-      .from('users')
-      .select('*')
-      .eq('id', id)
-      .single();
-  }
+    return await supabase.from("users").select("*").eq("id", id).single();
+  },
 };
 
 // Serviço de assinaturas
 export const subscriptionsService = {
   // Cria uma assinatura para um usuário
-  createSubscription: async (userId: string, productId: string, plan: string, status = 'trial', expiresAt?: string) => {
-    return await supabase
-      .from('subscriptions')
-      .insert({
-        user_id: userId,
-        product_id: productId,
-        plan,
-        status,
-        expires_at: expiresAt
-      });
+  createSubscription: async (
+    userId: string,
+    productId: string,
+    plan: string,
+    status = "trial",
+    expiresAt?: string,
+  ) => {
+    return await supabase.from("subscriptions").insert({
+      user_id: userId,
+      product_id: productId,
+      plan,
+      status,
+      expires_at: expiresAt,
+    });
   },
-  
+
   // Obtém a assinatura de um usuário
   getUserSubscription: async (userId: string) => {
     return await supabase
-      .from('subscriptions')
-      .select('*, products(name, code)')
-      .eq('user_id', userId)
+      .from("subscriptions")
+      .select("*, products(name, code)")
+      .eq("user_id", userId)
       .single();
   },
-  
+
   // Atualiza o status de uma assinatura
   updateSubscriptionStatus: async (id: string, status: string) => {
-    return await supabase
-      .from('subscriptions')
-      .update({ status })
-      .eq('id', id);
-  }
+    return await supabase.from("subscriptions").update({ status }).eq("id", id);
+  },
 };
 
 // Serviço de produtos
 export const productsService = {
   // Obtém todos os produtos
   getAllProducts: async () => {
-    return await supabase
-      .from('products')
-      .select('*');
+    return await supabase.from("products").select("*");
   },
-  
+
   // Obtém um produto pelo código
   getProductByCode: async (code: string) => {
-    console.log('Buscando produto com código:', code);
+    console.log("Buscando produto com código:", code);
     const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .eq('code', code)
+      .from("products")
+      .select("*")
+      .eq("code", code)
       .limit(1);
 
-    console.log('Resultado da busca:', { data, error });
+    console.log("Resultado da busca:", { data, error });
     return {
       data: data?.[0] || null,
-      error
+      error,
     };
-  }
+  },
 };
 
-// Serviço de colaboradores
-export const collaboratorsService = {
-  // Obtém todos os colaboradores de um usuário
-  getUserCollaborators: async (ownerId: string) => {
+// Serviço de tenants
+export const tenantsService = {
+  // Obtém o tenant de um usuário
+  getUserTenant: async (ownerId: string) => {
     return await supabase
-      .from('collaborators')
-      .select('*')
-      .eq('owner_id', ownerId);
-  },
-  
-  // Cria um novo colaborador
-  createCollaborator: async (collaborator: Omit<CollaboratorType, 'id' | 'created_at'>) => {
-    return await supabase
-      .from('collaborators')
-      .insert(collaborator);
-  },
-  
-  // Atualiza um colaborador
-  updateCollaborator: async (id: string, data: Partial<Omit<CollaboratorType, 'id' | 'created_at'>>) => {
-    return await supabase
-      .from('collaborators')
-      .update(data)
-      .eq('id', id);
-  },
-  
-  // Exclui um colaborador
-  deleteCollaborator: async (id: string) => {
-    return await supabase
-      .from('collaborators')
-      .delete()
-      .eq('id', id);
-  },
-  
-  // Obtém um colaborador pelo ID
-  getCollaboratorById: async (id: string) => {
-    return await supabase
-      .from('collaborators')
-      .select('*')
-      .eq('id', id)
+      .from("tenants")
+      .select("*")
+      .eq("owner_id", ownerId)
       .single();
-  }
+  },
 };
 
 // Serviço de encomendas
 export const ordersService = {
-  // Obtém todas as encomendas de um usuário
-  getUserOrders: async (userId: string) => {
+  // Obtém todas as encomendas de um tenant
+  getTenantOrders: async (tenantId: string) => {
     return await supabase
-      .from('orders')
-      .select('*, collaborator:collaborators(name)')
-      .eq('user_id', userId)
-      .order('due_date', { ascending: true });
+      .from("orders")
+      .select("*")
+      .eq("tenant_id", tenantId)
+      .order("due_date", { ascending: true });
   },
-  
+
   // Cria uma nova encomenda
-  createOrder: async (order: Omit<OrderType, 'id' | 'created_at'>) => {
-    return await supabase
-      .from('orders')
-      .insert(order);
+  createOrder: async (order: Omit<OrderType, "id" | "created_at">) => {
+    return await supabase.from("orders").insert(order).select().single();
   },
-  
+
   // Obtém uma encomenda pelo ID
   getOrderById: async (id: string) => {
     return await supabase
-      .from('orders')
-      .select('*, collaborator:collaborators(name)')
-      .eq('id', id)
+      .from("orders")
+      .select("*")
+      .eq("id", id)
       .single();
   },
-  
+
   // Atualiza uma encomenda
-  updateOrder: async (id: string, data: Partial<Omit<OrderType, 'id' | 'created_at'>>) => {
-    return await supabase
-      .from('orders')
-      .update(data)
-      .eq('id', id);
+  updateOrder: async (
+    id: string,
+    data: Partial<Omit<OrderType, "id" | "created_at">>,
+  ) => {
+    return await supabase.from("orders").update(data).eq("id", id).select().single();
   },
-  
+
   // Exclui uma encomenda
   deleteOrder: async (id: string) => {
-    return await supabase
-      .from('orders')
-      .delete()
-      .eq('id', id);
+    return await supabase.from("orders").delete().eq("id", id);
   },
-  
+
   // Atualiza o status de uma encomenda
   updateOrderStatus: async (id: string, status: "pending" | "production" | "done") => {
+    return await supabase.from("orders").update({ status }).eq("id", id);
+  },
+};
+
+export const remindersService = {
+  // Obtém todos os lembretes de um tenant
+  getTenantReminders: async (tenantId: string) => {
+    return await supabase.from("reminders").select("*").eq("tenant_id", tenantId);
+  },
+
+  createReminder: async (reminder: Omit<ReminderType, "id" | "created_at">) => {
+    return await supabase.from("reminders").insert(reminder).select().single();
+  },
+
+  updateReminder: async (id: string, data: Partial<Omit<ReminderType, "id" | "created_at">>) => {
+    return await supabase.from("reminders").update(data).eq("id", id).select().single();
+  },
+
+  deleteReminder: async (id: string) => {
+    return await supabase.from("reminders").delete().eq("id", id);
+  },
+};
+
+// Serviço de configurações
+export const settingsService = {
+  // Obtém as configurações de um tenant
+  getTenantSettings: async (tenantId: string) => {
     return await supabase
-      .from('orders')
-      .update({ status })
-      .eq('id', id);
-  }
+      .from("settings")
+      .select("*")
+      .eq("tenant_id", tenantId)
+      .single();
+  },
+
+  // Cria ou atualiza as configurações de um tenant
+  upsertSettings: async (settings: Omit<SettingsType, "id" | "created_at" | "updated_at">) => {
+    return await supabase
+      .from("settings")
+      .upsert(settings)
+      .select()
+      .single();
+  },
+};
+
+// Serviço de papéis (roles)
+export const rolesService = {
+  // Obtém todos os papéis de um tenant
+  getTenantRoles: async (tenantId: string) => {
+    return await supabase
+      .from("roles")
+      .select("*")
+      .eq("tenant_id", tenantId)
+      .order("name", { ascending: true });
+  },
+
+  // Cria um novo papel
+  createRole: async (role: Omit<RoleType, "id" | "created_at" | "updated_at">) => {
+    return await supabase
+      .from("roles")
+      .insert(role)
+      .select()
+      .single();
+  },
+
+  // Atualiza um papel existente
+  updateRole: async (id: string, role: Partial<Omit<RoleType, "id" | "created_at" | "updated_at">>) => {
+    return await supabase
+      .from("roles")
+      .update(role)
+      .eq("id", id)
+      .select()
+      .single();
+  },
+
+  // Exclui um papel
+  deleteRole: async (id: string) => {
+    return await supabase
+      .from("roles")
+      .delete()
+      .eq("id", id);
+  },
 };
 
 // Exporta todos os serviços em um único objeto
 export const supabaseService = {
   auth: authService,
   users: usersService,
+  tenants: tenantsService,
   subscriptions: subscriptionsService,
   products: productsService,
-  collaborators: collaboratorsService,
   orders: ordersService,
+  reminders: remindersService,
+  settings: settingsService,
+  roles: rolesService,
 };
 
+// Exporta o objeto como default também
 export default supabaseService;

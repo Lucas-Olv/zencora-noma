@@ -1,68 +1,137 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, Eye, Plus, Search, X, Loader2, Package, Pencil } from "lucide-react";
-import { formatDate, parseDate } from "@/lib/utils";
-import { ptBR } from "date-fns/locale";
+import {
+  CheckCircle2, Eye,
+  Plus,
+
+  Search,
+  X,
+  Loader2,
+  Package,
+  Pencil,
+  Printer,
+} from "lucide-react";
+import {
+  formatDate,
+  usePrint,
+  getOrderCode,
+  getStatusDisplay,
+} from "@/lib/utils";
 import { supabaseService, OrderType } from "@/services/supabaseService";
-
-// Interface para a ordem com dados do colaborador
-interface OrderWithCollaborator extends OrderType {
-  collaborator?: {
-    name: string | null;
-  } | null;
-}
-
-const getStatusDisplay = (status: string | null) => {
-  switch (status) {
-    case "pending":
-      return { 
-        label: "Pendente", 
-        className: "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50" 
-      };
-    case "production":
-      return { 
-        label: "Em produção", 
-        className: "bg-purple-100/80 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200 hover:bg-purple-200 dark:hover:bg-purple-900/50" 
-      };
-    case "done":
-      return { 
-        label: "Concluído", 
-        className: "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50" 
-      };
-    default:
-      return { 
-        label: "Pendente", 
-        className: "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50" 
-      };
-  }
-};
+import { useAuthContext } from "@/contexts/AuthContext";
+import OrderDialog from "./OrderDialog";
+import { SubscriptionGate } from "../subscription/SubscriptionGate";
 
 const OrderList = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [orders, setOrders] = useState<OrderWithCollaborator[]>([]);
+  const [orders, setOrders] = useState<OrderType[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  
+  const [selectedOrder, setSelectedOrder] =
+    useState<OrderType | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
+  const [dialogOrderId, setDialogOrderId] = useState<string | undefined>();
+  const printRef = useRef<HTMLDivElement>(null);
+  const handlePrint = usePrint(printRef, {
+    pageStyle: `
+      @page {
+        size: 100mm 150mm;
+        margin: 0;
+      }
+      @media print {
+        body {
+          margin: 0;
+          padding: 0;
+        }
+      }
+    `,
+  });
+  const { tenant, loading: tenantLoading, error: tenantError } = useAuthContext();
+
+  const OrderLabel = ({ order }: { order: OrderType }) => {
+    const statusDisplay = getStatusDisplay(order.status);
+
+    return (
+      <div className="w-[100mm] h-[150mm] bg-white text-black p-6">
+        <div className="border border-gray-300 rounded-xl shadow-sm h-full flex flex-col justify-between p-6 space-y-4">
+
+          {/* Bloco do código da encomenda */}
+          <div className="text-center py-4">
+            <p className="text-[10px] uppercase font-medium text-zinc-400 tracking-wide">Código</p>
+            <h1 className="font-mono text-2xl font-bold tracking-widest text-zinc-800">
+              {getOrderCode(order.id)}
+            </h1>
+          </div>
+
+          {/* Informações principais */}
+          <div className="flex-1 flex flex-col gap-4 text-zinc-800">
+
+            <div className="grid grid-cols-2 gap-4">
+              <LabelItem title="Cliente" content={order.client_name} />
+              <LabelItem title="Entrega" content={formatDate(order.due_date)} />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <LabelItem title="Valor" content={`R$ ${order.price.toFixed(2).replace(".", ",")}`} />
+              <LabelItem title="Status" content={statusDisplay.label} />
+            </div>
+
+            <LabelItem title="Descrição" content={order.description || "Sem descrição"} />
+          </div>
+
+          {/* Rodapé */}
+          <div className="text-center text-[10px] text-zinc-400 border-t pt-2">
+            <p>Gerado em {formatDate(new Date().toISOString(), "dd/MM/yyyy 'às' HH:mm")}</p>
+            <p className="mt-0.5">Por Zencora Noma</p>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const LabelItem = ({ title, content }: { title: string; content: React.ReactNode }) => (
+    <div className="flex flex-col">
+      <span className="text-[10px] uppercase font-medium text-zinc-400 tracking-wide">{title}</span>
+      <span className="text-sm leading-tight break-words">{content}</span>
+    </div>
+  );
+
+
+
   useEffect(() => {
-    fetchOrders();
-  }, []);
-  
+    if (!tenantLoading && tenant) {
+      fetchOrders();
+    }
+  }, [tenantLoading, tenant]);
+
   const fetchOrders = async () => {
     try {
-      const { user } = await supabaseService.auth.getCurrentUser();
-      if (!user) return;
+      if (tenantLoading) return;
+      if (tenantError || !tenant) {
+        throw new Error(tenantError || "Tenant não encontrado");
+      }
 
-      const { data, error } = await supabaseService.orders.getUserOrders(user.id);
+      const { data, error } = await supabaseService.orders.getTenantOrders(
+        tenant.id,
+      );
       if (error) throw error;
 
-      setOrders(data as OrderWithCollaborator[]);
+      setOrders(data as OrderType[]);
     } catch (error: any) {
       toast({
         title: "Erro ao carregar encomendas",
@@ -73,19 +142,27 @@ const OrderList = () => {
       setLoading(false);
     }
   };
-  
-  const handleStatusChange = async (id: string, targetStatus: "pending" | "production" | "done") => {
+
+  const handleStatusChange = async (
+    id: string,
+    targetStatus: "pending" | "production" | "done",
+  ) => {
     try {
-      const { error } = await supabaseService.orders.updateOrderStatus(id, targetStatus);
+      const { error } = await supabaseService.orders.updateOrderStatus(
+        id,
+        targetStatus,
+      );
       if (error) throw error;
 
-      setOrders(orders.map(order => 
-        order.id === id ? { ...order, status: targetStatus } : order
-      ));
+      setOrders(
+        orders.map((order) =>
+          order.id === id ? { ...order, status: targetStatus } : order,
+        ),
+      );
 
       toast({
         title: "Status atualizado!",
-        description: `A encomenda foi marcada como ${targetStatus === "pending" ? "pendente" : targetStatus === "production" ? "em produção" : "concluída"}.`,
+        description: `A encomenda foi marcada como ${targetStatus === "pending" ? "pendente" : targetStatus === "production" ? "Produção" : "concluída"}.`,
       });
     } catch (error: any) {
       toast({
@@ -95,14 +172,49 @@ const OrderList = () => {
       });
     }
   };
-  
-  const filteredOrders = searchTerm.trim() === "" 
-    ? orders 
-    : orders.filter(order => 
-        order.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (order.description && order.description.toLowerCase().includes(searchTerm.toLowerCase()))
+
+  const handleNewOrder = () => {
+    setDialogMode("create");
+    setDialogOrderId(undefined);
+    setDialogOpen(true);
+  };
+
+  const handleEditOrder = (order: OrderType) => {
+    setDialogMode("edit");
+    setDialogOrderId(order.id);
+    setSelectedOrder(order);
+    setDialogOpen(true);
+  };
+
+  const handleListUpdate = (updatedOrder: OrderType) => {
+    if (dialogMode === "create") {
+      let newOrders = [updatedOrder as OrderType, ...orders];
+      newOrders.sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime());
+      setOrders(newOrders);
+    } else {
+      setOrders(orders.map(order =>
+        order.id === updatedOrder.id ? { ...order, ...updatedOrder, id: order.id } : order
+      ));
+    }
+  };
+
+  const filteredOrders =
+    searchTerm.trim() === ""
+      ? orders
+      : orders.filter(
+        (order) =>
+          getOrderCode(order.id)
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          order.client_name
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          (order.description &&
+            order.description
+              .toLowerCase()
+              .includes(searchTerm.toLowerCase())),
       );
-  
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
@@ -112,12 +224,14 @@ const OrderList = () => {
             Gerencie todas as suas encomendas em um só lugar
           </p>
         </div>
-        
-        <Button onClick={() => navigate("/orders/new")} className="shrink-0">
-          <Plus className="mr-2 h-4 w-4" /> Nova Encomenda
-        </Button>
+
+        <SubscriptionGate>
+          <Button onClick={handleNewOrder} className="shrink-0">
+            <Plus className="mr-2 h-4 w-4" /> Nova Encomenda
+          </Button>
+        </SubscriptionGate>
       </div>
-      
+
       <Card>
         <CardHeader className="pb-3">
           <div className="flex flex-col sm:flex-row justify-between gap-4">
@@ -152,7 +266,9 @@ const OrderList = () => {
             <div className="text-center py-6">
               {searchTerm ? (
                 <>
-                  <p className="text-muted-foreground">Nenhuma encomenda encontrada para "{searchTerm}"</p>
+                  <p className="text-muted-foreground">
+                    Nenhuma encomenda encontrada para "{searchTerm}"
+                  </p>
                   <Button
                     variant="link"
                     onClick={() => setSearchTerm("")}
@@ -164,7 +280,9 @@ const OrderList = () => {
               ) : (
                 <>
                   <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-medium mb-2">Nenhuma encomenda</h3>
+                  <h3 className="text-lg font-medium mb-2">
+                    Nenhuma encomenda
+                  </h3>
                   <p className="text-muted-foreground mb-4">
                     Comece registrando sua primeira encomenda.
                   </p>
@@ -178,6 +296,7 @@ const OrderList = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead>Código</TableHead>
                       <TableHead>Cliente</TableHead>
                       <TableHead>Data de Entrega</TableHead>
                       <TableHead>Preço</TableHead>
@@ -190,59 +309,83 @@ const OrderList = () => {
                       const statusDisplay = getStatusDisplay(order.status);
                       return (
                         <TableRow key={order.id}>
-                          <TableCell className="font-medium">{order.client_name}</TableCell>
+                          <TableCell className="font-mono text-sm text-muted-foreground">
+                            {getOrderCode(order.id)}
+                          </TableCell>
+                          <TableCell className="font-medium truncate max-w-[20dvw]">
+                            {order.client_name}
+                          </TableCell>
+                          <TableCell>{formatDate(order.due_date)}</TableCell>
                           <TableCell>
-                            {formatDate(order.due_date)}
+                            R$ {order.price.toFixed(2).replace(".", ",")}
                           </TableCell>
                           <TableCell>
-                            R$ {order.price.toFixed(2).replace('.', ',')}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className={statusDisplay.className}>
+                            <Badge
+                              variant="outline"
+                              className={statusDisplay.className}
+                            >
                               {statusDisplay.label}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-2">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleStatusChange(order.id, "pending")}
-                                title="Marcar como pendente"
-                                disabled={order.status === "pending"}
-                                className="flex items-center justify-center"
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleStatusChange(order.id, "production")}
-                                title="Marcar como em produção"
-                                disabled={order.status === "production"}
-                                className="flex items-center justify-center"
-                              >
-                                <Package className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleStatusChange(order.id, "done")}
-                                title="Marcar como concluída"
-                                disabled={order.status === "done"}
-                                className="flex items-center justify-center"
-                              >
-                                <CheckCircle2 className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => navigate(`/orders/edit/${order.id}`)}
-                                title="Editar encomenda"
-                                className="flex items-center justify-center"
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Button>
+                              <SubscriptionGate blockMode="disable">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() =>
+                                    handleStatusChange(order.id, "pending")
+                                  }
+                                  title="Marcar como pendente"
+                                  disabled={order.status === "pending"}
+                                  className="flex items-center justify-center"
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+
+                              </SubscriptionGate>
+                              <SubscriptionGate blockMode="disable">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() =>
+                                    handleStatusChange(order.id, "production")
+                                  }
+                                  title="Marcar como Produção"
+                                  disabled={order.status === "production"}
+                                  className="flex items-center justify-center"
+                                >
+                                  <Package className="h-4 w-4" />
+                                </Button>
+                              </SubscriptionGate>
+                              <SubscriptionGate blockMode="disable">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() =>
+                                    handleStatusChange(order.id, "done")
+                                  }
+                                  title="Marcar como concluída"
+                                  disabled={order.status === "done"}
+                                  className="flex items-center justify-center"
+                                >
+                                  <CheckCircle2 className="h-4 w-4" />
+                                </Button>
+                              </SubscriptionGate>
+                              <SubscriptionGate blockMode="disable">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() =>
+                                    handleEditOrder(order)
+                                  }
+                                  title="Editar encomenda"
+                                  className="flex items-center justify-center"
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                              </SubscriptionGate>
+
                               <Button
                                 variant="ghost"
                                 size="icon"
@@ -252,6 +395,20 @@ const OrderList = () => {
                               >
                                 <Eye className="h-4 w-4" />
                               </Button>
+
+                              <SubscriptionGate blockMode="disable">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => {
+                                    setSelectedOrder(order);
+                                    setTimeout(handlePrint, 100);
+                                  }}
+                                  title="Imprimir"
+                                >
+                                  <Printer className="h-4 w-4" />
+                                </Button>
+                              </SubscriptionGate>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -271,52 +428,79 @@ const OrderList = () => {
                         <div className="flex flex-col gap-3">
                           <div className="flex items-start justify-between">
                             <div>
-                              <h3 className="font-medium">{order.client_name}</h3>
+                              <div className="flex items-center gap-2">
+                                <p className="font-mono text-sm text-muted-foreground">
+                                  {getOrderCode(order.id)}
+                                </p>
+                                <h3 className="font-medium truncate max-w-[40dvw]">
+                                  {order.client_name}
+                                </h3>
+                              </div>
                               <p className="text-sm text-muted-foreground">
                                 {formatDate(order.due_date)}
                               </p>
                             </div>
-                            <Badge variant="outline" className={statusDisplay.className}>
+                            <Badge
+                              variant="outline"
+                              className={statusDisplay.className}
+                            >
                               {statusDisplay.label}
                             </Badge>
                           </div>
-                          
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleStatusChange(order.id, "pending")}
-                              title="Marcar como pendente"
-                              disabled={order.status === "pending"}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleStatusChange(order.id, "production")}
-                              title="Marcar como em produção"
-                              disabled={order.status === "production"}
-                            >
-                              <Package className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleStatusChange(order.id, "done")}
-                              title="Marcar como concluída"
-                              disabled={order.status === "done"}
-                            >
-                              <CheckCircle2 className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => navigate(`/orders/edit/${order.id}`)}
-                              title="Editar encomenda"
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
+
+                          <div className="flex items-center justify-between gap-2">
+                            <SubscriptionGate blockMode="disable">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() =>
+                                  handleStatusChange(order.id, "pending")
+                                }
+                                title="Marcar como pendente"
+                                disabled={order.status === "pending"}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </SubscriptionGate>
+                            <SubscriptionGate blockMode="disable">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() =>
+                                  handleStatusChange(order.id, "production")
+                                }
+                                title="Marcar como Produção"
+                                disabled={order.status === "production"}
+                              >
+                                <Package className="h-4 w-4" />
+                              </Button>
+                            </SubscriptionGate>
+                            <SubscriptionGate blockMode="disable">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() =>
+                                  handleStatusChange(order.id, "done")
+                                }
+                                title="Marcar como concluída"
+                                disabled={order.status === "done"}
+                              >
+                                <CheckCircle2 className="h-4 w-4" />
+                              </Button>
+                            </SubscriptionGate>
+                            <SubscriptionGate blockMode="disable">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() =>
+                                  handleEditOrder(order)
+                                }
+                                title="Editar encomenda"
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                            </SubscriptionGate>
+
                             <Button
                               variant="ghost"
                               size="icon"
@@ -325,6 +509,20 @@ const OrderList = () => {
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
+
+                            <SubscriptionGate blockMode="disable">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  setSelectedOrder(order);
+                                  setTimeout(handlePrint, 100);
+                                }}
+                                title="Imprimir"
+                              >
+                                <Printer className="h-4 w-4" />
+                              </Button>
+                            </SubscriptionGate>
                           </div>
                         </div>
                       </CardContent>
@@ -336,6 +534,24 @@ const OrderList = () => {
           )}
         </CardContent>
       </Card>
+
+      <OrderDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        mode={dialogMode}
+        orderId={dialogOrderId}
+        orderData={selectedOrder}
+        onSuccess={handleListUpdate}
+      />
+
+      {/* Hidden print content */}
+      <div className="hidden">
+        {selectedOrder && (
+          <div ref={printRef}>
+            <OrderLabel order={selectedOrder} />
+          </div>
+        )}
+      </div>
     </div>
   );
 };

@@ -2,100 +2,244 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { TenantProvider } from "@/contexts/TenantContext";
 import { ThemeProvider } from "next-themes";
 import Layout from "./components/layout/Layout";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Orders from "./pages/Orders";
 import OrderDetail from "./pages/OrderDetail";
-import NewOrder from "./pages/NewOrder";
 import Production from "./pages/Production";
 import Reports from "./pages/Reports";
 import Calendar from "./pages/Calendar";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
-import { supabaseService } from "./services/supabaseService";
-import { Session } from "@supabase/supabase-js";
 import Landing from "./pages/Landing";
-import Pricing from "./pages/Pricing";
-import EditOrder from "./pages/EditOrder";
+import About from "./pages/About";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
+import Contact from "./pages/Contact";
+import { SubscriptionExpired } from "./pages/SubscriptionExpired";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { useAuthContext } from "@/contexts/AuthContext";
+import ProtectedRoute from "@/components/routing/ProtectedRoute";
+import { SubscriptionProvider } from "./contexts/SubscriptionContext";
+import { SubscriptionGate } from "./components/subscription/SubscriptionGate";
+import Reminders from "./pages/Reminders";
+import { SettingsProvider } from "./contexts/SettingsContext";
+import { useSettings } from "@/contexts/SettingsContext";
+import RoleSelector from "@/components/auth/RoleSelector";
+import PasswordVerification from "@/components/auth/PasswordVerification";
+import { SettingsType } from "@/services/supabaseService";
 
 const queryClient = new QueryClient();
 
-const App = () => {
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+const BLOCKED_ROUTES = ["/dashboard", "/production", "/reports", "/calendar", "/settings", "/profile", "/reminders"];
 
-  useEffect(() => {
-    // Verifica se há uma sessão ativa
-    const checkSession = async () => {
-      try {
-        const { session } = await supabaseService.auth.getCurrentSession();
-        setSession(session);
-      } catch (error) {
-        console.error("Erro ao verificar sessão:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    // Monitora mudanças no estado de autenticação
-    const { data: { subscription } } = supabaseService.auth.onAuthStateChange((event, currentSession) => {
-      setSession(currentSession);
-    });
-
-    checkSession();
-
-    return () => {
-      subscription?.unsubscribe();
-    };
-  }, []);
+const AppRoutes = () => {
+  const { isAuthenticated, loading } = useAuthContext();
+  const { settings, roles } = useSettings();
+  const location = useLocation();
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-10 w-10 border-4 border-primary border-t-transparent"></div>
+        <div className="animate-spin rounded-full h-10 w-10 border-4 border-primary border-t-transparent" />
       </div>
     );
   }
 
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/" element={<Landing />} />
-              <Route path="/pricing" element={<Pricing />} />
-              <Route path="/login" element={session ? <Navigate to="/dashboard" /> : <Login />} />
-              
-              {/* Protected Routes */}
-              <Route path="/" element={session ? <Layout /> : <Navigate to="/login" />}>
-                <Route path="dashboard" element={<Dashboard />} />
-                <Route path="orders" element={<Orders />} />
-                <Route path="orders/new" element={<NewOrder />} />
-                <Route path="orders/edit/:id" element={<EditOrder />} />
-                <Route path="orders/:id" element={<OrderDetail />} />
-                <Route path="production" element={<Production />} />
-                <Route path="reports" element={<Reports />} />
-                <Route path="calendar" element={<Calendar />} />
-                <Route path="profile" element={<Profile />} />
-                <Route path="settings" element={<Settings />} />
-              </Route>
+    <Routes>
+      {/* Public Routes */}
+      <Route
+        path="/"
+        element={
+          isAuthenticated ? (
+            settings?.enable_roles && roles.length > 0 ? (
+              <Navigate to="/select-role" />
+            ) : (
+              <Navigate to="/dashboard" />
+            )
+          ) : (
+            <Landing />
+          )
+        }
+      />
+      <Route path="/about" element={<About />} />
+      <Route path="/terms" element={<Terms />} />
+      <Route path="/privacy" element={<Privacy />} />
+      <Route path="/contact" element={<Contact />} />
+      <Route
+        path="/login"
+        element={
+          isAuthenticated ? (
+            settings?.enable_roles && roles.length > 0 ? (
+              <Navigate to="/select-role" />
+            ) : (
+              <Navigate to="/dashboard" />
+            )
+          ) : (
+            <Login />
+          )
+        }
+      />
+      {/* Protected Routes */}
+      {isAuthenticated && (
+        <Route path="/" element={<Layout />}>
+          <Route
+            path="dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="orders"
+            element={
+              <ProtectedRoute>
+                <Orders />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="orders/:id"
+            element={
+              <ProtectedRoute>
+                <OrderDetail />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="production"
+            element={
+              <ProtectedRoute>
+                <Production />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="verify-password"
+            element={
+              <ProtectedRoute>
+                <PasswordVerification />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="reports"
+            element={
+              <ProtectedRoute>
+                {settings?.lock_reports_by_password && !location.state?.verified ? (
+                  <Navigate 
+                    to="/verify-password" 
+                    state={{ 
+                      redirect: "/reports",
+                      name: "os relatórios",
+                      fromRoleSwitch: false
+                    }} 
+                    replace 
+                  />
+                ) : (
+                  <Reports />
+                )}
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="calendar"
+            element={
+              <ProtectedRoute>
+                <Calendar />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="reminders"
+            element={
+              <ProtectedRoute>
+                <Reminders />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="settings"
+            element={
+              <ProtectedRoute>
+                {settings?.lock_settings_by_password && !location.state?.verified ? (
+                  <Navigate 
+                    to="/verify-password" 
+                    state={{ 
+                      redirect: "/settings",
+                      name: "as configurações",
+                      fromRoleSwitch: false
+                    }} 
+                    replace 
+                  />
+                ) : (
+                  <Settings />
+                )}
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="subscription-expired"
+            element={
+              <ProtectedRoute>
+                <SubscriptionExpired />
+              </ProtectedRoute>
+            }
+          />
+        </Route>
+      )}
 
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </QueryClientProvider>
-    </ThemeProvider>
+      {/* Protected Routes Outside Layout scheme*/}
+      {isAuthenticated && (
+          <Route
+          path="/select-role"
+          element={
+            isAuthenticated ? (
+              <RoleSelector />
+            ) : (
+              <Navigate to="/login" />
+            )
+          }
+        />
+      )}
+
+      <Route path="*" element={<NotFound />} />
+    </Routes>
   );
 };
+
+export const App = () => (
+  <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <TenantProvider>
+          <SubscriptionProvider>
+            <SettingsProvider>
+              <TooltipProvider>
+                <Toaster />
+                <Sonner />
+                <BrowserRouter>
+                  <SubscriptionGate
+                    blockedRoutes={BLOCKED_ROUTES}
+                    redirectTo="/subscription-expired"
+                  >
+                    <AppRoutes />
+                  </SubscriptionGate>
+                </BrowserRouter>
+              </TooltipProvider>
+            </SettingsProvider>
+          </SubscriptionProvider>
+        </TenantProvider>
+      </AuthProvider>
+    </QueryClientProvider>
+  </ThemeProvider>
+);
 
 export default App;
