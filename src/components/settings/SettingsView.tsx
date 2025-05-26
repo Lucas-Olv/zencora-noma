@@ -27,7 +27,15 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Pencil, Plus, Trash2 } from "lucide-react";
-import { settingsService, rolesService, RoleType } from "@/services/supabaseService";
+import { settingsService, rolesService, RoleType, SettingsType } from "@/services/supabaseService";
+
+const DEFAULT_SETTINGS: Omit<SettingsType, "id" | "created_at" | "updated_at"> = {
+  enable_roles: false,
+  lock_reports_by_password: false,
+  require_password_to_switch_role: false,
+  lock_settings_by_password: false,
+  tenant_id: "",
+};
 
 export default function SettingsView() {
   const { tenant } = useAuthContext();
@@ -51,7 +59,7 @@ export default function SettingsView() {
     can_edit_orders: false,
   });
 
-  const handleUpdateSettings = async (field: string, value: boolean) => {
+  const handleUpdateSettings = async (field: keyof SettingsType, value: boolean) => {
     try {
       if (!settings || !tenant?.id) return;
 

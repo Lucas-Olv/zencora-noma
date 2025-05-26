@@ -35,25 +35,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
 
       const { data: tenantData, error: tenantError } =
         await supabaseService.tenants.getUserTenant(user.id);
-
-      if (tenantError) {
-        // Se não encontrou o tenant, cria um novo
-        if (tenantError.code === 'PGRST116') {
-          const { data: newTenant, error: createError } = await supabaseService.tenants.createTenant({
-            name: `${user.email}'s Tenant`,
-            owner_id: user.id,
-            product_id: 'default', // Ajuste conforme necessário
-          });
-          if (createError) throw createError;
-          if (!newTenant) throw new Error("Erro ao criar tenant");
-          setTenantState(newTenant);
-          setTenantAuth(newTenant);
-          return;
-        }
-        throw tenantError;
-      }
-
-      if (!tenantData) throw new Error("Tenant não encontrado");
+      if (tenantError || !tenantData) throw new Error("Tenant não encontrado");
 
       setTenantState(tenantData);
       setTenantAuth(tenantData);
