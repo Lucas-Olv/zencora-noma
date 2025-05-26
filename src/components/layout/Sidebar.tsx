@@ -28,11 +28,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Link } from "react-router-dom";
 import { SubscriptionGate, useSubscriptionRoutes } from "@/components/subscription/SubscriptionGate";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useSettings } from "@/contexts/SettingsContext";
+import { SettingsGate } from "@/components/settings/SettingsGate";
+import { useAppReady } from "@/hooks/use-app-ready";
+import { Loader2 } from "lucide-react";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -95,11 +97,24 @@ interface NavButtonProps {
 const NavButton = ({ item, isActive, onClick }: NavButtonProps) => {
   const { blockedRoutes, allowedRoutes } = useSubscriptionRoutes();
   const { isBlocked: isSubscriptionBlocked } = useSubscription();
+  const { settings } = useSettings();
   const isRouteBlocked = blockedRoutes.includes(item.href);
   const isRouteAllowed = allowedRoutes.includes(item.href);
 
   // Só mostra o cadeado se a rota estiver bloqueada E a assinatura não estiver ativa
   const shouldShowLock = isSubscriptionBlocked && (isRouteBlocked || isRouteAllowed);
+
+  // Verifica se a tela requer senha baseado no item
+  const requiresPassword = (() => {
+    switch (item.href) {
+      case '/reports':
+        return settings?.lock_reports_by_password;
+      case '/settings':
+        return settings?.lock_settings_by_password;
+      default:
+        return false;
+    }
+  })();
 
   const button = (
     <button
@@ -115,7 +130,7 @@ const NavButton = ({ item, isActive, onClick }: NavButtonProps) => {
     >
       <item.icon className="h-5 w-5 transition-transform duration-200 group-hover:scale-110" />
       {item.title}
-      {shouldShowLock && <Lock className="h-4 w-4 ml-auto text-muted-foreground" />}
+      {(shouldShowLock || requiresPassword) && <Lock className="h-4 w-4 ml-auto text-muted-foreground" />}
     </button>
   );
 
@@ -130,7 +145,12 @@ const NavButton = ({ item, isActive, onClick }: NavButtonProps) => {
                 blockMode="disable"
                 fallback={button}
               >
-                {button}
+                <SettingsGate
+                  requirePanelAccess={item.href.replace('/', '')}
+                  fallback={button}
+                >
+                  {button}
+                </SettingsGate>
               </SubscriptionGate>
             </div>
           </TooltipTrigger>
@@ -142,7 +162,14 @@ const NavButton = ({ item, isActive, onClick }: NavButtonProps) => {
     );
   }
 
-  return button;
+  return (
+    <SettingsGate
+      requirePanelAccess={item.href.replace('/', '')}
+      fallback={button}
+    >
+      {button}
+    </SettingsGate>
+  );
 };
 
 const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
@@ -150,6 +177,21 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { settings, isOwner } = useSettings();
+  const { ready: appReady, loading: appLoading } = useAppReady();
+
+  // Se o app não estiver pronto, mostra um loader
+  if (!appReady || appLoading) {
+    return (
+      <aside
+        className={cn(
+          "fixed top-0 bottom-0 left-0 z-[130] w-60 bg-background dark:bg-background border-r border-border p-4 shadow-sm transition-transform duration-300 md:translate-x-0 flex flex-col items-center justify-center",
+          isOpen ? "translate-x-0" : "-translate-x-full",
+        )}
+      >
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </aside>
+    );
+  }
 
   const handleLogoClick = () => {
     // Se estiver na página de seleção de papel, não faz nada
@@ -302,7 +344,7 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
             />
           ))}
 
-          {/* Perfil ou Trocar Papel */}
+          {/* Perfil ou Trocar Papel - Sempre visível */}
           {isOwner ? (
             <Button
               variant="ghost"
@@ -323,6 +365,7 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
             </Button>
           )}
 
+          {/* Sair - Sempre visível */}
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button

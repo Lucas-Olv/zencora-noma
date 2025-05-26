@@ -45,13 +45,22 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
   const ROLE_STORAGE_KEY = 'active_role_id';
 
   const fetchSettings = async () => {
-    if (!tenant?.id) return;
-
-    if (isBlocked || !subscription && (subscription?.plan !== 'pro' && subscription?.plan !== 'enterprise' && !subscription?.is_trial)) {
+    if (!tenant?.id) {
+      setLoading(false);
       return;
     }
 
     try {
+      // Se estiver bloqueado e não for pro/enterprise/trial, retorna sem buscar settings
+      if (isBlocked && subscription?.plan !== 'pro' && subscription?.plan !== 'enterprise' && !subscription?.is_trial) {
+        setSettings(null);
+        setRoles([]);
+        setSelectedRole(null);
+        setIsOwner(true);
+        setLoading(false);
+        return;
+      }
+
       const { data: settingsData, error: settingsError } = await settingsService.getTenantSettings(tenant.id);
       if (settingsError) throw settingsError;
 
@@ -86,7 +95,11 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
       }
     } catch (error) {
       console.error('Error fetching settings:', error);
-      // Em caso de erro, mantém o estado anterior
+      // Em caso de erro, limpa os dados e define como owner
+      setSettings(null);
+      setRoles([]);
+      setSelectedRole(null);
+      setIsOwner(true);
     } finally {
       setLoading(false);
     }
