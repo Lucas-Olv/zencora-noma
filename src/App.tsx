@@ -78,8 +78,9 @@ const AppRoutes = () => {
           )
         }
       />
+
       {/* Protected Routes */}
-      {isAuthenticated && (
+      {isAuthenticated ? (
         <Route path="/" element={<Layout />}>
           <Route
             path="dashboard"
@@ -186,19 +187,15 @@ const AppRoutes = () => {
             }
           />
         </Route>
+      ) : (
+        <Route path="*" element={<Navigate to="/login" replace />} />
       )}
 
       {/* Protected Routes Outside Layout scheme*/}
-      {isAuthenticated && (
+      {isAuthenticated && settings?.enable_roles && roles.length > 0 && (
         <Route
           path="/select-role"
-          element={
-            isAuthenticated ? (
-              <RoleSelector />
-            ) : (
-              <Navigate to="/login" />
-            )
-          }
+          element={<RoleSelector />}
         />
       )}
 
