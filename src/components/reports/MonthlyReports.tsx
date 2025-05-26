@@ -48,7 +48,7 @@ import autoTable from "jspdf-autotable";
 import { Badge } from "@/components/ui/badge";
 import { report } from "process";
 import supabaseService from "@/services/supabaseService";
-import { useAuthContext } from "@/contexts/AuthContext";
+import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import {
   Select,
   SelectContent,
@@ -106,7 +106,7 @@ const MonthlyReports = () => {
     categoryData: [],
   });
   const isMobile = useIsMobile();
-  const { tenant, loading: tenantLoading, error: tenantError } = useAuthContext();
+  const { tenant, loading: tenantLoading, error: tenantError } = useWorkspaceContext();
   const navigate = useNavigate();
 
   const formatCurrency = (value: number) => {

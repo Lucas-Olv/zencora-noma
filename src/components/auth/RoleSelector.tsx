@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useSettings } from "@/contexts/SettingsContext";
+import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { useToast } from "@/components/ui/use-toast";
 import { RoleType } from "@/services/supabaseService";
 import { Crown } from "lucide-react";
@@ -11,7 +11,7 @@ import ThemeToggle from "../layout/ThemeToggle";
 export default function RoleSelector() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { settings, roles, setSelectedRoleById } = useSettings();
+  const { settings, roles, setSelectedRoleById } = useWorkspaceContext();
   const [loading, setLoading] = useState(false);
 
   // Check if there's a saved role in localStorage

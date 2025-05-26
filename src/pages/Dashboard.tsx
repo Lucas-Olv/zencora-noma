@@ -6,7 +6,7 @@ import { Calendar, ClipboardList, FileText, Users } from "lucide-react";
 import { Tables } from "@/integrations/supabase/types";
 import { parseDate } from "@/lib/utils";
 import { remindersService, supabaseService } from "@/services/supabaseService";
-import { useAuthContext } from "@/contexts/AuthContext";
+import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { useAuthenticatedEffect } from "@/hooks/use-authenticated";
 import RecentReminders from "@/components/dashboard/RecentReminders";
 type Order = Tables<"orders">;
@@ -29,7 +29,7 @@ const formatCurrency = (value: number) => {
 };
 
 const Dashboard = () => {
-  const { tenant, loading: tenantLoading, error: tenantError } = useAuthContext();
+  const { tenant, loading: tenantLoading, error: tenantError } = useWorkspaceContext();
   const [orders, setOrders] = useState<Order[]>([]);
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [stats, setStats] = useState<DashboardStats>({

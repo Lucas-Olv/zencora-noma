@@ -1,6 +1,4 @@
-import { useAuthContext } from "@/contexts/AuthContext";
-import { useSettings } from "@/contexts/SettingsContext";
-import { useSubscription } from "@/contexts/SubscriptionContext";
+import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 
 const useAppReady = () => {
   const {
@@ -8,26 +6,22 @@ const useAppReady = () => {
     loading: authLoading,
     user,
     tenant,
-  } = useAuthContext();
+  } = useWorkspaceContext();
 
-  const { loading: settingsLoading } = useSettings();
-  const { subscription, isLoading: subscriptionLoading } = useSubscription();
+  const { loading: workspaceLoading } = useWorkspaceContext();
 
   const ready =
     isAuthenticated &&
     !authLoading &&
-    !settingsLoading &&
-    !subscriptionLoading &&
+    !workspaceLoading &&
     !!user &&
-    !!tenant &&
-    !!subscription;
+    !!tenant;
 
   return {
     ready,
-    loading: authLoading || settingsLoading || subscriptionLoading,
+    loading: authLoading || workspaceLoading,
     user,
     tenant,
-    subscription,
   };
 };
 

@@ -31,7 +31,7 @@ import {
   getStatusDisplay,
 } from "@/lib/utils";
 import { supabaseService, OrderType } from "@/services/supabaseService";
-import { useAuthContext } from "@/contexts/AuthContext";
+import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import OrderDialog from "./OrderDialog";
 import { SubscriptionGate } from "../subscription/SubscriptionGate";
 
@@ -61,7 +61,7 @@ const OrderList = () => {
       }
     `,
   });
-  const { tenant, loading: tenantLoading, error: tenantError } = useAuthContext();
+  const { tenant, loading: tenantLoading, error: tenantError } = useWorkspaceContext();
 
   const OrderLabel = ({ order }: { order: OrderType }) => {
     const statusDisplay = getStatusDisplay(order.status);

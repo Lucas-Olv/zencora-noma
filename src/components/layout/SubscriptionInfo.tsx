@@ -1,7 +1,7 @@
 import { InfoIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
-import { useSubscription } from "@/contexts/SubscriptionContext";
+import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -11,10 +11,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 const SubscriptionInfo = () => {
   const [mounted, setMounted] = useState(false);
-  const { isBlocked: isSubscriptionBlocked } = useSubscription();
-  const { isTrial } = useSubscription();
-  const { isPaymentFailed } = useSubscription();
-  const { isExpired } = useSubscription();
+  const { isBlocked: isSubscriptionBlocked } = useWorkspaceContext();
+  const { isTrial } = useWorkspaceContext();
+  const { isPaymentFailed } = useWorkspaceContext();
+  const { isExpired } = useWorkspaceContext();
 
   const headerSubscriptionStatusWarning = isTrial && isExpired ? "Seu período de teste expirou" : isSubscriptionBlocked ? "Sua assinatura expirou" : isPaymentFailed ? "Ocorreu um erro no pagamento, por favor, verifique seus meios de pagamento" : isExpired ? "Sua assinatura expirou" : isTrial ? "Você está em período de teste" : "";
 

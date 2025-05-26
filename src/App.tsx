@@ -3,7 +3,6 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
-import { TenantProvider } from "@/contexts/TenantContext";
 import { ThemeProvider } from "next-themes";
 import Layout from "./components/layout/Layout";
 import Login from "./pages/Login";
@@ -13,7 +12,6 @@ import OrderDetail from "./pages/OrderDetail";
 import Production from "./pages/Production";
 import Reports from "./pages/Reports";
 import Calendar from "./pages/Calendar";
-import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import Landing from "./pages/Landing";
@@ -22,25 +20,19 @@ import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import Contact from "./pages/Contact";
 import { SubscriptionExpired } from "./pages/SubscriptionExpired";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { useAuthContext } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/routing/ProtectedRoute";
-import { SubscriptionProvider } from "./contexts/SubscriptionContext";
 import { SubscriptionGate } from "./components/subscription/SubscriptionGate";
-import Reminders from "./pages/Reminders";
-import { SettingsProvider } from "./contexts/SettingsContext";
-import { useSettings } from "@/contexts/SettingsContext";
+import Reminders from "./pages/Reminders"
 import RoleSelector from "@/components/auth/RoleSelector";
 import PasswordVerification from "@/components/auth/PasswordVerification";
-import { SettingsType } from "@/services/supabaseService";
-
+import { useWorkspaceContext, WorkspaceProvider } from "@/contexts/WorkspaceContext";
 const queryClient = new QueryClient();
 
 const BLOCKED_ROUTES = ["/dashboard", "/production", "/reports", "/calendar", "/settings", "/profile", "/reminders"];
 
 const AppRoutes = () => {
-  const { isAuthenticated, loading } = useAuthContext();
-  const { settings, roles } = useSettings();
+  const { isAuthenticated, loading } = useWorkspaceContext();
+  const { settings, roles } = useWorkspaceContext();
   const location = useLocation();
 
   if (loading) {
@@ -134,14 +126,14 @@ const AppRoutes = () => {
             element={
               <ProtectedRoute>
                 {settings?.lock_reports_by_password && !location.state?.verified ? (
-                  <Navigate 
-                    to="/verify-password" 
-                    state={{ 
+                  <Navigate
+                    to="/verify-password"
+                    state={{
                       redirect: "/reports",
                       name: "os relatórios",
                       fromRoleSwitch: false
-                    }} 
-                    replace 
+                    }}
+                    replace
                   />
                 ) : (
                   <Reports />
@@ -170,14 +162,14 @@ const AppRoutes = () => {
             element={
               <ProtectedRoute>
                 {settings?.lock_settings_by_password && !location.state?.verified ? (
-                  <Navigate 
-                    to="/verify-password" 
-                    state={{ 
+                  <Navigate
+                    to="/verify-password"
+                    state={{
                       redirect: "/settings",
                       name: "as configurações",
                       fromRoleSwitch: false
-                    }} 
-                    replace 
+                    }}
+                    replace
                   />
                 ) : (
                   <Settings />
@@ -198,7 +190,7 @@ const AppRoutes = () => {
 
       {/* Protected Routes Outside Layout scheme*/}
       {isAuthenticated && (
-          <Route
+        <Route
           path="/select-role"
           element={
             isAuthenticated ? (
@@ -218,26 +210,20 @@ const AppRoutes = () => {
 export const App = () => (
   <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TenantProvider>
-          <SubscriptionProvider>
-            <SettingsProvider>
-              <TooltipProvider>
-                <Toaster />
-                <Sonner />
-                <BrowserRouter>
-                  <SubscriptionGate
-                    blockedRoutes={BLOCKED_ROUTES}
-                    redirectTo="/subscription-expired"
-                  >
-                    <AppRoutes />
-                  </SubscriptionGate>
-                </BrowserRouter>
-              </TooltipProvider>
-            </SettingsProvider>
-          </SubscriptionProvider>
-        </TenantProvider>
-      </AuthProvider>
+      <WorkspaceProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <SubscriptionGate
+              blockedRoutes={BLOCKED_ROUTES}
+              redirectTo="/subscription-expired"
+            >
+              <AppRoutes />
+            </SubscriptionGate>
+          </BrowserRouter>
+        </TooltipProvider>
+      </WorkspaceProvider>
     </QueryClientProvider>
   </ThemeProvider>
 );

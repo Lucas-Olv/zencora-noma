@@ -1,11 +1,9 @@
-import { useAuthContext } from "@/contexts/AuthContext";
-import { useSettings } from "@/contexts/SettingsContext";
+import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 
 const ProtectedRoute = ({ children }: { children: ReactNode }) => {
-  const { isAuthenticated, loading } = useAuthContext();
-  const { settings, selectedRole } = useSettings();
+  const { isAuthenticated, loading, settings, selectedRole } = useWorkspaceContext();
   const location = useLocation();
 
   if (loading)

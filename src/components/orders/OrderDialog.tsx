@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabaseService, OrderType } from "@/services/supabaseService";
-import { useAuthContext } from "@/contexts/AuthContext";
+import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useForm } from "react-hook-form";
@@ -80,7 +80,7 @@ const OrderDialog = ({
   onSuccess,
 }: OrderDialogProps) => {
   const { toast } = useToast();
-  const { tenant } = useAuthContext();
+  const { tenant } = useWorkspaceContext();
   const [loading, setLoading] = useState(false);
   const queryClient = useQueryClient();
 

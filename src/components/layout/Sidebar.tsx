@@ -30,11 +30,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { SubscriptionGate, useSubscriptionRoutes } from "@/components/subscription/SubscriptionGate";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { useSubscription } from "@/contexts/SubscriptionContext";
-import { useSettings } from "@/contexts/SettingsContext";
 import { SettingsGate } from "@/components/settings/SettingsGate";
 import { useAppReady } from "@/hooks/use-app-ready";
 import { Loader2 } from "lucide-react";
+import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -96,13 +95,12 @@ interface NavButtonProps {
 
 const NavButton = ({ item, isActive, onClick }: NavButtonProps) => {
   const { blockedRoutes, allowedRoutes } = useSubscriptionRoutes();
-  const { isBlocked: isSubscriptionBlocked } = useSubscription();
-  const { settings } = useSettings();
+  const { settings } = useWorkspaceContext();
   const isRouteBlocked = blockedRoutes.includes(item.href);
   const isRouteAllowed = allowedRoutes.includes(item.href);
 
   // Só mostra o cadeado se a rota estiver bloqueada E a assinatura não estiver ativa
-  const shouldShowLock = isSubscriptionBlocked && (isRouteBlocked || isRouteAllowed);
+  const shouldShowLock = isRouteBlocked || isRouteAllowed;
 
   // Verifica se a tela requer senha baseado no item
   const requiresPassword = (() => {
@@ -176,7 +174,7 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { settings, isOwner } = useSettings();
+  const { settings, isOwner } = useWorkspaceContext();
   const { ready: appReady, loading: appLoading } = useAppReady();
 
   // Se o app não estiver pronto, mostra um loader

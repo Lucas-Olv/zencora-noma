@@ -281,6 +281,19 @@ export const tenantsService = {
       .eq("owner_id", ownerId)
       .single();
   },
+
+  // Cria um novo tenant para um usuário
+  createTenant: async (ownerId: string, name: string, productId: string) => {
+    return await supabase
+      .from("tenants")
+      .insert({
+        owner_id: ownerId,
+        name,
+        product_id: productId
+      })
+      .select()
+      .single();
+  }
 };
 
 // Serviço de encomendas

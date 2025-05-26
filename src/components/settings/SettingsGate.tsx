@@ -1,13 +1,13 @@
 // components/SettingsGate.tsx
 import { ReactNode } from 'react';
-import { useSettings } from '@/contexts/SettingsContext';
+import { useWorkspaceContext } from '@/contexts/WorkspaceContext';
 import { Loader2 } from 'lucide-react';
 
 type Props = {
   children: ReactNode;
   fallback?: ReactNode;
   requireRolesEnabled?: boolean;
-  requireFeature?: keyof ReturnType<typeof useSettings>['settings'];
+  requireFeature?: keyof ReturnType<typeof useWorkspaceContext>['settings'];
   requirePanelAccess?: string; // ex: 'dashboard', 'orders', etc.
 };
 
@@ -18,7 +18,7 @@ export const SettingsGate = ({
   requireFeature,
   requirePanelAccess,
 }: Props) => {
-  const { settings, selectedRole, loading, isOwner } = useSettings();
+  const { settings, selectedRole, loading, isOwner } = useWorkspaceContext();
 
   if (loading) return fallback;
 

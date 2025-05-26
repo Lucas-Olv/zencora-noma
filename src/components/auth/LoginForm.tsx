@@ -15,8 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { supabaseService } from "@/services/supabaseService";
-import { useAuthContext } from "@/contexts/AuthContext";  
-import { useSettings } from "@/contexts/SettingsContext";
+import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 
 export const LoginForm = () => {
   const { toast } = useToast();
@@ -28,8 +27,7 @@ export const LoginForm = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
-  const { isAuthenticated } = useAuthContext();
-  const { settings, roles } = useSettings();
+  const { isAuthenticated, settings, roles } = useWorkspaceContext();
   
   useEffect(() => {
     // Check if register=true is in the URL

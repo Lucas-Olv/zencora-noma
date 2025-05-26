@@ -1,9 +1,8 @@
-import { useSubscription } from '@/contexts/SubscriptionContext';
 import { Loader2 } from 'lucide-react';
 import { ReactNode, useEffect, cloneElement, createContext, useContext } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppReady } from '@/hooks/use-app-ready';
-import { useAuthContext } from '@/contexts/AuthContext';
+import { useWorkspaceContext } from '@/contexts/WorkspaceContext';
 
 interface SubscriptionRoutesContextType {
   blockedRoutes: string[];
@@ -44,9 +43,9 @@ export const SubscriptionGate = ({
   blockMode = 'hide',
   onBlock,
 }: Props) => {
-  const { isLoading: subscriptionLoading, isTrial, isActive, isBlocked } = useSubscription();
+  const { isLoading: subscriptionLoading, isTrial, isActive, isBlocked } = useWorkspaceContext();
   const { ready: appReady, loading: appLoading } = useAppReady();
-  const { isAuthenticated } = useAuthContext();
+  const { isAuthenticated } = useWorkspaceContext();
   const navigate = useNavigate();
   const location = useLocation();
 

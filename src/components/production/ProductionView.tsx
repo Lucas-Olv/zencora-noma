@@ -23,14 +23,14 @@ import {
   getStatusDisplay,
 } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
-import { useAuthContext } from "@/contexts/AuthContext";
+import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { supabaseService, OrderType } from "@/services/supabaseService";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { SubscriptionGate } from "../subscription/SubscriptionGate";
 
 export function ProductionView() {
   const { toast } = useToast();
-  const { tenant, loading: tenantLoading, error: tenantError } = useAuthContext();
+  const { tenant, loading: tenantLoading, error: tenantError } = useWorkspaceContext();
   const [orders, setOrders] = useState<OrderType[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();

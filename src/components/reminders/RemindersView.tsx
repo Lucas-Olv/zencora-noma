@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useAuthContext } from "@/contexts/AuthContext";
+import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { Database } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,9 +31,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 type Reminder = Database["public"]["Tables"]["reminders"]["Row"];
 
-export default function RemindersView() {
+const RemindersView = () => {
   const { toast } = useToast();
-  const { tenant } = useAuthContext();
+  const { tenant } = useWorkspaceContext();
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [newReminderTitle, setNewReminderTitle] = useState("");
   const [selectedReminder, setSelectedReminder] = useState<Reminder | null>(null);
@@ -344,4 +344,6 @@ export default function RemindersView() {
       </Card>
     </div>
   );
-} 
+};
+
+export default RemindersView; 

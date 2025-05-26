@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { useAuthContext } from "@/contexts/AuthContext";
-import { useSettings } from "@/contexts/SettingsContext";
+import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
@@ -38,8 +37,8 @@ const DEFAULT_SETTINGS: Omit<SettingsType, "id" | "created_at" | "updated_at"> =
 };
 
 export default function SettingsView() {
-  const { tenant } = useAuthContext();
-  const { settings, roles, reloadSettings } = useSettings();
+  const { tenant } = useWorkspaceContext();
+  const { settings, roles, reloadSettings } = useWorkspaceContext();
   const { toast } = useToast();
   const [isCreateRoleDialogOpen, setIsCreateRoleDialogOpen] = useState(false);
   const [isEditRoleDialogOpen, setIsEditRoleDialogOpen] = useState(false);

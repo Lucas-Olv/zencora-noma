@@ -1,4 +1,3 @@
-import { useSubscription } from "@/contexts/SubscriptionContext";
 import { PricingSection } from "@/components/layout/PricingSection";
 import { AlertCircle, Clock, CreditCard, Zap } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -6,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 
 export function SubscriptionExpired() {
-  const { subscription, isTrial, isPaymentFailed, isExpired } = useSubscription();
+  const { subscription, isTrial, isPaymentFailed, isExpired } = useWorkspaceContext();
 
   // Determina o estado da assinatura e retorna as informações apropriadas
   const getSubscriptionState = () => {
