@@ -103,159 +103,183 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
 
   // Load session and initial setup
   useEffect(() => {
-    const initializeWorkspace = async () => {
-      try {
-        setLoading(true);
-        const { session, error } = await supabaseService.auth.getCurrentSession();
-        
-        if (error) {
-          setError(error.message);
-          return;
-        }
-
-        if (!session?.user) {
-          setLoading(false);
-          return;
-        }
-
-        // Check/Create user record
-        const { data: userData, error: userError } = 
-          await supabaseService.users.getUserById(session.user.id);
-
-        if (userError && userError.code !== 'PGRST116') { // PGRST116 is "not found" error
-          setError(userError.message);
-          return;
-        }
-
-        if (!userData) {
-          const { error: createUserError } = 
-            await supabaseService.users.createUserRecord(
-              session.user.id,
-              session.user.user_metadata?.name ?? 'Usuário',
-              session.user.email ?? '',
-              'admin'
-            );
-          
-          if (createUserError) {
-            setError(createUserError.message);
-            return;
-          }
-        }
-
-        // Fetch product by code
-        const { data: productData, error: productError } = 
-          await supabaseService.products.getProductByCode(PRODUCT_CODE);
-
-        if (productError) {
-          setError(productError.message);
-          return;
-        }
-
-        if (!productData) {
-          setError("Produto não encontrado");
-          return;
-        }
-
-        // Fetch or create subscription
-        const { data: subscriptionData, error: subscriptionError } = 
-          await supabaseService.subscriptions.getUserSubscription(session.user.id);
-
-        if (subscriptionError && subscriptionError.code !== 'PGRST116') {
-          setError(subscriptionError.message);
-          return;
-        }
-
-        let subscription = subscriptionData;
-        if (!subscription) {
-          const { data: newSubscription, error: createError } = 
-            await supabaseService.subscriptions.createSubscription(
-              session.user.id,
-              productData.id,
-              'trial',
-              'trial',
-              dayjs().add(7, 'days').toISOString()
-            );
-          
-          if (createError) {
-            setError(createError.message);
-            return;
-          }
-          
-          subscription = newSubscription;
-        }
-
-        // Fetch or create tenant
-        const { data: tenantData, error: tenantError } = 
-          await supabaseService.tenants.getUserTenant(session.user.id);
-
-        if (tenantError && tenantError.code !== 'PGRST116') {
-          setError(tenantError.message);
-          return;
-        }
-
-        let tenant = tenantData;
-        if (!tenant) {
-          const { data: newTenant, error: createError } = 
-            await supabaseService.tenants.createTenant(
-              session.user.id,
-              `${session.user.user_metadata?.name ?? 'Usuário'}'s Workspace`,
-              productData.id
-            );
-          
-          if (createError) {
-            setError(createError.message);
-            return;
-          }
-          
-          tenant = newTenant;
-        }
-
-        // Fetch or create settings
-        const { data: settingsData, error: settingsError } = 
-          await settingsService.getTenantSettings(tenant.id);
-
-        if (settingsError && settingsError.code !== 'PGRST116') {
-          setError(settingsError.message);
-          return;
-        }
-
-        let settings = settingsData;
-        if (!settings) {
-          const { data: newSettings, error: createError } = 
-            await settingsService.upsertSettings({
-              tenant_id: tenant.id,
-              enable_roles: false,
-              lock_reports_by_password: false,
-              lock_settings_by_password: false,
-              require_password_to_switch_role: false
-            });
-          
-          if (createError) {
-            setError(createError.message);
-            return;
-          }
-          
-          settings = newSettings;
-        }
-
-        // Atualiza todos os estados de uma vez
-        setSession(session);
-        setUser(session.user);
-        setIsAuthenticated(true);
-        setTenant(tenant);
-        setSettings(settings);
-        setSubscription(subscription);
-
-      } catch (error: any) {
-        console.error('Error initializing workspace:', error);
-        setError(error.message);
-      } finally {
-        setLoading(false);
-        setIsLoading(false);
-      }
-    };
-
     initializeWorkspace();
+  }, []);
+
+  const initializeWorkspaceWithSession = async (session: Session) => {
+    try {
+      setLoading(true);
+
+      const user = session.user;
+
+      // Check/Create user record
+      const { data: userData, error: userError } = 
+        await supabaseService.users.getUserById(user.id);
+
+      if (userError && userError.code !== 'PGRST116') { // PGRST116 is "not found" error
+        setError(userError.message);
+        return;
+      }
+
+      if (!userData) {
+        const { error: createUserError } = 
+          await supabaseService.users.createUserRecord(
+            user.id,
+            user.user_metadata?.name ?? 'Usuário',
+            user.email ?? '',
+            'admin'
+          );
+        
+        if (createUserError) {
+          setError(createUserError.message);
+          return;
+        }
+      }
+
+      // Fetch product by code
+      const { data: productData, error: productError } = 
+        await supabaseService.products.getProductByCode(PRODUCT_CODE);
+
+      if (productError) {
+        setError(productError.message);
+        return;
+      }
+
+      if (!productData) {
+        setError("Produto não encontrado");
+        return;
+      }
+
+      // Fetch or create subscription
+      const { data: subscriptionData, error: subscriptionError } = 
+        await supabaseService.subscriptions.getUserSubscription(user.id);
+
+      if (subscriptionError && subscriptionError.code !== 'PGRST116') {
+        setError(subscriptionError.message);
+        return;
+      }
+
+      let subscription = subscriptionData;
+      if (!subscription) {
+        const { data: newSubscription, error: createError } = 
+          await supabaseService.subscriptions.createSubscription(
+            user.id,
+            productData.id,
+            'trial',
+            'trial',
+            dayjs().add(7, 'days').toISOString()
+          );
+        
+        if (createError) {
+          setError(createError.message);
+          return;
+        }
+        
+        subscription = newSubscription;
+      }
+
+      // Fetch or create tenant
+      const { data: tenantData, error: tenantError } = 
+        await supabaseService.tenants.getUserTenant(user.id);
+
+      if (tenantError && tenantError.code !== 'PGRST116') {
+        setError(tenantError.message);
+        return;
+      }
+
+      let tenant = tenantData;
+      if (!tenant) {
+        const { data: newTenant, error: createError } = 
+          await supabaseService.tenants.createTenant(
+            user.id,
+            `${user.user_metadata?.name ?? 'Usuário'}'s Workspace`,
+            productData.id
+          );
+        
+        if (createError) {
+          setError(createError.message);
+          return;
+        }
+        
+        tenant = newTenant;
+      }
+
+      // Fetch or create settings
+      const { data: settingsData, error: settingsError } = 
+        await settingsService.getTenantSettings(tenant.id);
+
+      if (settingsError && settingsError.code !== 'PGRST116') {
+        setError(settingsError.message);
+        return;
+      }
+
+      let settings = settingsData;
+      if (!settings) {
+        const { data: newSettings, error: createError } = 
+          await settingsService.upsertSettings({
+            tenant_id: tenant.id,
+            enable_roles: false,
+            lock_reports_by_password: false,
+            lock_settings_by_password: false,
+            require_password_to_switch_role: false
+          });
+        
+        if (createError) {
+          setError(createError.message);
+          return;
+        }
+        
+        settings = newSettings;
+      }
+
+      // Atualiza todos os estados de uma vez
+      setSession(session);
+      setUser(user);
+      setIsAuthenticated(true);
+      setTenant(tenant);
+      setSettings(settings);
+      setSubscription(subscription);
+
+    } catch (error: any) {
+      console.error('Error initializing workspace:', error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
+      setIsLoading(false);
+    }
+  };
+
+  const initializeWorkspace = async () => {
+    const { session, error } = await supabaseService.auth.getCurrentSession();
+    if (session?.user) {
+      await initializeWorkspaceWithSession(session);
+    } else {
+      setSession(null);
+      setUser(null);
+      setTenant(null);
+      setSettings(null);
+      setSubscription(null);
+      setIsAuthenticated(false);
+      setRoles([]);
+      setSelectedRole(null);
+      setIsOwner(true);
+      setLoading(false);
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const {
+      data: authListener
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user) {
+        initializeWorkspaceWithSession(session);
+      }
+    });
+  
+    return () => {
+      authListener?.subscription.unsubscribe();
+    };
   }, []);
 
   // Effect to handle role selection when settings change
@@ -366,48 +390,33 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
     fetchSettings();
   };
 
-  const fetchTenant = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      setLoadingTenant(true);
-
-      if (!user) throw new Error("Usuário não autenticado");
-
-      const { data: tenantData, error: tenantError } =
-        await supabaseService.tenants.getUserTenant(user.id);
-      if (tenantError || !tenantData) throw new Error("Tenant não encontrado");
-
-      setTenant(tenantData);
-    } catch (error: any) {
-      setError(error.message);
-      setTenant(null);
-      setTenantError(error.message);
-    } finally {
-      setLoading(false);
-      setLoadingTenant(false);
-    }
-  };
-
   const logout = async () => {
     try {
       setLoading(true);
       const { error } = await supabaseService.auth.signOut();
       if (error) throw error;
-
+  
+      localStorage.removeItem(ROLE_STORAGE_KEY); // limpa role salva
+  
       setUser(null);
       setSession(null);
       setTenant(null);
       setSettings(null);
+      setSubscription(null);
       setIsAuthenticated(false);
+      setRoles([]);
+      setSelectedRole(null);
+      setIsOwner(true);
       setError(null);
     } catch (error: any) {
       console.error('Erro ao fazer logout:', error);
       setError('Erro ao fazer logout. Por favor, tente novamente.');
     } finally {
       setLoading(false);
+      setIsLoading(false);
     }
   };
+  
 
   const updateSettings = async (newSettings: Settings) => {
     try {
