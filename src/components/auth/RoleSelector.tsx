@@ -32,6 +32,7 @@ export default function RoleSelector() {
 
       // Se for owner (role null), vai direto para o dashboard
       if (!role) {
+        localStorage.removeItem("active_role_id");
         navigate("/dashboard");
         return;
       }

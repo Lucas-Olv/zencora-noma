@@ -31,7 +31,7 @@ const queryClient = new QueryClient();
 const BLOCKED_ROUTES = ["/dashboard", "/production", "/reports", "/calendar", "/settings", "/profile", "/reminders"];
 
 const AppRoutes = () => {
-  const { isAuthenticated, loading, settings, roles, selectedRole } = useWorkspaceContext();
+  const { isAuthenticated, loading, settings, roles, selectedRole, isOwner } = useWorkspaceContext();
   const location = useLocation();
 
   if (loading) {
@@ -42,8 +42,8 @@ const AppRoutes = () => {
     );
   }
 
-  // Se estiver autenticado, tem roles habilitados e roles disponíveis, mas não tem role selecionada
-  const shouldSelectRole = isAuthenticated && settings?.enable_roles && roles.length > 0 && !selectedRole;
+  // Se estiver autenticado, tem roles habilitados e roles disponíveis, mas não tem role selecionada E não é owner
+  const shouldSelectRole = isAuthenticated && settings?.enable_roles && roles.length > 0 && !selectedRole && !isOwner;
 
   return (
     <Routes>
