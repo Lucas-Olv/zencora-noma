@@ -70,7 +70,6 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isSettingUp, setIsSettingUp] = useState(false);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const now = dayjs();
@@ -88,8 +87,6 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   const [selectedRole, setSelectedRole] = useState<RoleType | null>(null);
   const [isOwner, setIsOwner] = useState(false);
   const ROLE_STORAGE_KEY = 'active_role_id';
-
-  const PRODUCT_CODE = 'noma';
 
   // Bloqueia se:
   // 1. Está expirado e fora do período de graça
@@ -113,130 +110,72 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
 
       const user = session.user;
 
-      // Check/Create user record
+      const setupHasRun = localStorage.getItem("WORKSPACE_SETUP_HAS_RUN");
+      if (!setupHasRun) {
+        const setupWorkspace = await supabaseService.auth.verifyAndCreateWorkspace(user);
+        localStorage.setItem("WORKSPACE_SETUP_HAS_RUN", "true");
+      }
+
+      // Apenas busca o usuário, sem tentar criar
       const { data: userData, error: userError } = 
         await supabaseService.users.getUserById(user.id);
 
-      if (userError && userError.code !== 'PGRST116') { // PGRST116 is "not found" error
+      if (userError) {
         setError(userError.message);
         return;
       }
 
       if (!userData) {
-        const { error: createUserError } = 
-          await supabaseService.users.createUserRecord(
-            user.id,
-            user.user_metadata?.name ?? 'Usuário',
-            user.email ?? '',
-            'admin'
-          );
-        
-        if (createUserError) {
-          setError(createUserError.message);
-          return;
-        }
-      }
-
-      // Fetch product by code
-      const { data: productData, error: productError } = 
-        await supabaseService.products.getProductByCode(PRODUCT_CODE);
-
-      if (productError) {
-        setError(productError.message);
+        setError("Usuário não encontrado");
         return;
       }
 
-      if (!productData) {
-        setError("Produto não encontrado");
-        return;
-      }
-
-      // Fetch or create subscription
+      // Fetch subscription
       const { data: subscriptionData, error: subscriptionError } = 
         await supabaseService.subscriptions.getUserSubscription(user.id);
 
-      if (subscriptionError && subscriptionError.code !== 'PGRST116') {
+      if (subscriptionError) {
         setError(subscriptionError.message);
         return;
       }
 
-      let subscription = subscriptionData;
-      if (!subscription) {
-        const { data: newSubscription, error: createError } = 
-          await supabaseService.subscriptions.createSubscription(
-            user.id,
-            productData.id,
-            'trial',
-            'trial',
-            dayjs().add(7, 'days').toISOString()
-          );
-        
-        if (createError) {
-          setError(createError.message);
-          return;
-        }
-        
-        subscription = newSubscription;
+      if (!subscriptionData) {
+        setError("Assinatura não encontrada");
+        return;
       }
 
-      // Fetch or create tenant
+      // Fetch tenant
       const { data: tenantData, error: tenantError } = 
         await supabaseService.tenants.getUserTenant(user.id);
 
-      if (tenantError && tenantError.code !== 'PGRST116') {
+      if (tenantError) {
         setError(tenantError.message);
         return;
       }
 
-      let tenant = tenantData;
-      if (!tenant) {
-        const { data: newTenant, error: createError } = 
-          await supabaseService.tenants.createTenant(
-            user.id,
-            `${user.user_metadata?.name ?? 'Usuário'}'s Workspace`,
-            productData.id
-          );
-        
-        if (createError) {
-          setError(createError.message);
-          return;
-        }
-        
-        tenant = newTenant;
+      if (!tenantData) {
+        setError("Tenant não encontrado");
+        return;
       }
 
-      // Fetch or create settings
+      // Fetch settings
       const { data: settingsData, error: settingsError } = 
-        await settingsService.getTenantSettings(tenant.id);
+        await settingsService.getTenantSettings(tenantData.id);
 
-      if (settingsError && settingsError.code !== 'PGRST116') {
+      if (settingsError) {
         setError(settingsError.message);
         return;
       }
 
-      let settings = settingsData;
-      if (!settings) {
-        const { data: newSettings, error: createError } = 
-          await settingsService.upsertSettings({
-            tenant_id: tenant.id,
-            enable_roles: false,
-            lock_reports_by_password: false,
-            lock_settings_by_password: false,
-            require_password_to_switch_role: false
-          });
-        
-        if (createError) {
-          setError(createError.message);
-          return;
-        }
-        
-        settings = newSettings;
+      if (!settingsData) {
+        setError("Configurações não encontradas");
+        return;
       }
 
       // Fetch roles if enabled
       let roles: RoleType[] = [];
-      if (settings.enable_roles) {
-        const { data: rolesData, error: rolesError } = await rolesService.getTenantRoles(tenant.id);
+      if (settingsData.enable_roles) {
+        const { data: rolesData, error: rolesError } = await rolesService.getTenantRoles(tenantData.id);
         if (rolesError) {
           console.error('Error fetching roles:', rolesError);
         } else {
@@ -248,9 +187,9 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
       setSession(session);
       setUser(user);
       setIsAuthenticated(true);
-      setTenant(tenant);
-      setSettings(settings);
-      setSubscription(subscription);
+      setTenant(tenantData);
+      setSettings(settingsData);
+      setSubscription(subscriptionData);
       setRoles(roles);
 
       // Verifica role ativa no localStorage
@@ -447,7 +386,6 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
     }
   };
   
-
   const updateSettings = async (newSettings: Settings) => {
     try {
       const { data: updatedSettings, error } = await settingsService.upsertSettings(newSettings);

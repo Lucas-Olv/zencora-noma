@@ -82,6 +82,86 @@ export const authService = {
       password,
     });
   },
+
+  // Verifica e cria todos os registros necessários para um novo usuário
+  verifyAndCreateWorkspace: async (user: User) => {
+    try {
+      // 1. Verifica/Cria usuário
+      const { data: userData, error: userError } = await usersService.getUserById(user.id);
+      if (userError && userError.code !== 'PGRST116') throw userError;
+
+      if (!userData) {
+        const { error: createUserError } = await usersService.createUserRecord(
+          user.id,
+          user.user_metadata?.name ?? 'Usuário',
+          user.email ?? '',
+          'admin'
+        );
+        if (createUserError) throw createUserError;
+      }
+
+      // 2. Busca o produto
+      const { data: productData, error: productError } = await productsService.getProductByCode('noma');
+      if (productError) throw productError;
+      if (!productData) throw new Error('Produto não encontrado');
+
+      // 3. Verifica/Cria tenant
+      const { data: tenantData, error: tenantError } = await tenantsService.getUserTenant(user.id);
+      if (tenantError && tenantError.code !== 'PGRST116') throw tenantError;
+
+      if (!tenantData) {
+        const { error: createTenantError } = await tenantsService.createTenant(
+          user.id,
+          `${user.user_metadata?.name ?? 'Usuário'}'s Workspace`,
+          productData.id
+        );
+        if (createTenantError) throw createTenantError;
+      }
+
+      // 4. Verifica/Cria subscription
+      const { data: subscriptionData, error: subscriptionError } = 
+        await subscriptionsService.getUserSubscription(user.id);
+      if (subscriptionError && subscriptionError.code !== 'PGRST116') throw subscriptionError;
+
+      if (!subscriptionData) {
+        const { error: createSubscriptionError } = await subscriptionsService.createSubscription(
+          user.id,
+          productData.id,
+          'trial',
+          'trial',
+          new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 dias de trial
+        );
+        if (createSubscriptionError) throw createSubscriptionError;
+      }
+
+      // 5. Verifica/Cria settings
+      const { data: settingsData, error: settingsError } = 
+        await settingsService.getTenantSettings(tenantData?.id || '');
+      if (settingsError && settingsError.code !== 'PGRST116') throw settingsError;
+
+      if (!settingsData) {
+        const { error: createSettingsError } = await settingsService.upsertSettings({
+          tenant_id: tenantData?.id || '',
+          enable_roles: false,
+          lock_reports_by_password: false,
+          lock_settings_by_password: false,
+          require_password_to_switch_role: false
+        });
+        if (createSettingsError) throw createSettingsError;
+      }
+
+      return {
+        success: true,
+        error: null
+      };
+    } catch (error: any) {
+      console.error('Error in verifyAndCreateUserRecords:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  },
 };
 
 // Serviço de usuários

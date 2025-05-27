@@ -16,6 +16,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { supabaseService } from "@/services/supabaseService";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
+import { authService } from "@/services/supabaseService";
 
 export const LoginForm = () => {
   const { toast } = useToast();
@@ -125,6 +126,7 @@ export const LoginForm = () => {
       if (error) throw error;
       
       if (data.session?.access_token) {
+
         toast({
           title: "Login realizado com sucesso!",
           description: "Bem-vindo de volta ao Zencora Noma.",
