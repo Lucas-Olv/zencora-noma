@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { rolesService, settingsService, supabaseService } from "@/services/supabaseService";
 import { Session, User } from "@supabase/supabase-js";
 import { Tables } from "@/integrations/supabase/types";
@@ -87,6 +87,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   const [selectedRole, setSelectedRole] = useState<RoleType | null>(null);
   const [isOwner, setIsOwner] = useState(false);
   const ROLE_STORAGE_KEY = 'active_role_id';
+  const workspaceStartedSync = useRef(false);
 
   // Bloqueia se:
   // 1. Está expirado e fora do período de graça
@@ -106,15 +107,20 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
 
   const initializeWorkspaceWithSession = async (session: Session) => {
     try {
-      setLoading(true);
+      if (workspaceStartedSync.current) return;
+      workspaceStartedSync.current = true;
+      console.log('initializeWorkspaceWithSession called', { session, initialized: workspaceStartedSync.current });
 
-      const user = session.user;
-
-      const setupHasRun = localStorage.getItem("WORKSPACE_SETUP_HAS_RUN");
-      if (!setupHasRun) {
-        const setupWorkspace = await supabaseService.auth.verifyAndCreateWorkspace(user);
-        localStorage.setItem("WORKSPACE_SETUP_HAS_RUN", "true");
+      try {
+        await supabaseService.auth.initializeWorkspaceIfNeeded(session.user);
+        localStorage.setItem('workspace_initialized', 'true');
+      } catch (err) {
+        console.error('Erro ao inicializar workspace:', err);
+        return;
       }
+      
+      setLoading(true);
+      const user = session.user;
 
       // Apenas busca o usuário, sem tentar criar
       const { data: userData, error: userError } = 
@@ -241,6 +247,8 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
     const {
       data: authListener
     } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT') localStorage.removeItem('workspace_initialized');
+
       if (session?.user) {
         initializeWorkspaceWithSession(session);
       }
