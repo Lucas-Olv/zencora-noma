@@ -102,6 +102,8 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
 
   // Load session and initial setup
   useEffect(() => {
+    const workspaceHasInitialized = localStorage.getItem('workspace_initialized');
+    if (workspaceHasInitialized === 'true') return;
     initializeWorkspace();
   }, []);
 
@@ -200,9 +202,9 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
 
       // Verifica role ativa no localStorage
       const savedRoleId = localStorage.getItem(ROLE_STORAGE_KEY);
-      if (savedRoleId === null) {
+      if (savedRoleId === null && settingsData.enable_roles && roles.length > 0) {
         setSelectedRole(null);
-        setIsOwner(true);
+        setIsOwner(false);
       } else {
         const found = roles.find((r) => r.id === savedRoleId);
         if (found) {
@@ -235,7 +237,6 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
       setSettings(null);
       setSubscription(null);
       setIsAuthenticated(false);
-      setRoles([]);
       setSelectedRole(null);
       setIsOwner(true);
       setLoading(false);
@@ -247,10 +248,20 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
     const {
       data: authListener
     } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_OUT') localStorage.removeItem('workspace_initialized');
-
       if (session?.user) {
         initializeWorkspaceWithSession(session);
+      } else {
+        localStorage.removeItem('workspace_initialized')
+        setSession(null);
+        setUser(null);
+        setTenant(null);
+        setSettings(null);
+        setSubscription(null);
+        setIsAuthenticated(false);
+        setSelectedRole(null);
+        setIsOwner(true);
+        setLoading(false);
+        setIsLoading(false);
       }
     });
   
