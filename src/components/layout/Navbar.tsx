@@ -2,7 +2,6 @@ import { Menu, InfoIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ThemeToggle from "./ThemeToggle";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useSubscription } from "@/contexts/SubscriptionContext";
 import SubscriptionInfo from "./SubscriptionInfo";
 
 interface NavbarProps {

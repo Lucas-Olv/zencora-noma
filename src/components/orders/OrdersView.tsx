@@ -16,7 +16,6 @@ import { Badge } from "@/components/ui/badge";
 import {
   CheckCircle2, Eye,
   Plus,
-
   Search,
   X,
   Loader2,
@@ -29,13 +28,14 @@ import {
   usePrint,
   getOrderCode,
   getStatusDisplay,
+  cn,
 } from "@/lib/utils";
 import { supabaseService, OrderType } from "@/services/supabaseService";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import OrderDialog from "./OrderDialog";
 import { SubscriptionGate } from "../subscription/SubscriptionGate";
 
-const OrderList = () => {
+const OrdersView = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [orders, setOrders] = useState<OrderType[]>([]);
@@ -61,10 +61,12 @@ const OrderList = () => {
       }
     `,
   });
-  const { tenant, loading: tenantLoading, error: tenantError } = useWorkspaceContext();
+  const { tenant, isLoading: tenantLoading, error: tenantError } = useWorkspaceContext();
 
   const OrderLabel = ({ order }: { order: OrderType }) => {
-    const statusDisplay = getStatusDisplay(order.status);
+    const isOverdue = new Date(order.due_date) < new Date();
+    const status = (isOverdue && order.status === "pending") ? "overdue" : order.status;
+    const statusDisplay = getStatusDisplay(status, order.due_date);
 
     return (
       <div className="w-[100mm] h-[150mm] bg-white text-black p-6">
@@ -110,8 +112,6 @@ const OrderList = () => {
       <span className="text-sm leading-tight break-words">{content}</span>
     </div>
   );
-
-
 
   useEffect(() => {
     if (!tenantLoading && tenant) {
@@ -306,7 +306,8 @@ const OrderList = () => {
                   </TableHeader>
                   <TableBody>
                     {filteredOrders.map((order) => {
-                      const statusDisplay = getStatusDisplay(order.status);
+                      const isOverdue = new Date(order.due_date) < new Date();
+                      const status = (isOverdue && order.status === "pending") ? "overdue" : order.status;
                       return (
                         <TableRow key={order.id}>
                           <TableCell className="font-mono text-sm text-muted-foreground">
@@ -322,9 +323,22 @@ const OrderList = () => {
                           <TableCell>
                             <Badge
                               variant="outline"
-                              className={statusDisplay.className}
+                              className={cn(
+                                "w-fit",
+                                status === "overdue" &&
+                                  "bg-red-100/80 text-red-800 dark:bg-red-900/30 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-900/50",
+                                status === "pending" &&
+                                  "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50",
+                                status === "production" &&
+                                  "bg-purple-100/80 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200 hover:bg-purple-200 dark:hover:bg-purple-900/50",
+                                status === "done" &&
+                                  "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50",
+                              )}
                             >
-                              {statusDisplay.label}
+                              {status === "overdue" && "Atrasado"}
+                              {status === "pending" && "Pendente"}
+                              {status === "production" && "Produção"}
+                              {status === "done" && "Concluído"}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-right">
@@ -421,7 +435,8 @@ const OrderList = () => {
               {/* Mobile Card View */}
               <div className="md:hidden space-y-4">
                 {filteredOrders.map((order) => {
-                  const statusDisplay = getStatusDisplay(order.status);
+                  const isOverdue = new Date(order.due_date) < new Date();
+                  const status = (isOverdue && order.status === "pending") ? "overdue" : order.status;
                   return (
                     <Card key={order.id}>
                       <CardContent className="p-4">
@@ -442,9 +457,22 @@ const OrderList = () => {
                             </div>
                             <Badge
                               variant="outline"
-                              className={statusDisplay.className}
+                              className={cn(
+                                "w-fit",
+                                status === "overdue" &&
+                                  "bg-red-100/80 text-red-800 dark:bg-red-900/30 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-900/50",
+                                status === "pending" &&
+                                  "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50",
+                                status === "production" &&
+                                  "bg-purple-100/80 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200 hover:bg-purple-200 dark:hover:bg-purple-900/50",
+                                status === "done" &&
+                                  "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50",
+                              )}
                             >
-                              {statusDisplay.label}
+                              {status === "overdue" && "Atrasado"}
+                              {status === "pending" && "Pendente"}
+                              {status === "production" && "Produção"}
+                              {status === "done" && "Concluído"}
                             </Badge>
                           </div>
 
@@ -556,4 +584,4 @@ const OrderList = () => {
   );
 };
 
-export default OrderList;
+export default OrdersView; 

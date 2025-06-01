@@ -31,10 +31,10 @@ const queryClient = new QueryClient();
 const BLOCKED_ROUTES = ["/dashboard", "/production", "/reports", "/calendar", "/settings", "/profile", "/reminders"];
 
 const AppRoutes = () => {
-  const { isAuthenticated, loading, settings, roles, selectedRole, isOwner } = useWorkspaceContext();
+  const { isAuthenticated, isLoading, settings, roles, selectedRole, isOwner } = useWorkspaceContext();
   const location = useLocation();
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="animate-spin rounded-full h-10 w-10 border-4 border-primary border-t-transparent" />

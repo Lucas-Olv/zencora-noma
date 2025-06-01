@@ -10,6 +10,7 @@ import interactionPlugin from "@fullcalendar/interaction";
 import ptBrLocale from "@fullcalendar/core/locales/pt-br";
 import "@/styles/calendar.css";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
+import { cn } from "@/lib/utils";
 
 interface Order {
   id: string;
@@ -19,36 +20,45 @@ interface Order {
   status: "pending" | "production" | "done";
 }
 
-const getStatusColor = (status: string | null) => {
-  switch (status) {
-    case "pending":
-      return "#fef08a"; // yellow-200
-    case "production":
-      return "#e9d5ff"; // purple-200
-    case "done":
-      return "#bbf7d0"; // green-200
-    default:
-      return "#fef08a"; // yellow-200
-  }
+const getStatusClasses = (status: string | null, dueDate: string) => {
+  const isOverdue = new Date(dueDate) < new Date();
+  const effectiveStatus = (isOverdue && status === "pending") ? "overdue" : status;
+
+  return cn(
+    "p-1 overflow-hidden rounded-md w-full",
+    effectiveStatus === "overdue" &&
+      "bg-red-100/80 text-red-800 dark:bg-red-900/30 dark:text-red-200",
+    effectiveStatus === "pending" &&
+      "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200",
+    effectiveStatus === "production" &&
+      "bg-purple-100/80 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200",
+    effectiveStatus === "done" &&
+      "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200"
+  );
 };
 
-const getStatusTextColor = (status: string | null) => {
-  switch (status) {
+const getEventColor = (status: string | null, dueDate: string) => {
+  const isOverdue = new Date(dueDate) < new Date();
+  const effectiveStatus = (isOverdue && status === "pending") ? "overdue" : status;
+
+  switch (effectiveStatus) {
+    case "overdue":
+      return { backgroundColor: "rgb(254 226 226 / 0.8)", borderColor: "rgb(153 27 27)" }; // red-100/80 and red-800
     case "pending":
-      return "#854d0e"; // yellow-800
+      return { backgroundColor: "rgb(254 240 138 / 0.8)", borderColor: "rgb(133 77 14)" }; // yellow-100/80 and yellow-800
     case "production":
-      return "#6b21a8"; // purple-800
+      return { backgroundColor: "rgb(233 213 255 / 0.8)", borderColor: "rgb(107 33 168)" }; // purple-100/80 and purple-800
     case "done":
-      return "#166534"; // green-800
+      return { backgroundColor: "rgb(187 247 208 / 0.8)", borderColor: "rgb(22 101 52)" }; // green-100/80 and green-800
     default:
-      return "#854d0e"; // yellow-800
+      return { backgroundColor: "rgb(254 240 138 / 0.8)", borderColor: "rgb(133 77 14)" }; // yellow-100/80 and yellow-800
   }
 };
 
 const CalendarPage = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { tenant, loading: tenantLoading, error: tenantError } = useWorkspaceContext();
+  const { tenant, isLoading: tenantLoading, error: tenantError } = useWorkspaceContext();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -63,8 +73,9 @@ const CalendarPage = () => {
   const fetchOrders = async () => {
     try {
       if (tenantLoading) return;
-      if (tenantError || !tenant)
+      if (tenantError || !tenant) {
         throw new Error(tenantError || "Tenant não encontrado");
+      }
 
       const { data, error } = await supabaseService.orders.getTenantOrders(
         tenant.id,
@@ -88,21 +99,47 @@ const CalendarPage = () => {
     }
   };
 
-  const events = orders.map((order) => ({
-    id: order.id,
-    title: order.client_name,
-    start: order.due_date,
-    backgroundColor: getStatusColor(order.status),
-    textColor: getStatusTextColor(order.status),
-    extendedProps: {
-      price: order.price,
-      status: order.status,
-    },
-  }));
+  const events = orders.map((order) => {
+    const colors = getEventColor(order.status, order.due_date);
+    return {
+      id: order.id,
+      title: order.client_name,
+      start: order.due_date,
+      backgroundColor: colors.backgroundColor,
+      borderColor: colors.borderColor,
+      extendedProps: {
+        price: order.price,
+        status: order.status,
+        dueDate: order.due_date,
+      },
+    };
+  });
 
   const handleEventClick = (info: any) => {
     navigate(`/orders/${info.event.id}`);
   };
+
+  useEffect(() => {
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'class') {
+          // Força uma atualização do calendário quando o tema muda
+          const calendar = document.querySelector('.fc');
+          if (calendar) {
+            calendar.classList.add('theme-updated');
+            setTimeout(() => calendar.classList.remove('theme-updated'), 0);
+          }
+        }
+      });
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
+
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -148,17 +185,10 @@ const CalendarPage = () => {
               }}
               eventContent={(eventInfo) => {
                 const status = eventInfo.event.extendedProps.status;
-                const bgColor = getStatusColor(status);
-                const textColor = getStatusTextColor(status);
+                const dueDate = eventInfo.event.extendedProps.dueDate;
 
                 return (
-                  <div
-                    className="p-1 overflow-hidden rounded-md w-full"
-                    style={{
-                      backgroundColor: bgColor,
-                      color: textColor,
-                    }}
-                  >
+                  <div className={getStatusClasses(status, dueDate)}>
                     <div className="font-medium truncate">
                       {eventInfo.event.title}
                     </div>

@@ -36,13 +36,13 @@
     --popover: 0 0% 100%;
     --popover-foreground: 260 10% 15%;
 
-    --primary: 265 100% 66%; /* #8C52FF */
+    --primary: 271 88% 36%; /* #560BAD */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 228 100% 66%; /* #5170FF */
+    --secondary: 333 93% 56%; /* #F72585 */
     --secondary-foreground: 0 0% 100%;
 
-    --complementary: 324 100% 70%; /* #FF66C4 */
+    --complementary: 217 100% 61%; /* #3A86FF */
     --complementary-foreground: 0 0% 100%;
 
     --muted: 260 10% 95%;
@@ -86,13 +86,13 @@
     --popover: 260 25% 12%;
     --popover-foreground: 260 10% 95%;
 
-    --primary: 265 80% 70%; /* Slightly lighter for dark mode */
+    --primary: 271 88% 46%; /* Lighter version of #560BAD for dark mode */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 228 80% 70%; /* Slightly lighter for dark mode */
+    --secondary: 333 93% 66%; /* Lighter version of #F72585 for dark mode */
     --secondary-foreground: 0 0% 100%;
 
-    --complementary: 324 80% 75%; /* Slightly lighter for dark mode */
+    --complementary: 217 100% 71%; /* Lighter version of #3A86FF for dark mode */
     --complementary-foreground: 0 0% 100%;
 
     --muted: 260 25% 20%;
@@ -152,7 +152,7 @@
   }
 
   .zencora-gradient-text {
-    @apply bg-gradient-to-r from-primary to-complementary bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent;
   }
 }
 

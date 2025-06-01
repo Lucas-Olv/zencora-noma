@@ -146,7 +146,7 @@ function RecentReminders({ reminders: initialReminders, loading = false }: Recen
                   className="text-muted-foreground w-full px-0 py-1 resize-none overflow-hidden bg-transparent focus:outline-none focus:ring-0 readOnly"
                 />
               ) : (
-                <div className="flex flex-col items-center text-muted-foreground">
+                <div className="flex flex-col items-center text-muted-foreground h-full justify-center">
                   <FileText className="w-10 h-10 mb-2" />
                   <span>Nenhum conteúdo disponível</span>
                 </div>

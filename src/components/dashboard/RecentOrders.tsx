@@ -40,7 +40,10 @@ function RecentOrders({ orders, loading = false }: RecentOrdersProps) {
           emptyIcon={<FileText className="h-12 w-12 text-muted-foreground" />}
         >
           <div className="space-y-4">
-            {orders.map((order) => (
+            {orders.map((order) => {
+              const isOverdue = new Date(order.due_date) < new Date();
+              const status = (isOverdue && order.status === "pending") ? "overdue" : order.status;
+              return (
               <div
                 key={order.id}
                 className="grid grid-cols-1 gap-4 rounded-lg border p-4 hover:bg-accent/50 cursor-pointer transition-colors"
@@ -77,22 +80,26 @@ function RecentOrders({ orders, loading = false }: RecentOrdersProps) {
                       variant="outline"
                       className={cn(
                         "w-fit",
-                        order.status === "pending" &&
+                          status === "overdue" &&
+                            "bg-red-100/80 text-red-800 dark:bg-red-900/30 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-900/50",
+                          status === "pending" &&
                           "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50",
-                        order.status === "production" &&
+                          status === "production" &&
                           "bg-purple-100/80 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200 hover:bg-purple-200 dark:hover:bg-purple-900/50",
-                        order.status === "done" &&
+                          status === "done" &&
                           "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50",
                       )}
                     >
-                      {order.status === "pending" && "Pendente"}
-                      {order.status === "production" && "Produção"}
-                      {order.status === "done" && "Concluído"}
+                        {status === "overdue" && "Atrasado"}
+                        {status === "pending" && "Pendente"}
+                        {status === "production" && "Produção"}
+                        {status === "done" && "Concluído"}
                     </Badge>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </LoadingState>
       </CardContent>

@@ -69,7 +69,7 @@ export const Nav = () => {
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center">
             <img
-              src="noma-logo.svg"
+              src="zencora-noma-logo.png"
               alt="Zencora Noma Logo"
               className="h-8 mr-2"
             />

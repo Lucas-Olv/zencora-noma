@@ -6,9 +6,9 @@ export default function Login() {
   return (
     <div className="min-h-screen grid md:grid-cols-2">
       {/* Left side - Artistic panel */}
-      <div className="relative hidden md:flex flex-col bg-gradient-to-br from-primary to-complementary">
+      <div className="relative hidden md:flex flex-col bg-gradient-to-br from-primary to-secondary">
         <div className="absolute inset-0 bg-grid-white/10" />
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/80 to-complementary/80" />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/80 to-secondary/80" />
 
         <div className="relative z-10 p-8">
           <Link
@@ -16,7 +16,7 @@ export default function Login() {
             className="flex items-center text-2xl font-bold text-white"
           >
             <img
-              src="/noma-logo.svg"
+              src="/zencora-noma-logo.svg"
               alt="Zencora Noma Logo"
               className="h-8 mr-2"
             />
@@ -49,7 +49,7 @@ export default function Login() {
             className="flex items-center text-2xl font-bold zencora-gradient-text md:hidden"
           >
             <img
-              src="/noma-logo.svg"
+              src="/zencora-noma-logo.png"
               alt="Zencora Noma Logo"
               className="h-8 mr-2"
             />

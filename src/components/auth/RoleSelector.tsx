@@ -81,7 +81,7 @@ export default function RoleSelector() {
           className="flex items-center text-2xl font-bold zencora-gradient-text"
         >
           <img
-            src="/noma-logo.svg"
+            src="/zencora-noma-logo.png"
             alt="Zencora Noma Logo"
             className="h-8 mr-2"
           />

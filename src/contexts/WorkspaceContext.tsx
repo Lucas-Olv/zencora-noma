@@ -39,8 +39,6 @@ interface WorkspaceContextType {
   setSettings: (settings: Settings | null) => void;
   updateSettings: (newSettings: Settings) => void;
   isAuthenticated: boolean;
-  loading: boolean;
-  logout: () => Promise<void>;
   error: string | null;
   subscription: Subscription | null;
   isLoading: boolean;
@@ -68,7 +66,6 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   const [tenant, setTenant] = useState<Tenant | null>(null);
   const [settings, setSettings] = useState<Settings | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -110,6 +107,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   const initializeWorkspaceWithSession = async (session: Session) => {
     try {
       if (workspaceStartedSync.current) return;
+      setIsLoading(true);
       workspaceStartedSync.current = true;
       console.log('initializeWorkspaceWithSession called', { session, initialized: workspaceStartedSync.current });
 
@@ -121,7 +119,6 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
         return;
       }
       
-      setLoading(true);
       const user = session.user;
 
       // Apenas busca o usuário, sem tentar criar
@@ -182,13 +179,36 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
 
       // Fetch roles if enabled
       let roles: RoleType[] = [];
+      let selectedRole: RoleType | null = null;
+      let isOwner = false; // Por padrão, não é owner
+
       if (settingsData.enable_roles) {
         const { data: rolesData, error: rolesError } = await rolesService.getTenantRoles(tenantData.id);
-        if (rolesError) {
-          console.error('Error fetching roles:', rolesError);
+        if (!rolesError && rolesData) {
+          roles = rolesData;
+          
+          // Verifica role ativa no localStorage
+          const savedRoleId = localStorage.getItem(ROLE_STORAGE_KEY);
+          if (savedRoleId) {
+            const found = roles.find((r) => r.id === savedRoleId);
+            if (found) {
+              selectedRole = found;
+              isOwner = false;
         } else {
-          roles = rolesData || [];
+              // Se a role salva não existe mais, limpa
+              localStorage.removeItem(ROLE_STORAGE_KEY);
+            }
+          }
+
+          // Se não tem role salva e não tem roles disponíveis, então é owner
+          if (!savedRoleId && roles.length === 0) {
+            isOwner = true;
         }
+        }
+      } else {
+        // Se roles não estiver habilitado, é owner
+        isOwner = true;
+        localStorage.removeItem(ROLE_STORAGE_KEY);
       }
 
       // Atualiza todos os estados de uma vez
@@ -199,29 +219,17 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
       setSettings(settingsData);
       setSubscription(subscriptionData);
       setRoles(roles);
-
-      // Verifica role ativa no localStorage
-      const savedRoleId = localStorage.getItem(ROLE_STORAGE_KEY);
-      if (savedRoleId === null && settingsData.enable_roles && roles.length > 0) {
-        setSelectedRole(null);
-        setIsOwner(false);
-      } else {
-        const found = roles.find((r) => r.id === savedRoleId);
-        if (found) {
-          setSelectedRole(found);
-          setIsOwner(false);
-        } else {
-          localStorage.removeItem(ROLE_STORAGE_KEY);
-          setSelectedRole(null);
-          setIsOwner(true);
-        }
-      }
+      setSelectedRole(selectedRole);
+      setIsOwner(isOwner);
 
     } catch (error: any) {
       console.error('Error initializing workspace:', error);
       setError(error.message);
+      // Em caso de erro, limpa todos os estados relacionados a role
+      setSelectedRole(null);
+      setIsOwner(true);
+      localStorage.removeItem(ROLE_STORAGE_KEY);
     } finally {
-      setLoading(false);
       setIsLoading(false);
     }
   };
@@ -239,8 +247,8 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
       setIsAuthenticated(false);
       setSelectedRole(null);
       setIsOwner(true);
-      setLoading(false);
       setIsLoading(false);
+      workspaceStartedSync.current = false;
     }
   };
 
@@ -260,8 +268,8 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
         setIsAuthenticated(false);
         setSelectedRole(null);
         setIsOwner(true);
-        setLoading(false);
         setIsLoading(false);
+        workspaceStartedSync.current = false;
       }
     });
   
@@ -272,12 +280,32 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
 
   // Effect to handle role selection when settings change
   useEffect(() => {
-    if (settings?.enable_roles) {
+    if (!settings || !settings.enable_roles) {
+      setSelectedRole(null);
+      setIsOwner(true);
+      localStorage.removeItem(ROLE_STORAGE_KEY);
+      return;
+    }
+
       const savedRoleId = localStorage.getItem(ROLE_STORAGE_KEY);
-      if (savedRoleId === null) {
+    
+    // Se tem roles disponíveis e não tem role salva, não é owner
+    if (roles.length > 0 && !savedRoleId) {
+      setSelectedRole(null);
+      setIsOwner(false);
+      return;
+    }
+
+    // Se não tem roles disponíveis, é owner
+    if (roles.length === 0) {
         setSelectedRole(null);
         setIsOwner(true);
-      } else {
+      localStorage.removeItem(ROLE_STORAGE_KEY);
+      return;
+    }
+
+    // Se tem role salva, verifica se ela existe
+    if (savedRoleId) {
         const found = roles.find((r) => r.id === savedRoleId);
         if (found) {
           setSelectedRole(found);
@@ -285,20 +313,14 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
         } else {
           localStorage.removeItem(ROLE_STORAGE_KEY);
           setSelectedRole(null);
-          setIsOwner(true);
-        }
+        setIsOwner(false); // Se tinha role salva mas não existe mais, ainda não é owner
       }
-    } else {
-      // Se roles não estiver habilitado, sempre é owner
-      setSelectedRole(null);
-      setIsOwner(true);
-      localStorage.removeItem(ROLE_STORAGE_KEY);
     }
-  }, [settings, roles]);
+  }, [settings?.enable_roles, roles]);
 
   const fetchSettings = async () => {
     if (!tenant?.id) {
-      setLoading(false);
+      setIsLoading(false);
       return;
     }
 
@@ -309,7 +331,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
         setRoles([]);
         setSelectedRole(null);
         setIsOwner(true);
-        setLoading(false);
+        setIsLoading(false);
         return;
       }
 
@@ -353,7 +375,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
       setSelectedRole(null);
       setIsOwner(true);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -374,35 +396,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   };
 
   const reloadSettings = () => {
-    setLoading(true);
     fetchSettings();
-  };
-
-  const logout = async () => {
-    try {
-      setLoading(true);
-      const { error } = await supabaseService.auth.signOut();
-      if (error) throw error;
-  
-      localStorage.removeItem(ROLE_STORAGE_KEY); // limpa role salva
-  
-      setUser(null);
-      setSession(null);
-      setTenant(null);
-      setSettings(null);
-      setSubscription(null);
-      setIsAuthenticated(false);
-      setRoles([]);
-      setSelectedRole(null);
-      setIsOwner(true);
-      setError(null);
-    } catch (error: any) {
-      console.error('Erro ao fazer logout:', error);
-      setError('Erro ao fazer logout. Por favor, tente novamente.');
-    } finally {
-      setLoading(false);
-      setIsLoading(false);
-    }
   };
   
   const updateSettings = async (newSettings: Settings) => {
@@ -460,8 +454,6 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
         settings,
         setSettings,
         updateSettings,
-        loading,
-        logout,
         error,
         subscription,
         isLoading,

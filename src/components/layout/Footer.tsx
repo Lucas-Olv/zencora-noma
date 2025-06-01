@@ -38,11 +38,11 @@ export function Footer() {
             <div className="flex flex-col items-start">
               <div className="flex items-center justify-center gap-2 mb-4">
                 <img
-                  src="noma-logo.svg"
+                  src="zencora-noma-logo.png"
                   alt="Zencora Noma Logo"
                   className="w-10 h-10"
                 />
-                <p className="text-2xl w-full text-center md:text-left font-bold bg-gradient-to-r from-primary to-complementary bg-clip-text text-transparent">
+                <p className="text-2xl w-full text-center md:text-left font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                   Noma
                 </p>
               </div>

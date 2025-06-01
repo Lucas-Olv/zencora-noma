@@ -32,7 +32,7 @@ export const Footer = () => {
           <div className="space-y-4">
             <Link to="/" className="flex items-center gap-2">
               <img
-                src="noma-logo.svg"
+                src="zencora-noma-logo.png"
                 alt="Zencora Noma Logo"
                 className="w-10 h-10"
               />

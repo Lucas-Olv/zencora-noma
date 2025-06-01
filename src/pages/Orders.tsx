@@ -1,12 +1,12 @@
 import { useEffect } from "react";
-import OrderList from "@/components/orders/OrderList";
+import OrdersView from "@/components/orders/OrdersView";
 
 const Orders = () => {
   useEffect(() => {
     document.title = "Encomendas | Zencora Noma";
   }, []);
 
-  return <OrderList />;
+  return <OrdersView />;
 };
 
 export default Orders;

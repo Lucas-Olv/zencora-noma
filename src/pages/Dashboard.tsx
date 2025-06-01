@@ -29,7 +29,7 @@ const formatCurrency = (value: number) => {
 };
 
 const Dashboard = () => {
-  const { tenant, loading: tenantLoading, error: tenantError } = useWorkspaceContext();
+  const { tenant, isLoading: tenantLoading, error: tenantError } = useWorkspaceContext();
   const [orders, setOrders] = useState<Order[]>([]);
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [stats, setStats] = useState<DashboardStats>({

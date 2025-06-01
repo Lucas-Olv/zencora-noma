@@ -58,6 +58,7 @@ import {
 } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
 import { SubscriptionGate } from "../subscription/SubscriptionGate";
+import OrdersList from "../orders/OrdersList";
 
 type Order = Tables<"orders">;
 
@@ -106,7 +107,7 @@ const MonthlyReports = () => {
     categoryData: [],
   });
   const isMobile = useIsMobile();
-  const { tenant, loading: tenantLoading, error: tenantError } = useWorkspaceContext();
+  const { tenant, isLoading: tenantLoading, error: tenantError } = useWorkspaceContext();
   const navigate = useNavigate();
 
   const formatCurrency = (value: number) => {
@@ -327,17 +328,24 @@ const MonthlyReports = () => {
     autoTable(doc, {
       startY: (doc as any).lastAutoTable.finalY + 20,
       head: [["Cliente", "Descrição", "Valor", "Data", "Status"]],
-      body: orders.map((order) => [
-        order.client_name,
-        order.description || "Sem descrição",
-        formatCurrency(order.price),
-        formatDate(order.due_date),
-        order.status === "pending"
-          ? "Pendente"
-          : order.status === "production"
-            ? "Produção"
-            : "Concluído",
-      ]),
+      body: orders.map((order) => {
+        const isOverdue = new Date(order.due_date) < new Date();
+        const status = isOverdue && (order.status === "pending" || order.status === "production")
+          ? "Atrasado"
+          : order.status === "pending"
+            ? "Pendente"
+            : order.status === "production"
+              ? "Produção"
+              : "Concluído";
+
+        return [
+          order.client_name,
+          order.description || "Sem descrição",
+          formatCurrency(order.price),
+          formatDate(order.due_date),
+          status
+        ];
+      }),
       theme: "grid",
       headStyles: {
         fillColor: primaryColor,
@@ -425,17 +433,22 @@ const MonthlyReports = () => {
                 {Array.from({ length: 12 }, (_, i) => {
                   const date = new Date();
                   date.setMonth(date.getMonth() - i);
+                  const monthYear = format(date, "yyyy-MM");
                   return (
                     <SelectItem
-                      key={format(date, "yyyy-MM")}
-                      value={format(date, "yyyy-MM")}
+                      key={monthYear}
+                      value={monthYear}
                     >
                       {format(date, "MMMM yyyy", { locale: ptBR })}
                     </SelectItem>
                   );
+                }).filter((_, i, arr) => {
+                  // Remove duplicatas verificando se é a primeira ocorrência do mês/ano
+                  const monthYear = arr[i].props.value;
+                  return arr.findIndex(item => item.props.value === monthYear) === i;
                 })}
-                </SelectContent>
-              </Select>
+              </SelectContent>
+            </Select>
             </SubscriptionGate>
             <div className="flex gap-2">
               <SubscriptionGate>
@@ -623,91 +636,12 @@ const MonthlyReports = () => {
           </Card>
         </div>
       </div>
-      <div className="lg:col-span-1">
-        <Card className="overflow-hidden">
-          <CardHeader className="p-3 sm:p-4">
-            <CardTitle>Encomendas do Período</CardTitle>
-            <CardDescription>
-              Lista de todas as encomendas no período selecionado
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="p-3 sm:p-4">
-            {loading ? (
-              <div className="flex items-center justify-center h-[15dvh]">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            ) : orders.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-[15dvh] text-center">
-                <FileText className="h-12 w-12 text-muted-foreground mb-2" />
-                <p className="text-muted-foreground">
-                  Nenhuma encomenda encontrada
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {orders.map((order) => (
-                  <div
-                    key={order.id}
-                    className="grid grid-cols-1 gap-4 rounded-lg border p-4 hover:bg-accent/50 cursor-pointer transition-colors"
-                    onClick={() => navigate(`/orders/${order.id}`)}
-                  >
-                    <div className="grid grid-cols-[minmax(0,1fr),auto] gap-4">
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="font-mono text-sm text-muted-foreground shrink-0">
-                            {getOrderCode(order.id)}
-                          </p>
-                          <h3 className="font-semibold truncate">
-                            {order.client_name}
-                          </h3>
-                        </div>
-                        <div className="mt-1">
-                          <p className="text-sm text-muted-foreground line-clamp-2">
-                            {order.description || "Sem descrição"}
-                          </p>
-                        </div>
-                        <div className="mt-2">
-                          <span className="text-sm text-muted-foreground">
-                            Entrega:{" "}
-                            <span className="font-semibold">
-                              {order.due_date
-                                ? formatDate(order.due_date)
-                                : "Sem data"}
-                            </span>
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex flex-col items-end justify-between gap-2">
-                        <Badge
-                          variant="outline"
-                          className={cn(
-                            "w-fit",
-                            order.status === "pending" &&
-                              "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50",
-                            order.status === "production" &&
-                              "bg-purple-100/80 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200 hover:bg-purple-200 dark:hover:bg-purple-900/50",
-                            order.status === "done" &&
-                              "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50",
-                          )}
-                        >
-                          {order.status === "pending" && "Pendente"}
-                          {order.status === "production" && "Produção"}
-                          {order.status === "done" && "Concluído"}
-                        </Badge>
-                        <div className="text-right">
-                          <p className="font-medium">
-                            {formatCurrency(order.price)}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+      <OrdersList 
+        orders={orders}
+        loading={loading}
+        title="Encomendas do Período"
+        description="Lista de todas as encomendas no período selecionado"
+      />
     </div>
   );
 };

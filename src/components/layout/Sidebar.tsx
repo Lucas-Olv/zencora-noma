@@ -133,7 +133,7 @@ const NavButton = ({ item, isActive, onClick }: NavButtonProps) => {
         "transition-all duration-200 ease-in-out",
         "hover:bg-muted/80 active:scale-[0.98]",
         isActive
-          ? "bg-secondary text-secondary-foreground hover:bg-secondary/90"
+          ? "bg-primary text-primary-foreground hover:bg-primary/90"
           : "opacity-80 hover:opacity-100",
       )}
     >
@@ -143,8 +143,8 @@ const NavButton = ({ item, isActive, onClick }: NavButtonProps) => {
     </button>
   );
 
-  // Se for settings e não tiver acesso ao plano, mostra o botão bloqueado
-  if (isSettingsItem && !hasPlanAccess) {
+  // Se for settings e não tiver acesso ao plano (e não estiver no trial)
+  if (isSettingsItem && !hasPlanAccess && !isTrial) {
     return (
       <TooltipProvider>
         <Tooltip>
@@ -172,6 +172,7 @@ const NavButton = ({ item, isActive, onClick }: NavButtonProps) => {
     );
   }
 
+  // Se a rota estiver bloqueada e não houver assinatura ativa (e não estiver no trial)
   if (isRouteBlocked && !isRouteAllowed && isBlocked && !isTrial && !subscriptionActive) {
     return (
       <TooltipProvider>
@@ -351,7 +352,7 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
         <div className="px-2 py-2">
           <button onClick={handleLogoClick} className="flex items-center">
             <img
-              src="/noma-logo.svg"
+              src="/zencora-noma-logo.png"
               alt="Zencora Noma Logo"
               className="h-8 mr-2"
             />

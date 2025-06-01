@@ -30,7 +30,7 @@ import { SubscriptionGate } from "../subscription/SubscriptionGate";
 
 export function ProductionView() {
   const { toast } = useToast();
-  const { tenant, loading: tenantLoading, error: tenantError } = useWorkspaceContext();
+  const { tenant, isLoading: tenantLoading, error: tenantError } = useWorkspaceContext();
   const [orders, setOrders] = useState<OrderType[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -108,6 +108,9 @@ export function ProductionView() {
   const isMobile = useMediaQuery("(max-width: 640px)");
 
   const OrderCard = ({ order }: { order: OrderType }) => {
+    const isOverdue = new Date(order.due_date) < new Date();
+    const status = (isOverdue && order.status === "pending") ? "overdue" : order.status;
+
     if (isMobile) {
       return (
         <div
@@ -141,13 +144,20 @@ export function ProductionView() {
                 variant="outline"
                 className={cn(
                   "w-fit",
-                  order.status === "pending" &&
+                  status === "overdue" &&
+                    "bg-red-100/80 text-red-800 dark:bg-red-900/30 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-900/50",
+                  status === "pending" &&
                     "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50",
-                  order.status === "production" &&
+                  status === "production" &&
                     "bg-purple-100/80 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200 hover:bg-purple-200 dark:hover:bg-purple-900/50",
+                  status === "done" &&
+                    "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50",
                 )}
               >
-                {order.status === "production" ? "Produção" : "Pendente"}
+                {status === "overdue" && "Atrasado"}
+                {status === "pending" && "Pendente"}
+                {status === "production" && "Produção"}
+                {status === "done" && "Concluído"}
               </Badge>
             </div>
           </div>
@@ -156,17 +166,22 @@ export function ProductionView() {
             <Button
               variant={order.status === "pending" ? "outline" : "default"}
               size="sm"
-              onClick={() => handleChangeOrderStatus(order.id, order.status)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleChangeOrderStatus(order.id, order.status);
+                }}
               className="flex-1"
+                disabled={order.status === "done"}
             >
-              {order.status === "pending" ? "Iniciar Produção" : "Finalizar"}
+                {order.status === "pending" ? "Iniciar Produção" : order.status === "done" ? "Concluído" : "Finalizar"}
               </Button>
             </SubscriptionGate>
             <SubscriptionGate blockMode="disable">
               <Button
                 variant="ghost"
               size="icon"
-              onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
                 setSelectedOrder(order);
                 setTimeout(handlePrint, 100);
               }}
@@ -212,30 +227,42 @@ export function ProductionView() {
               variant="outline"
               className={cn(
                 "w-fit",
-                order.status === "pending" &&
+                status === "overdue" &&
+                  "bg-red-100/80 text-red-800 dark:bg-red-900/30 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-900/50",
+                status === "pending" &&
                   "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50",
-                order.status === "production" &&
+                status === "production" &&
                   "bg-purple-100/80 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200 hover:bg-purple-200 dark:hover:bg-purple-900/50",
+                status === "done" &&
+                  "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50",
               )}
             >
-              {order.status === "production" ? "Produção" : "Pendente"}
+              {status === "overdue" && "Atrasado"}
+              {status === "pending" && "Pendente"}
+              {status === "production" && "Produção"}
+              {status === "done" && "Concluído"}
             </Badge>
             <div className="flex items-center gap-2">
               <SubscriptionGate blockMode="disable">
                 <Button
                   variant={order.status === "pending" ? "outline" : "default"}
                   size="sm"
-                  onClick={() => handleChangeOrderStatus(order.id, order.status)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleChangeOrderStatus(order.id, order.status);
+                  }}
                   className="flex-1 sm:flex-none"
+                  disabled={order.status === "done"}
               >
-                {order.status === "pending" ? "Iniciar Produção" : "Finalizar"}
+                  {order.status === "pending" ? "Iniciar Produção" : order.status === "done" ? "Concluído" : "Finalizar"}
               </Button>
               </SubscriptionGate>
               <SubscriptionGate blockMode="disable">
                 <Button
                   variant="ghost"
                   size="icon"
-                onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                   setSelectedOrder(order);
                   setTimeout(handlePrint, 100);
                 }}
@@ -252,7 +279,9 @@ export function ProductionView() {
   };
 
   const OrderLabel = ({ order }: { order: OrderType }) => {
-    const statusDisplay = getStatusDisplay(order.status);
+    const isOverdue = new Date(order.due_date) < new Date();
+    const status = (isOverdue && order.status === "pending") ? "overdue" : order.status;
+    const statusDisplay = getStatusDisplay(status, order.due_date);
 
     return (
       <div className="w-[100mm] h-[150mm] bg-white text-black p-6">
@@ -386,9 +415,12 @@ export function ProductionView() {
                 }
               >
                 <div className="space-y-4">
-                  {pendingOrders.map((order) => (
+                  {pendingOrders.map((order) => {
+                    const statusDisplay = getStatusDisplay(order.status, order.due_date);
+                    return (
                     <OrderCard key={order.id} order={order} />
-                  ))}
+                    );
+                  })}
                 </div>
               </LoadingState>
             </TabsContent>

@@ -423,7 +423,7 @@ export default function SettingsView() {
               </div>
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex justify-end gap-2 md:gap-0">
             <Button variant="outline" onClick={() => setIsCreateRoleDialogOpen(false)}>
               Cancelar
             </Button>
@@ -597,7 +597,7 @@ export default function SettingsView() {
               </div>
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex justify-end gap-2 md:gap-0">
             <Button variant="outline" onClick={() => setIsEditRoleDialogOpen(false)}>
               Cancelar
             </Button>
@@ -608,7 +608,7 @@ export default function SettingsView() {
 
       {/* Dialog de Excluir Papel */}
       <AlertDialog open={isDeleteRoleDialogOpen} onOpenChange={setIsDeleteRoleDialogOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="w-[calc(100%-2rem)] max-w-[400px] mx-auto rounded-xl">
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir Papel</AlertDialogTitle>
             <AlertDialogDescription>
@@ -616,11 +616,11 @@ export default function SettingsView() {
               pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
+          <AlertDialogFooter className="flex justify-end gap-2 md:gap-0">
             <AlertDialogCancel onClick={() => setIsDeleteRoleDialogOpen(false)}>
               Cancelar
             </AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteRole}>Excluir</AlertDialogAction>
+            <AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={handleDeleteRole}>Excluir</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

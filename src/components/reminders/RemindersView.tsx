@@ -214,13 +214,13 @@ const RemindersView = () => {
               <TabsTrigger value="pending">
                 Pendentes
                 {pendingReminders.length > 0 && (
-                  <Badge variant="secondary" className="ml-2">{pendingReminders.length}</Badge>
+                  <Badge variant="default" className="ml-2">{pendingReminders.length}</Badge>
                 )}
               </TabsTrigger>
               <TabsTrigger value="completed">
                 Concluídos
                 {completedReminders.length > 0 && (
-                  <Badge variant="secondary" className="ml-2">{completedReminders.length}</Badge>
+                  <Badge variant="default" className="ml-2">{completedReminders.length}</Badge>
                 )}
               </TabsTrigger>
             </TabsList>
@@ -313,7 +313,7 @@ const RemindersView = () => {
                   className="min-h-[200px]"
                 />
               </div>
-              <DialogFooter>
+              <DialogFooter className="flex justify-end gap-2 md:gap-0">
                 <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Cancelar
                 </Button>
@@ -323,9 +323,9 @@ const RemindersView = () => {
           </Dialog>
 
           <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-            <AlertDialogContent>
+            <AlertDialogContent className="w-[calc(100%-2rem)] max-w-[400px] mx-auto rounded-xl">
               <AlertDialogHeader>
-                <AlertDialogTitle>Excluir lembrete</AlertDialogTitle>
+                <AlertDialogTitle>Excluir lembrete?</AlertDialogTitle>
                 <AlertDialogDescription>
                   Tem certeza que deseja excluir este lembrete? Esta ação não pode ser desfeita.
                 </AlertDialogDescription>
@@ -334,7 +334,7 @@ const RemindersView = () => {
                 <AlertDialogCancel onClick={() => setIsDeleteDialogOpen(false)}>
                   Cancelar
                 </AlertDialogCancel>
-                <AlertDialogAction onClick={handleDelete}>
+                <AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={handleDelete}>
                   Excluir
                 </AlertDialogAction>
               </AlertDialogFooter>

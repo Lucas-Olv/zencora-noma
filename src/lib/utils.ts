@@ -68,7 +68,19 @@ export function usePrint(
   });
 }
 
-export function getStatusDisplay(status: string | null) {
+export function getStatusDisplay(status: string | null, dueDate?: string | null) {
+  // Verifica se está atrasado (apenas para status pendente ou produção)
+  const isOverdue = dueDate && ["pending", "production"].includes(status || "") && new Date(dueDate) < new Date();
+
+  if (isOverdue) {
+    return {
+      label: "Atrasado",
+      variant: "destructive" as const,
+      className:
+        "bg-red-100/80 text-red-800 dark:bg-red-900/30 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-900/50",
+    };
+  }
+
   switch (status) {
     case "pending":
       return {

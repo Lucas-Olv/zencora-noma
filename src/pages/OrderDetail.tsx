@@ -45,15 +45,31 @@ interface OrderWithCollaborator extends OrderType {
   status: "done" | "pending" | "production";
 }
 
-const getStatusDisplay = (status: "done" | "pending" | "production" | null) => {
+const getStatusDisplay = (status: "done" | "pending" | "production" | null, dueDate?: string | null) => {
   switch (status) {
     case "pending":
+      // Verifica se está atrasado
+      if (dueDate && new Date(dueDate) < new Date()) {
+        return {
+          label: "Atrasado",
+          className:
+            "bg-red-100/80 text-red-800 dark:bg-red-900/30 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-900/50",
+        };
+      }
       return {
         label: "Pendente",
         className:
           "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50",
       };
     case "production":
+      // Verifica se está atrasado
+      if (dueDate && new Date(dueDate) < new Date()) {
+        return {
+          label: "Atrasado",
+          className:
+            "bg-red-100/80 text-red-800 dark:bg-red-900/30 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-900/50",
+        };
+      }
       return {
         label: "Produção",
         className:
@@ -243,7 +259,7 @@ const OrderDetail = () => {
     );
   }
 
-  const statusDisplay = getStatusDisplay(order.status);
+  const statusDisplay = getStatusDisplay(order.status, order.due_date);
 
   return (
     <div className="space-y-6">
@@ -379,7 +395,7 @@ const OrderDetail = () => {
             </AlertDialogTrigger>
             <AlertDialogContent className="w-[calc(100%-2rem)] max-w-[400px] mx-auto rounded-xl">
               <AlertDialogHeader>
-                <AlertDialogTitle>Confirma exclusão?</AlertDialogTitle>
+                <AlertDialogTitle>Excluir encomenda?</AlertDialogTitle>
                 <AlertDialogDescription className="line-clamp-3 max-w-[80dvw] md:max-w-[18dvw]">
                   Esta ação não poderá ser desfeita. Isso excluirá
                   permanentemente a encomenda do cliente {order?.client_name}.
@@ -387,7 +403,7 @@ const OrderDetail = () => {
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDelete}>
+                <AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={handleDelete}>
                   Excluir
                 </AlertDialogAction>
               </AlertDialogFooter>
