@@ -22,7 +22,7 @@ const Navbar = ({ toggleSidebar }: NavbarProps) => {
               className="mr-2"
               aria-label="Toggle menu"
             >
-              <Menu className="h-5 w-5" />
+              <Menu className="size-4" />
             </Button>
           )}
         </div>

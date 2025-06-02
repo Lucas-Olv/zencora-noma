@@ -11,6 +11,9 @@ import {
 export function Toaster() {
   const { toasts } = useToast();
 
+  // Verifica se há toasts ativos (com propriedade 'open' true)
+  const hasActiveToasts = toasts.some(toast => toast.open);
+
   return (
     <ToastProvider>
       {toasts.map(function ({ id, title, description, action, ...props }) {
@@ -27,7 +30,7 @@ export function Toaster() {
           </Toast>
         );
       })}
-      <ToastViewport />
+      <ToastViewport className={hasActiveToasts ? "" : "pointer-events-none"} />
     </ToastProvider>
   );
 }
