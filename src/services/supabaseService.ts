@@ -83,117 +83,6 @@ export const authService = {
       password,
     });
   },
-
-  // Verifica e cria todos os registros necessários para um novo usuário
-  initializeWorkspaceIfNeeded: async (user: User) => {
-    let productData: ProductType | null = null;
-    let tenantData: TenantType | null = null;
-  
-    // 1. Busca o produto "noma"
-    try {
-      const { data, error } = await productsService.getProductByCode('noma');
-      if (error) throw error;
-      if (!data) throw new Error('Produto não encontrado');
-      productData = data;
-    } catch (error: any) {
-      console.error('Erro ao buscar produto:', error);
-      throw error;
-    }
-  
-    // 2. Verifica/Cria usuário
-    try {
-      const { data: users, error } = await supabase.from('users').select('*').eq('id', user.id).maybeSingle();
-      if (error) throw error;
-  
-      if (!users || users.length === 0) {
-        const { error: createUserError } = await usersService.createUserRecord(
-          user.id,
-          user.user_metadata?.name ?? 'Usuário',
-          user.email ?? '',
-          'admin'
-        );
-        if (createUserError) throw createUserError;
-      } else if (users.length > 1) {
-        console.warn('Usuário com múltiplas entradas — atenção!');
-        return;
-      }
-    } catch (error: any) {
-      console.error('Erro ao verificar/criar usuário:', error);
-      throw error;
-    }
-  
-    // 3. Verifica/Cria tenant
-    try {
-      const { data, error } = await supabase.from('tenants').select('*').eq('owner_id', user.id).maybeSingle(); 
-      if (error) throw error;
-  
-      if (!data) {
-        const { error: createTenantError, data: createdTenant } = await tenantsService.createTenant(
-          user.id,
-          `${user.user_metadata?.name ?? 'Usuário'}'s Workspace`,
-          productData!.id
-        );
-        if (createTenantError) throw createTenantError;
-        tenantData = createdTenant;
-      } else {
-        tenantData = data;
-      }
-    } catch (error: any) {
-      console.error('Erro ao verificar/criar tenant:', error);
-      throw error;
-    }
-  
-    // Garante que tenantData foi preenchido corretamente
-    if (!tenantData?.id) {
-      throw new Error('Tenant ID não definido. Abortando criação dos settings.');
-    }
-  
-    // 4. Verifica/Cria subscription
-    try {
-      const { data, error } = await supabase.from('subscriptions').select('*').eq('user_id', user.id).maybeSingle();
-      if (error) throw error;
-  
-      if (!data) {
-        const trialUntil = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(); // 7 dias
-        const { error: createSubError } = await subscriptionsService.createSubscription(
-          user.id,
-          productData!.id,
-          'trial',
-          'trial',
-          trialUntil
-        );
-        if (createSubError) throw createSubError;
-      }
-    } catch (error: any) {
-      console.error('Erro ao verificar/criar assinatura:', error);
-      throw error;
-    }
-  
-    // 5. Verifica/Cria settings
-    try {
-      const { data, error } = await supabase.from('settings').select('*').eq('tenant_id', tenantData.id).maybeSingle();
-      if (error) throw error;
-  
-      if (!data) {
-        const { error: createSettingsError } = await settingsService.upsertSettings({
-          tenant_id: tenantData.id,
-          enable_roles: false,
-          lock_reports_by_password: false,
-          lock_settings_by_password: false,
-          require_password_to_switch_role: false
-        });
-        if (createSettingsError) throw createSettingsError;
-      }
-    } catch (error: any) {
-      console.error('Erro ao verificar/criar settings:', error);
-      throw error;
-    }
-  
-    return {
-      success: true,
-      error: null
-    };
-  },  
 };
 
 // Serviço de usuários
@@ -205,7 +94,7 @@ export const usersService = {
     email: string,
     role = "admin",
   ) => {
-    return await supabase.from("users").insert({ id, name, email, role });
+    return await supabase.from("users").insert({ id, name, email, role }).select().single();
   },
 
   // Obtém um usuário pelo ID

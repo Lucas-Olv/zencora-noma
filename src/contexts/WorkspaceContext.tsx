@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
-import { rolesService, settingsService, supabaseService } from "@/services/supabaseService";
+import { productsService, rolesService, settingsService, TenantType, supabaseService, usersService, ProductType, tenantsService, subscriptionsService, SettingsType } from "@/services/supabaseService";
 import { Session, User } from "@supabase/supabase-js";
 import { Tables } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,26 +8,8 @@ import dayjs from "dayjs";
 type Tenant = Tables<"tenants">;
 type Settings = Tables<"settings">;
 type RoleType = Tables<"roles">;
+type SubscriptionType = Tables<"subscriptions">;
 
-type SubscriptionStatus =
-  | 'trial'
-  | 'active'
-  | 'cancelled'
-  | 'expired'
-  | 'payment_failed'
-  | 'paused';
-
-type Subscription = {
-  status: SubscriptionStatus;
-  plan: string;
-  started_at: string;
-  expires_at: string;
-  cancel_at_period_end: boolean;
-  cancelled_at?: string | null;
-  payment_failed_at?: string | null;
-  is_trial: boolean;
-  grace_period_until?: string | null;
-};
 
 
 interface WorkspaceContextType {
@@ -40,7 +22,7 @@ interface WorkspaceContextType {
   updateSettings: (newSettings: Settings) => void;
   isAuthenticated: boolean;
   error: string | null;
-  subscription: Subscription | null;
+  subscription: SubscriptionType | null;
   isLoading: boolean;
   isTrial: boolean;
   isActive: boolean;
@@ -67,7 +49,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   const [settings, setSettings] = useState<Settings | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [subscription, setSubscription] = useState<SubscriptionType | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const now = dayjs();
   const expiresAt = subscription?.expires_at ? dayjs(subscription.expires_at) : null;
@@ -97,84 +79,154 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   const showWarning =
     (expiresAt && expiresAt.diff(now, 'day') <= 3 && !isBlocked) || isPaymentFailed;
 
-  // Load session and initial setup
-  useEffect(() => {
-    const workspaceHasInitialized = localStorage.getItem('workspace_initialized');
-    if (workspaceHasInitialized === 'true') return;
-    initializeWorkspace();
-  }, []);
+    useEffect(() => {
+      const {
+        data: authListener
+      } = supabase.auth.onAuthStateChange((event, session) => {
+        if (session?.user) {
+            initializeWorkspace();
+        } else {
+          cleanWorkspace();
+        }
+      });
+    
+      return () => {
+        authListener?.subscription.unsubscribe();
+      };
+    }, []);
+
+  const initializeWorkspace = async () => {
+    setIsLoading(true);
+    workspaceStartedSync.current = true;
+    const { session, error } = await supabaseService.auth.getCurrentSession();
+    if (session?.user) {
+      let workspaceInitialized = localStorage.getItem('workspace_initialized');
+      if (workspaceInitialized === 'true') {
+        setTenant(JSON.parse(localStorage.getItem('tenant_data') || '{}'));
+        setSettings(JSON.parse(localStorage.getItem('settings_data') || '{}'));
+        setSubscription(JSON.parse(localStorage.getItem('subscription_data') || '{}'));
+        setRoles(JSON.parse(localStorage.getItem('roles_data') || '[]'));
+        setSelectedRole(JSON.parse(localStorage.getItem('selected_role') || 'null'));
+        setIsOwner(JSON.parse(localStorage.getItem('is_owner') || 'false'));
+        setUser(JSON.parse(localStorage.getItem('user_data') || '{}'));
+        setSession(session);
+        setIsAuthenticated(true);
+        setIsLoading(false);
+        return;
+      };
+      await initializeWorkspaceWithSession(session);
+      setIsLoading(false);
+    } else {
+      cleanWorkspace();
+    }
+  };
 
   const initializeWorkspaceWithSession = async (session: Session) => {
     try {
-      if (workspaceStartedSync.current) return;
-      setIsLoading(true);
-      workspaceStartedSync.current = true;
-      console.log('initializeWorkspaceWithSession called', { session, initialized: workspaceStartedSync.current });
-
-      try {
-        await supabaseService.auth.initializeWorkspaceIfNeeded(session.user);
-        localStorage.setItem('workspace_initialized', 'true');
-      } catch (err) {
-        console.error('Erro ao inicializar workspace:', err);
-        return;
-      }
-      
       const user = session.user;
+      let productData: ProductType | null = null;
+      let foundTenantData: TenantType | null = null;
+      let foundSettingsData: SettingsType | null = null;
+      let foundSubscriptionData: SubscriptionType | null = null;
+            // 1. Busca o produto "noma"
+            try {
+              const { data, error } = await productsService.getProductByCode('noma');
+              if (error) throw error;
+              if (!data) throw new Error('Produto não encontrado');
+              productData = data;
+            } catch (error: any) {
+              console.error('Erro ao buscar produto:', error);
+              throw error;
+            }
 
-      // Apenas busca o usuário, sem tentar criar
-      const { data: userData, error: userError } = 
-        await supabaseService.users.getUserById(user.id);
+            try {
+              const { data: users, error } = await supabase.from('users').select('*').eq('id', user.id).maybeSingle();
+              if (error) throw error;
+          
+              if (!users || users.length === 0) {
+                const { error: createUserError } = await usersService.createUserRecord(
+                  user.id,
+                  user.user_metadata?.name ?? 'Usuário',
+                  user.email ?? '',
+                  'admin'
+                );
+                if (createUserError) throw createUserError;
+              } else if (users.length > 1) {
+                console.warn('Usuário com múltiplas entradas — atenção!');
+                return;
+              }
+            } catch (error: any) {
+              console.error('Erro ao verificar/criar usuário:', error);
+              throw error;
+            }
 
-      if (userError) {
-        setError(userError.message);
-        return;
+      // 3. Verifica/Cria tenant
+      try {
+        const { data, error } = await supabase.from('tenants').select('*').eq('owner_id', user.id).maybeSingle(); 
+        if (error) throw error;
+        foundTenantData = data;
+        if (!data) {
+          const { error: createTenantError, data: createdTenant } = await tenantsService.createTenant(
+            user.id,
+            `${user.user_metadata?.name ?? 'Usuário'}'s Workspace`,
+            productData!.id
+          );
+          if (createTenantError) throw createTenantError;
+          foundTenantData = createdTenant;
+        } else {
+          foundTenantData = data;
+        }
+      } catch (error: any) {
+        console.error('Erro ao verificar/criar tenant:', error);
+        throw error;
       }
-
-      if (!userData) {
-        setError("Usuário não encontrado");
-        return;
+    
+      // Garante que tenantData foi preenchido corretamente
+      if (!foundTenantData?.id) {
+        throw new Error('Tenant ID não definido. Abortando criação dos settings.');
       }
-
-      // Fetch subscription
-      const { data: subscriptionData, error: subscriptionError } = 
-        await supabaseService.subscriptions.getUserSubscription(user.id);
-
-      if (subscriptionError) {
-        setError(subscriptionError.message);
-        return;
+    
+      // 4. Verifica/Cria subscription
+      try {
+        const { data, error } = await supabase.from('subscriptions').select('*').eq('user_id', user.id).maybeSingle();
+        if (error) throw error;
+        foundSubscriptionData = data;
+        if (!data) {
+          const trialUntil = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(); // 7 dias
+          const { data: createdSubscription, error: createSubError } = await subscriptionsService.createSubscription(
+            user.id,
+            productData!.id,
+            'trial',
+            'trial',
+            trialUntil
+          );
+          if (createSubError) throw createSubError;
+          foundSubscriptionData = createdSubscription;
+        }
+      } catch (error: any) {
+        console.error('Erro ao verificar/criar assinatura:', error);
+        throw error;
       }
-
-      if (!subscriptionData) {
-        setError("Assinatura não encontrada");
-        return;
-      }
-
-      // Fetch tenant
-      const { data: tenantData, error: tenantError } = 
-        await supabaseService.tenants.getUserTenant(user.id);
-
-      if (tenantError) {
-        setError(tenantError.message);
-        return;
-      }
-
-      if (!tenantData) {
-        setError("Tenant não encontrado");
-        return;
-      }
-
-      // Fetch settings
-      const { data: settingsData, error: settingsError } = 
-        await settingsService.getTenantSettings(tenantData.id);
-
-      if (settingsError) {
-        setError(settingsError.message);
-        return;
-      }
-
-      if (!settingsData) {
-        setError("Configurações não encontradas");
-        return;
+    
+      // 5. Verifica/Cria settings
+      try {
+        const { data, error } = await supabase.from('settings').select('*').eq('tenant_id', foundTenantData.id).maybeSingle();
+        if (error) throw error;
+        foundSettingsData = data;
+        if (!data) {
+          const { data: createdSettings, error: createSettingsError } = await settingsService.upsertSettings({
+            tenant_id: foundTenantData.id,
+            enable_roles: false,
+            lock_reports_by_password: false,
+            lock_settings_by_password: false,
+            require_password_to_switch_role: false
+          });
+          if (createSettingsError) throw createSettingsError;
+          foundSettingsData = createdSettings;
+        }
+      } catch (error: any) {
+        console.error('Erro ao verificar/criar settings:', error);
+        throw error;
       }
 
       // Fetch roles if enabled
@@ -182,8 +234,8 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
       let selectedRole: RoleType | null = null;
       let isOwner = false; // Por padrão, não é owner
 
-      if (settingsData.enable_roles) {
-        const { data: rolesData, error: rolesError } = await rolesService.getTenantRoles(tenantData.id);
+      if (foundSettingsData.enable_roles) {
+        const { data: rolesData, error: rolesError } = await rolesService.getTenantRoles(foundTenantData.id);
         if (!rolesError && rolesData) {
           roles = rolesData;
           
@@ -194,7 +246,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
             if (found) {
               selectedRole = found;
               isOwner = false;
-        } else {
+            } else {
               // Se a role salva não existe mais, limpa
               localStorage.removeItem(ROLE_STORAGE_KEY);
             }
@@ -215,13 +267,23 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
       setSession(session);
       setUser(user);
       setIsAuthenticated(true);
-      setTenant(tenantData);
-      setSettings(settingsData);
-      setSubscription(subscriptionData);
+      setTenant(foundTenantData);
+      setSettings(foundSettingsData);
+      setSubscription(foundSubscriptionData);
       setRoles(roles);
       setSelectedRole(selectedRole);
       setIsOwner(isOwner);
 
+      localStorage.setItem('workspace_initialized', 'true');
+      localStorage.setItem('workspace_initialized_at', new Date().toISOString());
+      localStorage.setItem('workspace_initialized_by', user.id);
+      localStorage.setItem('tenant_data', JSON.stringify(foundTenantData));
+      localStorage.setItem('settings_data', JSON.stringify(foundSettingsData));
+      localStorage.setItem('subscription_data', JSON.stringify(foundSubscriptionData));
+      localStorage.setItem('roles_data', JSON.stringify(roles));
+      localStorage.setItem('selected_role', JSON.stringify(selectedRole));
+      localStorage.setItem('is_owner', JSON.stringify(isOwner));
+      localStorage.setItem('user_data', JSON.stringify(user));
     } catch (error: any) {
       console.error('Error initializing workspace:', error);
       setError(error.message);
@@ -229,54 +291,142 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
       setSelectedRole(null);
       setIsOwner(true);
       localStorage.removeItem(ROLE_STORAGE_KEY);
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  const initializeWorkspace = async () => {
-    const { session, error } = await supabaseService.auth.getCurrentSession();
-    if (session?.user) {
-      await initializeWorkspaceWithSession(session);
-    } else {
-      setSession(null);
-      setUser(null);
-      setTenant(null);
-      setSettings(null);
-      setSubscription(null);
-      setIsAuthenticated(false);
-      setSelectedRole(null);
-      setIsOwner(true);
-      setIsLoading(false);
-      workspaceStartedSync.current = false;
-    }
-  };
+  const cleanWorkspace = () => {
+    setSession(null);
+    setUser(null);
+    setTenant(null);
+    setSettings(null);
+    setSubscription(null);
+    setIsAuthenticated(false);
+    setSelectedRole(null);
+    setIsOwner(true);
+    setIsLoading(false);
+    workspaceStartedSync.current = false;
+    localStorage.removeItem('workspace_initialized');
+    localStorage.removeItem('workspace_initialized_at');
+    localStorage.removeItem('workspace_initialized_by');
+    localStorage.removeItem('tenant_data');
+    localStorage.removeItem('settings_data');
+    localStorage.removeItem('subscription_data');
+    localStorage.removeItem('roles_data');
+    localStorage.removeItem('selected_role');
+    localStorage.removeItem('is_owner');
+    localStorage.removeItem('user_data');
+  }
 
-  useEffect(() => {
-    const {
-      data: authListener
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session?.user) {
-        initializeWorkspaceWithSession(session);
-      } else {
-        localStorage.removeItem('workspace_initialized')
-        setSession(null);
-        setUser(null);
-        setTenant(null);
-        setSettings(null);
-        setSubscription(null);
-        setIsAuthenticated(false);
-        setSelectedRole(null);
-        setIsOwner(true);
-        setIsLoading(false);
-        workspaceStartedSync.current = false;
+    // Verifica e cria todos os registros necessários para um novo usuário
+    const initializeWorkspaceIfNeeded = async (user: User) => {
+      let productData: ProductType | null = null;
+      let tenantData: TenantType | null = null;
+    
+      // 1. Busca o produto "noma"
+      try {
+        const { data, error } = await productsService.getProductByCode('noma');
+        if (error) throw error;
+        if (!data) throw new Error('Produto não encontrado');
+        productData = data;
+      } catch (error: any) {
+        console.error('Erro ao buscar produto:', error);
+        throw error;
       }
-    });
-  
-    return () => {
-      authListener?.subscription.unsubscribe();
-    };
-  }, []);
+    
+      // 2. Verifica/Cria usuário
+      try {
+        const { data: users, error } = await supabase.from('users').select('*').eq('id', user.id).maybeSingle();
+        if (error) throw error;
+    
+        if (!users || users.length === 0) {
+          const { error: createUserError } = await usersService.createUserRecord(
+            user.id,
+            user.user_metadata?.name ?? 'Usuário',
+            user.email ?? '',
+            'admin'
+          );
+          if (createUserError) throw createUserError;
+        } else if (users.length > 1) {
+          console.warn('Usuário com múltiplas entradas — atenção!');
+          return;
+        }
+      } catch (error: any) {
+        console.error('Erro ao verificar/criar usuário:', error);
+        throw error;
+      }
+    
+      // 3. Verifica/Cria tenant
+      try {
+        const { data, error } = await supabase.from('tenants').select('*').eq('owner_id', user.id).maybeSingle(); 
+        if (error) throw error;
+    
+        if (!data) {
+          const { error: createTenantError, data: createdTenant } = await tenantsService.createTenant(
+            user.id,
+            `${user.user_metadata?.name ?? 'Usuário'}'s Workspace`,
+            productData!.id
+          );
+          if (createTenantError) throw createTenantError;
+          tenantData = createdTenant;
+        } else {
+          tenantData = data;
+        }
+      } catch (error: any) {
+        console.error('Erro ao verificar/criar tenant:', error);
+        throw error;
+      }
+    
+      // Garante que tenantData foi preenchido corretamente
+      if (!tenantData?.id) {
+        throw new Error('Tenant ID não definido. Abortando criação dos settings.');
+      }
+    
+      // 4. Verifica/Cria subscription
+      try {
+        const { data, error } = await supabase.from('subscriptions').select('*').eq('user_id', user.id).maybeSingle();
+        if (error) throw error;
+    
+        if (!data) {
+          const trialUntil = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(); // 7 dias
+          const { error: createSubError } = await subscriptionsService.createSubscription(
+            user.id,
+            productData!.id,
+            'trial',
+            'trial',
+            trialUntil
+          );
+          if (createSubError) throw createSubError;
+        }
+      } catch (error: any) {
+        console.error('Erro ao verificar/criar assinatura:', error);
+        throw error;
+      }
+    
+      // 5. Verifica/Cria settings
+      try {
+        const { data, error } = await supabase.from('settings').select('*').eq('tenant_id', tenantData.id).maybeSingle();
+        if (error) throw error;
+    
+        if (!data) {
+          const { error: createSettingsError } = await settingsService.upsertSettings({
+            tenant_id: tenantData.id,
+            enable_roles: false,
+            lock_reports_by_password: false,
+            lock_settings_by_password: false,
+            require_password_to_switch_role: false
+          });
+          if (createSettingsError) throw createSettingsError;
+        }
+      } catch (error: any) {
+        console.error('Erro ao verificar/criar settings:', error);
+        throw error;
+      }
+    
+      return {
+        success: true,
+        error: null
+      };
+    }
 
   // Effect to handle role selection when settings change
   useEffect(() => {
