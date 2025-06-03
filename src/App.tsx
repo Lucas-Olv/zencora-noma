@@ -42,7 +42,6 @@ const AppRoutes = () => {
     );
   }
 
-  console.log(isAuthenticated, settings?.enable_roles, roles.length, selectedRole, isOwner);
   // Se estiver autenticado, tem roles habilitados e roles disponíveis, mas não tem role selecionada E não é owner
   const shouldSelectRole = isAuthenticated && settings?.enable_roles && roles.length > 0 && !selectedRole && !isOwner;
 

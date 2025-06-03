@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Check, Clock, FileText, Loader2, Pencil, Printer } from "lucide-react";
+import { Check, Clock, FileText, Loader2, Pencil, Printer, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
@@ -27,19 +27,129 @@ import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { supabaseService, OrderType } from "@/services/supabaseService";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { SubscriptionGate } from "../subscription/SubscriptionGate";
+import { supabase } from "@/integrations/supabase/client";
+
+function ConnectionStatus({ isConnected, onReconnect }: { isConnected: boolean | undefined; onReconnect: () => void }) {
+  return (
+    <div className="flex items-center gap-2">
+      {isConnected === false && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onReconnect}
+          className="flex items-center gap-2"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Reconectar
+        </Button>
+      )}
+      <div className="relative">
+        <div
+          className={cn(
+            "w-3 h-3 rounded-full",
+            isConnected === undefined && "bg-gray-400",
+            isConnected === true && "bg-green-500 animate-pulse",
+            isConnected === false && "bg-red-500"
+          )}
+        />
+        <div
+          className={cn(
+            "absolute inset-0 rounded-full",
+            isConnected === undefined && "bg-gray-400",
+            isConnected === true && "bg-green-500",
+            isConnected === false && "bg-red-500",
+            isConnected && "opacity-50 animate-ping"
+          )}
+        />
+      </div>
+    </div>
+  );
+}
 
 export function ProductionView() {
   const { toast } = useToast();
   const { isLoading, tenant } = useWorkspaceContext();
   const [orders, setOrders] = useState<OrderType[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isConnected, setIsConnected] = useState<boolean | undefined>(undefined);
+  const channelRef = useRef<any>(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!isLoading) {
-      fetchOrders();
+  const setupRealtimeSubscription = async () => {
+    if (!tenant) return;
+
+    // Cleanup existing subscription if any
+    if (channelRef.current) {
+      channelRef.current.unsubscribe();
     }
+
+    // Set auth for Realtime
+    await supabase.realtime.setAuth();
+
+    // Create new subscription
+    const channel = supabase
+      .channel(`orders:${tenant.id}`, {
+        config: { private: true },
+      })
+      .on('broadcast', { event: 'INSERT' }, (payload) => {
+        if (payload.payload?.record) {
+          setOrders(currentOrders => [...currentOrders, payload.payload.record]);
+        }
+      })
+      .on('broadcast', { event: 'UPDATE' }, (payload) => {
+        if (payload.payload?.record) {
+          setOrders(currentOrders => {
+            const updatedOrders = [...currentOrders];
+            const orderIndex = updatedOrders.findIndex(o => o.id === payload.payload.record.id);
+            if (orderIndex >= 0) {
+              updatedOrders[orderIndex] = payload.payload.record;
+            }
+            return updatedOrders;
+          });
+        }
+      })
+      .on('broadcast', { event: 'DELETE' }, (payload) => {
+        if (payload.payload?.old_record?.id) {
+          setOrders(currentOrders => 
+            currentOrders.filter(order => order.id !== payload.payload.old_record.id)
+          );
+        }
+      })
+      .subscribe((status) => {
+        setIsConnected(status === 'SUBSCRIBED');
+        if (status === 'SUBSCRIBED') {
+          toast({
+            title: "Conexão estabelecida",
+            description: "Recebendo atualizações em tempo real",
+          });
+        } else if (status === 'CLOSED') {
+          toast({
+            title: "Conexão perdida",
+            description: "Não é possível receber atualizações em tempo real",
+            variant: "destructive",
+          });
+        }
+      });
+
+    channelRef.current = channel;
+  };
+
+  useEffect(() => {
+    if (!isLoading && tenant) {
+      fetchOrders();
+      setupRealtimeSubscription();
+    }
+
+    return () => {
+      if (channelRef.current) {
+        channelRef.current.unsubscribe();
+      }
+    };
   }, [isLoading, tenant]);
+
+  const handleReconnect = () => {
+    setupRealtimeSubscription();
+  };
 
   const fetchOrders = async () => {
     try {
@@ -377,12 +487,15 @@ export function ProductionView() {
           Painel de Produção
         </h2>
         <p className="text-muted-foreground">
-          Acompanhe as encomendas pendentes e concluídas.
+          Acompanhe suas encomendas pendentes e concluídas em tempo real
         </p>
       </div>
       <Card>
-        <CardHeader>
-          <CardTitle>Encomendas</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Encomendas</CardTitle>
+          </div>
+          <ConnectionStatus isConnected={isConnected} onReconnect={handleReconnect} />
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="pending" className="w-full">
