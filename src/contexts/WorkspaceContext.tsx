@@ -24,14 +24,12 @@ interface WorkspaceContextType {
   subscription: SubscriptionType | null;
   isLoading: boolean;
   isTrial: boolean;
-  setIsOwner: (isOwner: boolean) => void;
+  setWorkspaceRole: (workspaceRole: RoleType, isOwner: boolean) => void;
   isActive: boolean;
   isExpired: boolean;
   isPaymentFailed: boolean;
   isBlocked: boolean;
   showWarning: boolean;
-  tenantError: string | null;
-  loadingTenant: boolean;
   roles: RoleType[];
   selectedRole: RoleType | null;
   setSelectedRoleById: (id: string | null) => void;
@@ -60,8 +58,6 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   const isPaymentFailed = subscription?.status === 'payment_failed';
   const isExpired = expiresAt ? now.isAfter(expiresAt) : false;
   const inGracePeriod = graceUntil ? now.isBefore(graceUntil) : false;
-  const [tenantError, setTenantError] = useState<string | null>(null);
-  const [loadingTenant, setLoadingTenant] = useState(true);
   const [roles, setRoles] = useState<RoleType[]>([]);
   const [selectedRole, setSelectedRole] = useState<RoleType | null>(null);
   const [isOwner, setIsOwner] = useState(false);
@@ -480,14 +476,18 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
     }
   };
 
-  const updateIsOwner = async (newIsOwner: boolean) => {
+  const updateWorkspaceRole = async (workspaceRole: RoleType, isOwner: boolean) => {
     try {
-      setIsOwner(newIsOwner);
+      setIsOwner(isOwner);
+      setSelectedRole(workspaceRole);
+      setSelectedRoleById(workspaceRole?.id || null);
       const workspaceData = await db.getWorkspaceData();
       if (workspaceData) {
         await db.saveWorkspaceData({
           ...workspaceData,
-          isOwner: newIsOwner
+          activeRoleId: workspaceRole?.id || null,
+          selectedRole: workspaceRole,
+          isOwner: isOwner
         });
       }
     } catch (error) {
@@ -516,14 +516,12 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
         isPaymentFailed,
         isBlocked,
         showWarning,
-        tenantError,
-        loadingTenant,
         roles,
         selectedRole,
         setSelectedRoleById,
         reloadSettings,
         isOwner,
-        setIsOwner: updateIsOwner,
+        setWorkspaceRole: updateWorkspaceRole,
         updateRoles,
       }}
     >

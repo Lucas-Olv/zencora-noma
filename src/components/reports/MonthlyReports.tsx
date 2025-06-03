@@ -107,7 +107,7 @@ const MonthlyReports = () => {
     categoryData: [],
   });
   const isMobile = useIsMobile();
-  const { tenant, isLoading: tenantLoading, error: tenantError } = useWorkspaceContext();
+  const { tenant, isLoading } = useWorkspaceContext();
   const navigate = useNavigate();
 
   const formatCurrency = (value: number) => {
@@ -118,10 +118,10 @@ const MonthlyReports = () => {
   };
 
   useEffect(() => {
-    if (!tenantLoading && tenant) {
+    if (!isLoading) {
       fetchOrders();
     }
-  }, [dateRange, tenantLoading, tenant]);
+  }, [dateRange, isLoading, tenant]);
 
   const fetchOrders = async () => {
     try {

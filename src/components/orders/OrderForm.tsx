@@ -46,7 +46,7 @@ interface FormErrors {
 const OrderForm = ({ mode = "create", orderId, onSuccess }: OrderFormProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { tenant, loading: tenantLoading, error: tenantError } = useWorkspaceContext();
+  const { tenant, isLoading } = useWorkspaceContext();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(mode === "edit");
   const [errors, setErrors] = useState<FormErrors>({});
@@ -71,7 +71,7 @@ const OrderForm = ({ mode = "create", orderId, onSuccess }: OrderFormProps) => {
 
   useEffect(() => {
     const fetchOrderDetails = async () => {
-      if (mode !== "edit" || !orderId) return;
+      if (mode !== "edit" || !orderId || isLoading) return;
 
       try {
         const { data, error } =
@@ -117,7 +117,7 @@ const OrderForm = ({ mode = "create", orderId, onSuccess }: OrderFormProps) => {
     };
 
     fetchOrderDetails();
-  }, [mode, orderId, navigate, toast]);
+  }, [mode, orderId, navigate, toast, isLoading]);
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};

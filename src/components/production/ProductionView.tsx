@@ -30,23 +30,19 @@ import { SubscriptionGate } from "../subscription/SubscriptionGate";
 
 export function ProductionView() {
   const { toast } = useToast();
-  const { tenant, isLoading: tenantLoading, error: tenantError } = useWorkspaceContext();
+  const { isLoading, tenant } = useWorkspaceContext();
   const [orders, setOrders] = useState<OrderType[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!tenantLoading && tenant) {
+    if (!isLoading) {
       fetchOrders();
     }
-  }, [tenantLoading, tenant]);
+  }, [isLoading, tenant]);
 
   const fetchOrders = async () => {
     try {
-      if (tenantError || !tenant) {
-        throw new Error(tenantError || "Tenant não encontrado");
-      }
-
       const { data, error } = await supabaseService.orders.getTenantOrders(
         tenant.id,
       );

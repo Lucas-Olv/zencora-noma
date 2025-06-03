@@ -61,7 +61,7 @@ const OrdersView = () => {
       }
     `,
   });
-  const { tenant, isLoading: tenantLoading, error: tenantError } = useWorkspaceContext();
+  const { tenant, isLoading } = useWorkspaceContext();
 
   const OrderLabel = ({ order }: { order: OrderType }) => {
     const isOverdue = new Date(order.due_date) < new Date();
@@ -114,16 +114,16 @@ const OrdersView = () => {
   );
 
   useEffect(() => {
-    if (!tenantLoading && tenant) {
+    if (!isLoading && tenant) {
       fetchOrders();
     }
-  }, [tenantLoading, tenant]);
+  }, [isLoading, tenant]);
 
   const fetchOrders = async () => {
     try {
-      if (tenantLoading) return;
-      if (tenantError || !tenant) {
-        throw new Error(tenantError || "Tenant não encontrado");
+      if (isLoading) return;
+      if (!tenant) {
+        throw new Error("Tenant não encontrado");
       }
 
       const { data, error } = await supabaseService.orders.getTenantOrders(

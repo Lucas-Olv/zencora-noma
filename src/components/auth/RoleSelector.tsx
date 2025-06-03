@@ -10,7 +10,7 @@ import type { Tables } from "@/integrations/supabase/types";
 
 export default function RoleSelector() {
   const navigate = useNavigate();
-  const { settings, roles, setSelectedRoleById, setIsOwner } = useWorkspaceContext();
+  const { settings, roles, setSelectedRoleById, setWorkspaceRole } = useWorkspaceContext();
   const [loading, setLoading] = useState(false);
   const [selectedRole, setSelectedRole] = useState<Tables<"roles"> | null>(null);
 
@@ -29,16 +29,19 @@ export default function RoleSelector() {
 
   const handleRoleSelect = async (role: Tables<"roles"> | null) => {
     try {
+      console.log("role", role);
+
       setLoading(true);
       setSelectedRoleById(role?.id || null);
 
       // If owner (role null), go directly to dashboard
       if (!role) {
-        setIsOwner(true);
+        setWorkspaceRole(null, true);
         navigate("/dashboard");
         return;
       }
 
+      setWorkspaceRole(role, false);
       // Determine which page to redirect to based on role permissions
       let redirectTo = "/dashboard"; // Default
 

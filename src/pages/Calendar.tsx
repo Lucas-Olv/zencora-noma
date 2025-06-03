@@ -58,25 +58,20 @@ const getEventColor = (status: string | null, dueDate: string) => {
 const CalendarPage = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { tenant, isLoading: tenantLoading, error: tenantError } = useWorkspaceContext();
+  const { tenant, isLoading } = useWorkspaceContext();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     document.title = "Calendário | Zencora Noma";
-    if (!tenantLoading && tenant) {
+    if (!isLoading) {
       fetchOrders();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tenant, tenantLoading]);
+  }, [tenant, isLoading]);
 
   const fetchOrders = async () => {
     try {
-      if (tenantLoading) return;
-      if (tenantError || !tenant) {
-        throw new Error(tenantError || "Tenant não encontrado");
-      }
-
       const { data, error } = await supabaseService.orders.getTenantOrders(
         tenant.id,
       );
