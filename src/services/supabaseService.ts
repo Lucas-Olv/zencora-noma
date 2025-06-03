@@ -22,6 +22,7 @@ export type ReminderType = Database["public"]["Tables"]["reminders"]["Row"];
 export type SettingsType = Database["public"]["Tables"]["settings"]["Row"];
 export type RoleType = Database["public"]["Tables"]["roles"]["Row"];
 export type ProductType = Database["public"]["Tables"]["products"]["Row"];
+export type AppSessionType = Database["public"]["Tables"]["app_sessions"]["Row"];
 
 // Serviço de autenticação
 export const authService = {
@@ -267,6 +268,21 @@ export const settingsService = {
       .upsert(settings)
       .select()
       .single();
+  },
+};
+
+export const appSessionsService = {
+  // Obtém todas as sessões de um tenant
+  getTenantAppSessions: async (tenantId: string) => {
+    return await supabase.from("app_sessions").select("*").eq("tenant_id", tenantId).maybeSingle();
+  },
+
+  createAppSession: async (session: Omit<AppSessionType, "id" | "created_at" | "updated_at">) => {
+    return await supabase.from("app_sessions").insert(session).select().single();
+  },
+
+  updateAppSession: async (id: string, data: Partial<Omit<AppSessionType, "id" | "created_at" | "updated_at">>) => {
+    return await supabase.from("app_sessions").update(data).eq("id", id).select().single();
   },
 };
 

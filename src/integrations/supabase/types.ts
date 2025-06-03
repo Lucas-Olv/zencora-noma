@@ -47,7 +47,43 @@ export type Database = {
             referencedColumns: ["id"]
           }
         ]
-      }
+      },
+      app_sessions: {
+        Row: {
+          id: string
+          tenant_id: string
+          role: string
+          session_token: string
+          last_used_at: string
+          expires_at: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          tenant_id: string
+          role: string
+          session_token: string
+          last_used_at: string
+          expires_at: string
+        }
+        Update: {
+          tenant_id: string
+          role: string
+          session_token: string
+          last_used_at: string
+          updated_at: string
+          expires_at: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "app_sessions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          }
+        ]
+      },
       orders: {
         Row: {
           client_name: string
