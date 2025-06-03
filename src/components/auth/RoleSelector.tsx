@@ -1,38 +1,40 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
+import { db } from "@/lib/db";
+import { Crown } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
-import { useToast } from "@/components/ui/use-toast";
-import { RoleType } from "@/services/supabaseService";
-import { Crown } from "lucide-react";
 import ThemeToggle from "../layout/ThemeToggle";
+import type { Tables } from "@/integrations/supabase/types";
 
 export default function RoleSelector() {
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const { settings, roles, setSelectedRoleById } = useWorkspaceContext();
+  const { settings, roles, setSelectedRoleById, setIsOwner } = useWorkspaceContext();
   const [loading, setLoading] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<Tables<"roles"> | null>(null);
 
-  // Check if there's a saved role in localStorage
   useEffect(() => {
-    const savedRoleId = localStorage.getItem("active_role_id");
-    if (savedRoleId) {
-      const role = roles.find((r) => r.id === savedRoleId);
-      if (role) {
-        handleRoleSelect(role);
+    const loadActiveRole = async () => {
+      const workspaceData = await db.getWorkspaceData();
+      if (workspaceData?.activeRoleId) {
+        const role = roles.find((r) => r.id === workspaceData.activeRoleId);
+        if (role) {
+          handleRoleSelect(role);
+        }
       }
-    }
+    };
+    loadActiveRole();
   }, [roles]);
 
-  const handleRoleSelect = async (role: RoleType | null) => {
+  const handleRoleSelect = async (role: Tables<"roles"> | null) => {
     try {
       setLoading(true);
       setSelectedRoleById(role?.id || null);
 
-      // Se for owner (role null), vai direto para o dashboard
+      // If owner (role null), go directly to dashboard
       if (!role) {
-        localStorage.removeItem("active_role_id");
+        setIsOwner(true);
         navigate("/dashboard");
         return;
       }
@@ -51,11 +53,7 @@ export default function RoleSelector() {
 
       navigate(redirectTo);
     } catch (error) {
-      toast({
-        title: "Erro ao selecionar papel",
-        description: "Não foi possível selecionar o papel. Tente novamente.",
-        variant: "destructive",
-      });
+      console.error("Error selecting role:", error);
     } finally {
       setLoading(false);
     }
@@ -66,14 +64,13 @@ export default function RoleSelector() {
     if (!settings?.enable_roles || roles.length === 0) {
       navigate("/dashboard");
     }
-  }, [settings, roles]);
+  }, [settings, roles, navigate]);
 
   if (!settings?.enable_roles || roles.length === 0) {
     return null;
   }
 
   return (
-
     <div className="flex flex-col min-h-screen items-center p-4">
       <div className="flex justify-between items-center w-full">
         <Link
@@ -111,9 +108,7 @@ export default function RoleSelector() {
                 <Crown className="h-5 w-5" />
                 <div>
                   <p className="font-medium">Owner</p>
-                  <p className="text-sm">
-                    Acesso completo ao sistema
-                  </p>
+                  <p className="text-sm">Acesso completo ao sistema</p>
                 </div>
               </div>
             </Button>
@@ -160,6 +155,5 @@ export default function RoleSelector() {
         </Card>
       </div>
     </div>
-
   );
 } 

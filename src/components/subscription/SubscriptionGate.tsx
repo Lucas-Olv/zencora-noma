@@ -1,7 +1,6 @@
 import { Loader2 } from 'lucide-react';
 import { ReactNode, useEffect, cloneElement, createContext, useContext } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAppReady } from '@/hooks/use-app-ready';
 import { useWorkspaceContext } from '@/contexts/WorkspaceContext';
 
 interface SubscriptionRoutesContextType {
@@ -43,8 +42,7 @@ export const SubscriptionGate = ({
   blockMode = 'hide',
   onBlock,
 }: Props) => {
-  const { isLoading: subscriptionLoading, isTrial, isActive, isBlocked } = useWorkspaceContext();
-  const { ready: appReady, loading: appLoading } = useAppReady();
+  const { isLoading: subscriptionLoading, isLoading: workspaceLoading, isTrial, isActive, isBlocked } = useWorkspaceContext();
   const { isAuthenticated } = useWorkspaceContext();
   const navigate = useNavigate();
   const location = useLocation();
@@ -100,7 +98,7 @@ export const SubscriptionGate = ({
   );
 
   // Verifica se ainda está carregando
-  const isLoading = isAuthenticated && (subscriptionLoading || appLoading || !appReady);
+  const isLoading = isAuthenticated && (subscriptionLoading || workspaceLoading);
 
   useEffect(() => {
     if (!isLoading && shouldBlock && redirectTo && path !== redirectTo) {

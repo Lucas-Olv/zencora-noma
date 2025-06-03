@@ -18,9 +18,9 @@ export const SettingsGate = ({
   requireFeature,
   requirePanelAccess,
 }: Props) => {
-  const { settings, selectedRole, loading, isOwner } = useWorkspaceContext();
+  const { settings, selectedRole, isLoading, isOwner } = useWorkspaceContext();
 
-  if (loading) return fallback;
+  if (isLoading) return fallback;
 
   // Se for owner, permite acesso a tudo
   if (isOwner) return <>{children}</>;

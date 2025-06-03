@@ -339,10 +339,10 @@ const MonthlyReports = () => {
               : "Concluído";
 
         return [
-          order.client_name,
-          order.description || "Sem descrição",
-          formatCurrency(order.price),
-          formatDate(order.due_date),
+        order.client_name,
+        order.description || "Sem descrição",
+        formatCurrency(order.price),
+        formatDate(order.due_date),
           status
         ];
       }),
@@ -447,8 +447,8 @@ const MonthlyReports = () => {
                   const monthYear = arr[i].props.value;
                   return arr.findIndex(item => item.props.value === monthYear) === i;
                 })}
-              </SelectContent>
-            </Select>
+                </SelectContent>
+              </Select>
             </SubscriptionGate>
             <div className="flex gap-2">
               <SubscriptionGate>

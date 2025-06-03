@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import StatsCard from "@/components/dashboard/StatsCard";
 import PerformanceMetrics from "@/components/dashboard/PerformanceMetrics";
 import DeliveryCalendar from "@/components/dashboard/DeliveryCalendar";
@@ -7,7 +7,6 @@ import { Tables } from "@/integrations/supabase/types";
 import { parseDate } from "@/lib/utils";
 import { remindersService, supabaseService } from "@/services/supabaseService";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
-import { useAuthenticatedEffect } from "@/hooks/use-authenticated";
 import RecentReminders from "@/components/dashboard/RecentReminders";
 type Order = Tables<"orders">;
 type Reminder = Tables<"reminders">;
@@ -29,7 +28,7 @@ const formatCurrency = (value: number) => {
 };
 
 const Dashboard = () => {
-  const { tenant, isLoading: tenantLoading, error: tenantError } = useWorkspaceContext();
+  const { tenant, isLoading } = useWorkspaceContext();
   const [orders, setOrders] = useState<Order[]>([]);
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [stats, setStats] = useState<DashboardStats>({
@@ -43,18 +42,18 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
 
   
-  useAuthenticatedEffect(() => {
+  useEffect(() => {
     document.title = "Dashboard | Zencora Noma";
     fetchStats();
     fetchReminders();
-  }, [tenant, tenantLoading, tenantError]);
+  }, [tenant, isLoading]);
 
 
   const fetchStats = async () => {
     try {
-      if (tenantLoading) return;
-      if (tenantError || !tenant) {
-        throw new Error(tenantError || "Tenant não encontrado");
+      if (isLoading) return;
+      if (!tenant) {
+        throw new Error("Tenant não encontrado");
       }
 
       const today = new Date();
@@ -120,9 +119,9 @@ const Dashboard = () => {
 
   const fetchReminders = async () => {
 
-    if (tenantLoading) return;
-    if (tenantError || !tenant) {
-      throw new Error(tenantError || "Tenant não encontrado");
+    if (isLoading) return;
+    if (!tenant) {
+      throw new Error("Tenant não encontrado");
     }
 
     const { data, error } = await remindersService.getTenantReminders(tenant.id);

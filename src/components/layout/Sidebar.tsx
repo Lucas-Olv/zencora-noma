@@ -31,9 +31,10 @@ import {
 import { SubscriptionGate, useSubscriptionRoutes } from "@/components/subscription/SubscriptionGate";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { SettingsGate } from "@/components/settings/SettingsGate";
-import { useAppReady } from "@/hooks/use-app-ready";
 import { Loader2 } from "lucide-react";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
+import { db } from "@/lib/db";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -215,11 +216,10 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { settings, isOwner } = useWorkspaceContext();
-  const { ready: appReady, loading: appLoading } = useAppReady();
+  const { settings, isOwner, isLoading } = useWorkspaceContext();
 
   // Se o app não estiver pronto, mostra um loader
-  if (!appReady || appLoading) {
+  if (isLoading) {
     return (
       <aside
         className={cn(
@@ -286,23 +286,8 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
   };
 
   const handleLogout = async () => {
-    try {
-      const { error } = await supabaseService.auth.signOut();
-      if (error) throw error;
-
-      toast({
-        title: "Logout realizado",
-        description: "Você foi desconectado com sucesso.",
-      });
-
-      navigate("/");
-    } catch (error: any) {
-      toast({
-        title: "Erro ao fazer logout",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+    await db.clearWorkspaceData();
+    await supabase.auth.signOut();
   };
 
   const handleNavigation = (href: string) => {

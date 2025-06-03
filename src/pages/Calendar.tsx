@@ -102,16 +102,16 @@ const CalendarPage = () => {
   const events = orders.map((order) => {
     const colors = getEventColor(order.status, order.due_date);
     return {
-      id: order.id,
-      title: order.client_name,
-      start: order.due_date,
+    id: order.id,
+    title: order.client_name,
+    start: order.due_date,
       backgroundColor: colors.backgroundColor,
       borderColor: colors.borderColor,
-      extendedProps: {
-        price: order.price,
-        status: order.status,
+    extendedProps: {
+      price: order.price,
+      status: order.status,
         dueDate: order.due_date,
-      },
+    },
     };
   });
 
