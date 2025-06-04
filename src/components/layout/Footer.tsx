@@ -1,8 +1,10 @@
 import { useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 
 export function Footer() {
   const sectionRef = useRef<HTMLElement>(null);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -29,6 +31,31 @@ export function Footer() {
       }
     };
   }, []);
+
+  const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, path: string) => {
+    if (path.startsWith('/#')) {
+      if (location.pathname === '/') {
+        e.preventDefault();
+        const element = document.getElementById(path.substring(2));
+        if (element) {
+          const headerOffset = 80; // Altura do header fixo
+          const elementPosition = element.getBoundingClientRect().top;
+          const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: 'smooth'
+          });
+        }
+        return;
+      }
+      return;
+    }
+    
+    e.preventDefault();
+    window.scrollTo(0, 0);
+    navigate(path);
+  };
 
   return (
     <footer ref={sectionRef} className="py-16 md:py-24 border-t">
@@ -59,6 +86,7 @@ export function Footer() {
                 <li>
                   <Link
                     to="/#features"
+                    onClick={(e) => handleLinkClick(e, "/#features")}
                     className="text-foreground/70 hover:text-primary"
                   >
                     Funcionalidades
@@ -67,6 +95,7 @@ export function Footer() {
                 <li>
                   <Link
                     to="/#pricing"
+                    onClick={(e) => handleLinkClick(e, "/#pricing")}
                     className="text-foreground/70 hover:text-primary"
                   >
                     Planos e Preços
@@ -75,6 +104,7 @@ export function Footer() {
                 <li>
                   <Link
                     to="/about"
+                    onClick={(e) => handleLinkClick(e, "/about")}
                     className="text-foreground/70 hover:text-primary"
                   >
                     Sobre
@@ -83,6 +113,7 @@ export function Footer() {
                 <li>
                   <Link
                     to="/contact"
+                    onClick={(e) => handleLinkClick(e, "/contact")}
                     className="text-foreground/70 hover:text-primary"
                   >
                     Suporte
@@ -97,6 +128,7 @@ export function Footer() {
                 <li>
                   <Link
                     to="/privacy"
+                    onClick={(e) => handleLinkClick(e, "/privacy")}
                     className="text-foreground/70 hover:text-primary"
                   >
                     Privacidade
@@ -105,6 +137,7 @@ export function Footer() {
                 <li>
                   <Link
                     to="/terms"
+                    onClick={(e) => handleLinkClick(e, "/terms")}
                     className="text-foreground/70 hover:text-primary"
                   >
                     Termos de Uso
@@ -113,6 +146,7 @@ export function Footer() {
                 <li>
                   <Link
                     to="/about"
+                    onClick={(e) => handleLinkClick(e, "/about")}
                     className="text-foreground/70 hover:text-primary"
                   >
                     Sobre a Zencora
@@ -121,6 +155,7 @@ export function Footer() {
                 <li>
                   <Link
                     to="/contact"
+                    onClick={(e) => handleLinkClick(e, "/contact")}
                     className="text-foreground/70 hover:text-primary"
                   >
                     Contato
