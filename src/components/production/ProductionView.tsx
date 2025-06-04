@@ -125,17 +125,21 @@ export function ProductionView() {
           }
         })
         .subscribe((status) => {
+          const wasConnected = isConnected;
           setIsConnected(status === 'SUBSCRIBED');
-          if (status === 'SUBSCRIBED') {
-            toast({
-              title: "Conexão estabelecida",
-              description: "Recebendo atualizações em tempo real",
-            });
-          } else if (status === 'CLOSED') {
+          
+          // Só mostra o toast se já estava conectado e perdeu a conexão
+          if (wasConnected && status === 'CLOSED') {
             toast({
               title: "Conexão perdida",
               description: "Não é possível receber atualizações em tempo real",
               variant: "destructive",
+            });
+          } else if (status === 'SUBSCRIBED' && !wasConnected) {
+            // Só mostra o toast de conexão estabelecida se não estava conectado antes
+            toast({
+              title: "Conexão estabelecida",
+              description: "Recebendo atualizações em tempo real",
             });
           }
         });

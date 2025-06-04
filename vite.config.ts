@@ -20,7 +20,10 @@ export default defineConfig(({ mode }) => ({
         "apple-touch-icon.png",
         "android-chrome-192x192.png",
         "android-chrome-512x512.png",
-        "zencora-noma-logo.svg"
+        "maskable-icon.png",
+        "splash-640x1136.png",
+        "splash-750x1334.png",
+        "splash-1242x2208.png"
       ],
       manifest: {
         name: "Zencora Noma",
@@ -28,22 +31,26 @@ export default defineConfig(({ mode }) => ({
         description: "Zencora Noma - Gestão de Encomendas",
         theme_color: "#8C52FF",
         background_color: "#ffffff",
+        display: "standalone",
+        orientation: "portrait",
         icons: [
           {
             src: "android-chrome-192x192.png",
             sizes: "192x192",
-            type: "image/png"
-          },
-          {
-            src: "android-chrome-512x512.png",
-            sizes: "512x512",
-            type: "image/png"
+            type: "image/png",
+            purpose: "any"
           },
           {
             src: "android-chrome-512x512.png",
             sizes: "512x512",
             type: "image/png",
-            purpose: "any maskable"
+            purpose: "any"
+          },
+          {
+            src: "maskable-icon.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "maskable"
           },
           {
             src: "apple-touch-icon.png",
@@ -51,6 +58,26 @@ export default defineConfig(({ mode }) => ({
             type: "image/png"
           }
         ],
+        screenshots: [
+          {
+            src: "splash-640x1136.png",
+            sizes: "640x1136",
+            type: "image/png",
+            form_factor: "narrow"
+          },
+          {
+            src: "splash-750x1334.png",
+            sizes: "750x1334",
+            type: "image/png",
+            form_factor: "narrow"
+          },
+          {
+            src: "splash-1242x2208.png",
+            sizes: "1242x2208",
+            type: "image/png",
+            form_factor: "narrow"
+          }
+        ]
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg}"],

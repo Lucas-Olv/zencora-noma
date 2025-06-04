@@ -156,79 +156,84 @@ export const Nav = () => {
       </header>
 
       {/* Mobile menu */}
-      {isMobileMenuOpen && (
-        <>
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 z-[99] bg-background/80 backdrop-blur-sm md:hidden"
-            style={{ top: "73px" }}
-            onClick={closeMobileMenu}
-          />
+      <div
+        className={cn(
+          "fixed top-[70px] left-0 right-0 z-[100] bg-background shadow-lg md:hidden transform transition-all duration-300 ease-in-out",
+          isMobileMenuOpen 
+            ? "translate-y-0 opacity-100" 
+            : "-translate-y-4 opacity-0 pointer-events-none"
+        )}
+      >
+        <div className="container mx-auto px-4 py-4 flex flex-col space-y-4">
+          <Link
+            to="/"
+            onClick={() => {
+              closeMobileMenu();
+              setTimeout(() => {
+                const element = document.getElementById("hero");
+                if (element) {
+                  const headerOffset = 80;
+                  const elementPosition = element.getBoundingClientRect().top;
+                  const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
 
-          {/* Menu content */}
-          <div className="fixed top-[70px] left-0 right-0 z-[100] bg-background shadow-lg md:hidden">
-            <div className="container mx-auto px-4 py-4 flex flex-col space-y-4">
-              <Link
-                to="/"
-                onClick={() => {
-                  closeMobileMenu();
-                  setTimeout(() => {
-                    const element = document.getElementById("hero");
-                    if (element) {
-                      const headerOffset = 80;
-                      const elementPosition =
-                        element.getBoundingClientRect().top;
-                      const offsetPosition =
-                        elementPosition + window.pageYOffset - headerOffset;
-
-                      window.scrollTo({
-                        top: offsetPosition,
-                        behavior: "smooth",
-                      });
-                    }
-                  }, 100);
-                }}
-                className="font-medium p-2 hover:bg-muted rounded-md text-left"
+                  window.scrollTo({
+                    top: offsetPosition,
+                    behavior: "smooth",
+                  });
+                }
+              }, 100);
+            }}
+            className="font-medium p-2 hover:bg-muted rounded-md text-left"
+          >
+            Home
+          </Link>
+          <button
+            onClick={() => scrollToSection("features")}
+            className="font-medium p-2 hover:bg-muted rounded-md text-left"
+          >
+            Funcionalidades
+          </button>
+          <button
+            onClick={() => scrollToSection("pricing")}
+            className="font-medium p-2 hover:bg-muted rounded-md text-left"
+          >
+            Preços
+          </button>
+          <button
+            onClick={() => scrollToSection("faq")}
+            className="font-medium p-2 hover:bg-muted rounded-md text-left"
+          >
+            FAQ
+          </button>
+          <div className="flex flex-col space-y-4">
+            <Link to="/login" onClick={closeMobileMenu}>
+              <Button
+                variant="ghost"
+                className="w-full text-foreground hover:text-foreground hover:bg-muted/80 transition-all duration-200 rounded-md"
               >
-                Home
-              </Link>
-              <button
-                onClick={() => scrollToSection("features")}
-                className="font-medium p-2 hover:bg-muted rounded-md text-left"
-              >
-                Funcionalidades
-              </button>
-              <button
-                onClick={() => scrollToSection("pricing")}
-                className="font-medium p-2 hover:bg-muted rounded-md text-left"
-              >
-                Preços
-              </button>
-              <button
-                onClick={() => scrollToSection("faq")}
-                className="font-medium p-2 hover:bg-muted rounded-md text-left"
-              >
-                FAQ
-              </button>
-              <div className="flex flex-col space-y-4">
-                <Link to="/login" onClick={closeMobileMenu}>
-                  <Button
-                    variant="ghost"
-                    className="w-full text-foreground hover:text-foreground hover:bg-muted/80 transition-all duration-200 rounded-md"
-                  >
-                    Entrar
-                  </Button>
-                </Link>
-                <Link to="/login?register=true" onClick={closeMobileMenu}>
-                  <Button className="w-full bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity">
-                    Comece agora
-                  </Button>
-                </Link>
-              </div>
-            </div>
+                Entrar
+              </Button>
+            </Link>
+            <Link to="/login?register=true" onClick={closeMobileMenu}>
+              <Button className="w-full bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity">
+                Comece agora
+              </Button>
+            </Link>
           </div>
-        </>
-      )}
+        </div>
+      </div>
+
+      {/* Backdrop */}
+      <div
+        className={cn(
+          "fixed inset-0 z-[99] bg-background/80 backdrop-blur-sm md:hidden transition-opacity duration-300",
+          isMobileMenuOpen 
+            ? "opacity-100" 
+            : "opacity-0 pointer-events-none"
+        )}
+        style={{ top: "73px" }}
+        onClick={closeMobileMenu}
+      />
     </>
   );
 };
