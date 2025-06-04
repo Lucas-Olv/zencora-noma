@@ -49,19 +49,28 @@ export default function RoleSelector() {
       setSelectedRole(role);
 
       // Se já existe uma sessão para este role, apenas atualiza
-      if (currentAppSession?.role_id === selectedRoleId) {
-        // Mantém todos os dados da sessão atual e atualiza apenas os campos necessários
-        const updatedSession = {
-          ...currentAppSession,
-          last_used_at: new Date().toISOString(),
-          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days
-        };
+      if ((role === null && currentAppSession?.role === 'owner') || 
+          (role && currentAppSession?.role_id === role.id)) {
+        // Busca a sessão atualizada do Supabase para garantir dados completos
+        const { data: updatedAppSession, error: updateError } = await appSessionsService.updateAppSession(
+          currentAppSession.id,
+          {
+            last_used_at: new Date().toISOString(),
+            expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days
+          }
+        );
 
-        // Atualiza no IndexedDB mantendo todos os dados da sessão
-        await db.updateAppSessionData(updatedSession);
+        if (updateError) throw updateError;
 
-        // Atualiza no contexto
-        setAppSession(updatedSession);
+        if (updatedAppSession) {
+          // Atualiza no IndexedDB com os dados completos da sessão
+          await db.updateAppSessionData(updatedAppSession);
+
+          // Atualiza no contexto
+          setAppSession(updatedAppSession);
+        } else {
+          throw new Error("Falha ao atualizar sessão");
+        }
 
         // Redireciona para o dashboard
         navigate("/dashboard", { replace: true });
