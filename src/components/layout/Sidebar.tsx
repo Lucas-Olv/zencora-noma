@@ -127,10 +127,8 @@ const NavButton = ({ item, isActive, onClick }: NavButtonProps) => {
   // 2. A rota não estiver na lista de permitidas E a assinatura estiver bloqueada
   // 3. É um item de settings e o usuário não tem acesso ao plano
   const shouldShowLock =
-    ((isRouteBlocked || (!isRouteAllowed && isBlocked)) &&
-      !isTrial &&
-      !subscriptionActive) ||
-    (isSettingsItem && !hasPlanAccess);
+    (isBlocked && isRouteBlocked) || // Mostra cadeado se estiver bloqueado e a rota estiver na lista de bloqueadas
+    (isSettingsItem && !hasPlanAccess); // Mostra cadeado se for settings e não tiver acesso ao plano
 
   // Verifica se a tela requer senha baseado no item
   const requiresPassword = (() => {
@@ -403,7 +401,7 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
           >
             <Settings className="h-4 w-4" />
             Configurações
-            {(isSettingsLocked || isSettingsBlocked) && (
+            {(isSettingsLocked || isSettingsBlocked || isBlocked) && (
               <Lock className="h-4 w-4 ml-auto" />
             )}
           </Button>
