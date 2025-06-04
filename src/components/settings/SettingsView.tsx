@@ -26,18 +26,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Pencil, Plus, Trash2 } from "lucide-react";
-import { settingsService, rolesService, RoleType, SettingsType } from "@/services/supabaseService";
-
-const DEFAULT_SETTINGS: Omit<SettingsType, "id" | "created_at" | "updated_at"> = {
-  enable_roles: false,
-  lock_reports_by_password: false,
-  require_password_to_switch_role: false,
-  lock_settings_by_password: false,
-  tenant_id: "",
-};
+import { rolesService, RoleType, SettingsType } from "@/services/supabaseService";
+import { db } from "@/lib/db";
 
 export default function SettingsView() {
-  const { tenant, settings, roles, updateSettings, updateRoles } = useWorkspaceContext();
+  const { tenant, settings, roles, updateSettings, updateRoles, reloadSettings } = useWorkspaceContext();
   const { toast } = useToast();
   const [isCreateRoleDialogOpen, setIsCreateRoleDialogOpen] = useState(false);
   const [isEditRoleDialogOpen, setIsEditRoleDialogOpen] = useState(false);
@@ -61,11 +54,14 @@ export default function SettingsView() {
     try {
       if (!settings || !tenant?.id) return;
 
-      await updateSettings({
+      const updatedSettings = {
         ...settings,
         [field]: value,
         tenant_id: tenant.id,
-      });
+      };
+
+      await updateSettings(updatedSettings);
+      await db.updateSettingsData(updatedSettings);
 
       toast({
         title: "Configurações atualizadas",
@@ -91,8 +87,9 @@ export default function SettingsView() {
 
       if (error) throw error;
 
-      // Atualiza a lista de roles
-      updateRoles([...roles, data]);
+      const updatedRoles = [...roles, data];
+      updateRoles(updatedRoles);
+      await db.updateRolesData(updatedRoles);
 
       setIsCreateRoleDialogOpen(false);
       setNewRole({
@@ -130,8 +127,9 @@ export default function SettingsView() {
 
       if (error) throw error;
 
-      // Atualiza a lista de roles
-      updateRoles(roles.map(r => r.id === data.id ? data : r));
+      const updatedRoles = roles.map(r => r.id === data.id ? data : r);
+      updateRoles(updatedRoles);
+      await db.updateRolesData(updatedRoles);
 
       setIsEditRoleDialogOpen(false);
       toast({
@@ -155,8 +153,9 @@ export default function SettingsView() {
 
       if (error) throw error;
 
-      // Atualiza a lista de roles
-      updateRoles(roles.filter(r => r.id !== selectedRole.id));
+      const updatedRoles = roles.filter(r => r.id !== selectedRole.id);
+      updateRoles(updatedRoles);
+      await db.updateRolesData(updatedRoles);
 
       setIsDeleteRoleDialogOpen(false);
       setSelectedRole(null);

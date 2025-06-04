@@ -29,7 +29,7 @@ export default function PasswordVerification() {
 
       // If from role switch, clear current role before redirecting
       if (fromRoleSwitch) {
-        await db.updateActiveRoleId(null);
+        await db.updateRolesData(null);
       }
 
       // If password is correct, navigate to the target path with verified state

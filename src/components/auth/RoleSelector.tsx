@@ -7,45 +7,93 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import ThemeToggle from "../layout/ThemeToggle";
 import type { Tables } from "@/integrations/supabase/types";
+import { appSessionsService } from "@/services/supabaseService";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function RoleSelector() {
   const navigate = useNavigate();
-  const { settings, roles, setSelectedRoleById, setWorkspaceRole } = useWorkspaceContext();
+  const { toast } = useToast();
+  const { 
+    settings, 
+    roles, 
+    session, 
+    tenant, 
+    setAppSession, 
+    appSession: currentAppSession,
+    setSelectedRole 
+  } = useWorkspaceContext();
   const [loading, setLoading] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<Tables<"roles"> | null>(null);
-
-  useEffect(() => {
-    const loadActiveRole = async () => {
-      const workspaceData = await db.getWorkspaceData();
-      if (workspaceData?.activeRoleId) {
-        const role = roles.find((r) => r.id === workspaceData.activeRoleId);
-        if (role) {
-          handleRoleSelect(role);
-        }
-      }
-    };
-    loadActiveRole();
-  }, [roles]);
+  const [isNavigating, setIsNavigating] = useState(false);
 
   const handleRoleSelect = async (role: Tables<"roles"> | null) => {
     try {
-      console.log("role", role);
-
-      setLoading(true);
-      setSelectedRoleById(role?.id || null);
-
-      // If owner (role null), go directly to dashboard
-      if (!role) {
-        setWorkspaceRole(null, true);
-        navigate("/dashboard");
+      if (!session?.access_token || !tenant?.id) {
+        toast({
+          title: "Erro ao selecionar papel",
+          description: "Sessão inválida. Por favor, faça login novamente.",
+          variant: "destructive",
+        });
         return;
       }
 
-      setWorkspaceRole(role, false);
+      if (loading || isNavigating) return;
+
+      setLoading(true);
+      setIsNavigating(true);
+
+      const selectedRoleId = role?.id;
+      const selectedRoleName = role ? role.name : 'owner';
+
+      // Atualiza o selectedRole no contexto e IndexedDB
+      await db.updateSelectedRoleData(role);
+      setSelectedRole(role);
+
+      // Se já existe uma sessão para este role, apenas atualiza
+      if (currentAppSession?.role_id === selectedRoleId) {
+        // Mantém todos os dados da sessão atual e atualiza apenas os campos necessários
+        const updatedSession = {
+          ...currentAppSession,
+          last_used_at: new Date().toISOString(),
+          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days
+        };
+
+        // Atualiza no IndexedDB mantendo todos os dados da sessão
+        await db.updateAppSessionData(updatedSession);
+
+        // Atualiza no contexto
+        setAppSession(updatedSession);
+
+        // Redireciona para o dashboard
+        navigate("/dashboard", { replace: true });
+        return;
+      }
+
+      // Se não existe sessão para este role, cria uma nova
+      const { data: newAppSession, error: appSessionError } = await appSessionsService.createAppSession({
+        tenant_id: tenant.id,
+        role: selectedRoleName,
+        role_id: selectedRoleId,
+        last_used_at: new Date().toISOString(),
+        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days
+      });
+
+      if (appSessionError) throw appSessionError;
+
+      // Garante que o IndexedDB receba o appSession completo do Supabase
+      if (newAppSession) {
+        // Update IndexedDB with complete app session data
+        await db.updateAppSessionData(newAppSession);
+
+        // Update context with complete app session data
+        setAppSession(newAppSession);
+      } else {
+        throw new Error("Falha ao criar nova sessão");
+      }
+
       // Determine which page to redirect to based on role permissions
       let redirectTo = "/dashboard"; // Default
 
-      if (!role.can_access_dashboard) {
+      if (role && !role.can_access_dashboard) {
         if (role.can_access_orders) redirectTo = "/orders";
         else if (role.can_access_calendar) redirectTo = "/calendar";
         else if (role.can_access_production) redirectTo = "/production";
@@ -54,9 +102,16 @@ export default function RoleSelector() {
         else if (role.can_access_settings) redirectTo = "/settings";
       }
 
-      navigate(redirectTo);
+      // Use replace to prevent going back to role selection
+      navigate(redirectTo, { replace: true });
     } catch (error) {
       console.error("Error selecting role:", error);
+      toast({
+        title: "Erro ao selecionar papel",
+        description: "Não foi possível selecionar o papel. Tente novamente.",
+        variant: "destructive",
+      });
+      setIsNavigating(false);
     } finally {
       setLoading(false);
     }
@@ -65,7 +120,7 @@ export default function RoleSelector() {
   // If roles are not enabled or there are no roles, redirect to dashboard
   useEffect(() => {
     if (!settings?.enable_roles || roles.length === 0) {
-      navigate("/dashboard");
+      navigate("/dashboard", { replace: true });
     }
   }, [settings, roles, navigate]);
 
@@ -105,7 +160,7 @@ export default function RoleSelector() {
               variant="defaultText"
               className="w-full justify-start text-left h-auto py-4"
               onClick={() => handleRoleSelect(null)}
-              disabled={loading}
+              disabled={loading || isNavigating}
             >
               <div className="flex items-center gap-2">
                 <Crown className="h-5 w-5" />
@@ -134,7 +189,7 @@ export default function RoleSelector() {
                 variant="outline"
                 className="w-full justify-start text-left h-auto py-4"
                 onClick={() => handleRoleSelect(role)}
-                disabled={loading}
+                disabled={loading || isNavigating}
               >
                 <div>
                   <p className="font-medium">{role.name}</p>

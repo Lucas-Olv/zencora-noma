@@ -127,21 +127,24 @@ const NavButton = ({ item, isActive, onClick }: NavButtonProps) => {
   })();
 
   const button = (
-    <button
-      onClick={onClick}
-      className={cn(
-        "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium",
-        "transition-all duration-200 ease-in-out",
-        "hover:bg-muted/80 active:scale-[0.98]",
-        isActive
-          ? "bg-primary text-primary-foreground hover:bg-primary/90"
-          : "opacity-80 hover:opacity-100",
-      )}
-    >
-      <item.icon className="h-5 w-5 transition-transform duration-200 group-hover:scale-110" />
-      {item.title}
-      {(shouldShowLock || requiresPassword) && <Lock className="h-4 w-4 ml-auto text-muted-foreground" />}
-    </button>
+    <div className="px-2 py-1">
+      <button
+        onClick={onClick}
+        className={cn(
+          "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium",
+          "transition-all duration-200 ease-in-out",
+          "hover:bg-muted/80 active:scale-[0.98]",
+          isActive
+            ? "bg-primary text-primary-foreground hover:bg-primary/90"
+            : "opacity-80 hover:opacity-100",
+          "h-10" // Adiciona altura fixa para consistência
+        )}
+      >
+        <item.icon className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
+        <span className="flex-1 text-left">{item.title}</span>
+        {(shouldShowLock || requiresPassword) && <Lock className="h-4 w-4 ml-auto" />}
+      </button>
+    </div>
   );
 
   // Se for settings e não tiver acesso ao plano (e não estiver no trial)
@@ -216,7 +219,7 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { settings, isOwner, isLoading } = useWorkspaceContext();
+  const { settings, appSession, isLoading, isBlocked, isTrial, isActive: subscriptionActive, subscription } = useWorkspaceContext();
 
   // Se o app não estiver pronto, mostra um loader
   if (isLoading) {
@@ -232,14 +235,10 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
     );
   }
 
-  const handleLogoClick = () => {
-    // Se estiver na página de seleção de papel, não faz nada
-    if (location.pathname === "/select-role") return;
-    
-    // Se estiver em qualquer outra página, vai para o dashboard
-    navigate("/dashboard");
-    closeSidebar();
-  };
+  // Lógica para mostrar o cadeado nas configurações
+  const isSettingsLocked = settings?.lock_settings_by_password;
+  const isSettingsBlocked = !isTrial && !subscriptionActive && 
+    (subscription?.plan !== 'pro' && subscription?.plan !== 'enterprise');
 
   const handleProfileClick = async () => {
     try {
@@ -335,7 +334,7 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
         )}
       >
         <div className="px-2 py-2">
-          <button onClick={handleLogoClick} className="flex items-center">
+          <div className="flex items-center">
             <img
               src="/zencora-noma-logo.png"
               alt="Zencora Noma Logo"
@@ -344,7 +343,7 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
             <span className="text-xl font-bold zencora-gradient-text">
               Zencora Noma
             </span>
-          </button>
+          </div>
         </div>
 
         <div className="space-y-1 py-4 flex-1">
@@ -359,18 +358,20 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
         </div>
 
         <div className="mt-auto border-t border-border pt-4">
-          {bottomNavItems.map((item) => (
-            <NavButton
-              key={item.href}
-              item={item}
-              isActive={location.pathname === item.href}
-              onClick={() => handleNavigation(item.href)}
-            />
-          ))}
+          {/* Configurações */}
+          <Button
+            variant="ghost"
+            className="w-full flex gap-3 justify-start h-10"
+            onClick={() => handleNavigation('/settings')}
+          >
+            <Settings className="h-4 w-4" />
+            Configurações
+            {(isSettingsLocked || isSettingsBlocked) && <Lock className="h-4 w-4 ml-auto" />}
+          </Button>
 
           {/* Perfil ou Trocar Papel */}
           {settings?.enable_roles ? (
-            isOwner ? (
+            appSession?.role === 'owner' ? (
               <Button
                 variant="ghost"
                 className="w-full flex gap-3 justify-start h-10"

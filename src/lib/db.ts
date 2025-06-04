@@ -6,6 +6,7 @@ type Tenant = Tables<"tenants">;
 type Settings = Tables<"settings">;
 type RoleType = Tables<"roles">;
 type SubscriptionType = Tables<"subscriptions">;
+type AppSessionType = Tables<"app_sessions">;
 
 interface WorkspaceData {
   id?: number;
@@ -14,12 +15,11 @@ interface WorkspaceData {
   initializedBy: string;
   tenant: Tenant | null;
   settings: Settings | null;
+  selectedRole: RoleType | null;
   subscription: SubscriptionType | null;
   roles: RoleType[];
-  selectedRole: RoleType | null;
   isOwner: boolean;
-  user: User | null;
-  activeRoleId: string | null;
+  appSession: AppSessionType | null;
 }
 
 export class ZencoraDB extends Dexie {
@@ -43,17 +43,66 @@ export class ZencoraDB extends Dexie {
     return await this.workspace.add(data);
   }
 
+  async updateSettingsData(settings: Settings): Promise<void> {
+    const workspace = await this.getWorkspaceData();
+    if (workspace) {
+      workspace.settings = settings;
+      await this.workspace.put(workspace);
+    }
+  }
+
+  async updateRolesData(roles: RoleType[]): Promise<void> {
+    const workspace = await this.getWorkspaceData();
+    if (workspace) {
+      workspace.roles = roles;
+      await this.workspace.put(workspace);
+    }
+  }
+
+  async updateIsOwnerData(isOwner: boolean): Promise<void> {
+    const workspace = await this.getWorkspaceData();
+    if (workspace) {
+      workspace.isOwner = isOwner;
+      await this.workspace.put(workspace);
+    }
+  }
+
+  async updateAppSessionData(appSession: AppSessionType): Promise<void> {
+    const workspace = await this.getWorkspaceData();
+    if (workspace) {
+      workspace.appSession = appSession;
+      await this.workspace.put(workspace);
+    }
+  }
+
+  async updateSelectedRoleData(selectedRole: RoleType | null): Promise<void> {
+    const workspace = await this.getWorkspaceData();
+    if (workspace) {
+      workspace.selectedRole = selectedRole;
+      await this.workspace.put(workspace);
+    }
+  }
+
+  async updateTenantData(tenant: Tenant): Promise<void> {
+    const workspace = await this.getWorkspaceData();
+    if (workspace) {
+      workspace.tenant = tenant;
+      await this.workspace.put(workspace);
+    }
+  }
+
+  async updateSubscriptionData(subscription: SubscriptionType): Promise<void> {
+    const workspace = await this.getWorkspaceData();
+    if (workspace) {
+      workspace.subscription = subscription;
+      await this.workspace.put(workspace);
+    }
+  }
+
   async clearWorkspaceData(): Promise<void> {
     await this.workspace.clear();
   }
 
-  async updateActiveRoleId(roleId: string | null): Promise<void> {
-    const workspace = await this.getWorkspaceData();
-    if (workspace) {
-      workspace.activeRoleId = roleId;
-      await this.workspace.put(workspace);
-    }
-  }
 }
 
 export const db = new ZencoraDB(); 

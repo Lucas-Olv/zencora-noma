@@ -52,6 +52,7 @@ export type Database = {
         Row: {
           id: string
           tenant_id: string
+          role_id?: string
           role: string
           session_token: string
           last_used_at: string
@@ -62,14 +63,14 @@ export type Database = {
         Insert: {
           tenant_id: string
           role: string
-          session_token: string
+          role_id?: string
           last_used_at: string
           expires_at: string
         }
         Update: {
           tenant_id: string
           role: string
-          session_token: string
+          role_id?: string
           last_used_at: string
           updated_at: string
           expires_at: string
@@ -80,6 +81,13 @@ export type Database = {
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "app_sessions_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
             referencedColumns: ["id"]
           }
         ]

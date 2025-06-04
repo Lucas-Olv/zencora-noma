@@ -43,24 +43,29 @@ function ConnectionStatus({ isConnected, onReconnect }: { isConnected: boolean |
           Reconectar
         </Button>
       )}
-      <div className="relative">
-        <div
-          className={cn(
-            "w-3 h-3 rounded-full",
-            isConnected === undefined && "bg-gray-400",
-            isConnected === true && "bg-green-500 animate-pulse",
-            isConnected === false && "bg-red-500"
-          )}
-        />
-        <div
-          className={cn(
-            "absolute inset-0 rounded-full",
-            isConnected === undefined && "bg-gray-400",
-            isConnected === true && "bg-green-500",
-            isConnected === false && "bg-red-500",
-            isConnected && "opacity-50 animate-ping"
-          )}
-        />
+      <div className="flex items-center gap-2">
+        {isConnected === undefined && (
+          <span className="text-xs text-muted-foreground">Conectando...</span>
+        )}
+        <div className="relative">
+          <div
+            className={cn(
+              "w-3 h-3 rounded-full",
+              isConnected === undefined && "bg-gray-400",
+              isConnected === true && "bg-green-500 animate-pulse",
+              isConnected === false && "bg-red-500"
+            )}
+          />
+          <div
+            className={cn(
+              "absolute inset-0 rounded-full",
+              isConnected === undefined && "bg-gray-400",
+              isConnected === true && "bg-green-500",
+              isConnected === false && "bg-red-500",
+              isConnected && "opacity-50 animate-ping"
+            )}
+          />
+        </div>
       </div>
     </div>
   );
@@ -83,55 +88,63 @@ export function ProductionView() {
       channelRef.current.unsubscribe();
     }
 
-    // Set auth for Realtime
-    await supabase.realtime.setAuth();
+    // Reset connection state
+    setIsConnected(undefined);
 
-    // Create new subscription
-    const channel = supabase
-      .channel(`orders:${tenant.id}`, {
-        config: { private: true },
-      })
-      .on('broadcast', { event: 'INSERT' }, (payload) => {
-        if (payload.payload?.record) {
-          setOrders(currentOrders => [...currentOrders, payload.payload.record]);
-        }
-      })
-      .on('broadcast', { event: 'UPDATE' }, (payload) => {
-        if (payload.payload?.record) {
-          setOrders(currentOrders => {
-            const updatedOrders = [...currentOrders];
-            const orderIndex = updatedOrders.findIndex(o => o.id === payload.payload.record.id);
-            if (orderIndex >= 0) {
-              updatedOrders[orderIndex] = payload.payload.record;
-            }
-            return updatedOrders;
-          });
-        }
-      })
-      .on('broadcast', { event: 'DELETE' }, (payload) => {
-        if (payload.payload?.old_record?.id) {
-          setOrders(currentOrders => 
-            currentOrders.filter(order => order.id !== payload.payload.old_record.id)
-          );
-        }
-      })
-      .subscribe((status) => {
-        setIsConnected(status === 'SUBSCRIBED');
-        if (status === 'SUBSCRIBED') {
-          toast({
-            title: "Conexão estabelecida",
-            description: "Recebendo atualizações em tempo real",
-          });
-        } else if (status === 'CLOSED') {
-          toast({
-            title: "Conexão perdida",
-            description: "Não é possível receber atualizações em tempo real",
-            variant: "destructive",
-          });
-        }
-      });
+    try {
+      // Set auth for Realtime
+      await supabase.realtime.setAuth();
 
-    channelRef.current = channel;
+      // Create new subscription
+      const channel = supabase
+        .channel(`orders:${tenant.id}`, {
+          config: { private: true },
+        })
+        .on('broadcast', { event: 'INSERT' }, (payload) => {
+          if (payload.payload?.record) {
+            setOrders(currentOrders => [...currentOrders, payload.payload.record]);
+          }
+        })
+        .on('broadcast', { event: 'UPDATE' }, (payload) => {
+          if (payload.payload?.record) {
+            setOrders(currentOrders => {
+              const updatedOrders = [...currentOrders];
+              const orderIndex = updatedOrders.findIndex(o => o.id === payload.payload.record.id);
+              if (orderIndex >= 0) {
+                updatedOrders[orderIndex] = payload.payload.record;
+              }
+              return updatedOrders;
+            });
+          }
+        })
+        .on('broadcast', { event: 'DELETE' }, (payload) => {
+          if (payload.payload?.old_record?.id) {
+            setOrders(currentOrders => 
+              currentOrders.filter(order => order.id !== payload.payload.old_record.id)
+            );
+          }
+        })
+        .subscribe((status) => {
+          setIsConnected(status === 'SUBSCRIBED');
+          if (status === 'SUBSCRIBED') {
+            toast({
+              title: "Conexão estabelecida",
+              description: "Recebendo atualizações em tempo real",
+            });
+          } else if (status === 'CLOSED') {
+            toast({
+              title: "Conexão perdida",
+              description: "Não é possível receber atualizações em tempo real",
+              variant: "destructive",
+            });
+          }
+        });
+
+      channelRef.current = channel;
+    } catch (error) {
+      console.error('Error setting up realtime subscription:', error);
+      setIsConnected(false);
+    }
   };
 
   useEffect(() => {
@@ -147,8 +160,8 @@ export function ProductionView() {
     };
   }, [isLoading, tenant]);
 
-  const handleReconnect = () => {
-    setupRealtimeSubscription();
+  const handleReconnect = async () => {
+    await setupRealtimeSubscription();
   };
 
   const fetchOrders = async () => {
@@ -493,7 +506,7 @@ export function ProductionView() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle>Encomendas</CardTitle>
+          <CardTitle>Encomendas</CardTitle>
           </div>
           <ConnectionStatus isConnected={isConnected} onReconnect={handleReconnect} />
         </CardHeader>

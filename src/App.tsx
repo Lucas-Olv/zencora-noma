@@ -31,7 +31,7 @@ const queryClient = new QueryClient();
 const BLOCKED_ROUTES = ["/dashboard", "/production", "/reports", "/calendar", "/settings", "/profile", "/reminders"];
 
 const AppRoutes = () => {
-  const { isAuthenticated, isLoading, settings, roles, selectedRole, isOwner } = useWorkspaceContext();
+  const { isAuthenticated, isLoading, settings, roles, appSession} = useWorkspaceContext();
   const location = useLocation();
 
   if (isLoading) {
@@ -42,8 +42,8 @@ const AppRoutes = () => {
     );
   }
 
-  // Se estiver autenticado, tem roles habilitados e roles disponíveis, mas não tem role selecionada E não é owner
-  const shouldSelectRole = isAuthenticated && settings?.enable_roles && roles.length > 0 && !selectedRole && !isOwner;
+  // Se estiver autenticado, tem roles habilitados e roles disponíveis, mas não tem role selecionada
+  const shouldSelectRole = isAuthenticated && settings?.enable_roles && roles.length > 0 && !appSession;
 
   return (
     <Routes>
@@ -82,155 +82,159 @@ const AppRoutes = () => {
       />
 
       {/* Protected Routes */}
-      {isAuthenticated ? (
-        <Route path="/" element={<Layout />}>
-          <Route
-            path="dashboard"
-            element={
-              <ProtectedRoute>
-                {shouldSelectRole ? (
-                  <Navigate to="/select-role" replace />
-                ) : (
-                  <Dashboard />
-                )}
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="orders"
-            element={
-              <ProtectedRoute>
-                {shouldSelectRole ? (
-                  <Navigate to="/select-role" replace />
-                ) : (
-                  <Orders />
-                )}
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="orders/:id"
-            element={
-              <ProtectedRoute>
-                {shouldSelectRole ? (
-                  <Navigate to="/select-role" replace />
-                ) : (
-                  <OrderDetail />
-                )}
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="production"
-            element={
-              <ProtectedRoute>
-                {shouldSelectRole ? (
-                  <Navigate to="/select-role" replace />
-                ) : (
-                  <Production />
-                )}
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="verify-password"
-            element={
-              <ProtectedRoute>
-                {shouldSelectRole ? (
-                  <Navigate to="/select-role" replace />
-                ) : (
-                  <PasswordVerification />
-                )}
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="reports"
-            element={
-              <ProtectedRoute>
-                {shouldSelectRole ? (
-                  <Navigate to="/select-role" replace />
-                ) : settings?.lock_reports_by_password && !location.state?.verified ? (
-                  <Navigate
-                    to="/verify-password"
-                    state={{
-                      redirect: "/reports",
-                      name: "os relatórios",
-                      fromRoleSwitch: false
-                    }}
-                    replace
-                  />
-                ) : (
-                  <Reports />
-                )}
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="calendar"
-            element={
-              <ProtectedRoute>
-                {shouldSelectRole ? (
-                  <Navigate to="/select-role" replace />
-                ) : (
-                  <Calendar />
-                )}
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="reminders"
-            element={
-              <ProtectedRoute>
-                {shouldSelectRole ? (
-                  <Navigate to="/select-role" replace />
-                ) : (
-                  <Reminders />
-                )}
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="settings"
-            element={
-              <ProtectedRoute>
-                {shouldSelectRole ? (
-                  <Navigate to="/select-role" replace />
-                ) : settings?.lock_settings_by_password && !location.state?.verified ? (
-                  <Navigate
-                    to="/verify-password"
-                    state={{
-                      redirect: "/settings",
-                      name: "as configurações",
-                      fromRoleSwitch: false
-                    }}
-                    replace
-                  />
-                ) : (
-                  <Settings />
-                )}
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="subscription-expired"
-            element={
-              <ProtectedRoute>
-                <SubscriptionExpired />
-              </ProtectedRoute>
-            }
-          />
-        </Route>
-      ) : (
-        <Route path="*" element={<Navigate to="/login" replace />} />
+      {isAuthenticated && (
+        <>
+          <Route path="/" element={<Layout />}>
+            <Route
+              path="dashboard"
+              element={
+                <ProtectedRoute>
+                  {shouldSelectRole ? (
+                    <Navigate to="/select-role" replace />
+                  ) : (
+                    <Dashboard />
+                  )}
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="orders"
+              element={
+                <ProtectedRoute>
+                  {shouldSelectRole ? (
+                    <Navigate to="/select-role" replace />
+                  ) : (
+                    <Orders />
+                  )}
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="orders/:id"
+              element={
+                <ProtectedRoute>
+                  {shouldSelectRole ? (
+                    <Navigate to="/select-role" replace />
+                  ) : (
+                    <OrderDetail />
+                  )}
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="production"
+              element={
+                <ProtectedRoute>
+                  {shouldSelectRole ? (
+                    <Navigate to="/select-role" replace />
+                  ) : (
+                    <Production />
+                  )}
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="verify-password"
+              element={
+                <ProtectedRoute>
+                  {shouldSelectRole ? (
+                    <Navigate to="/select-role" replace />
+                  ) : (
+                    <PasswordVerification />
+                  )}
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="reports"
+              element={
+                <ProtectedRoute>
+                  {shouldSelectRole ? (
+                    <Navigate to="/select-role" replace />
+                  ) : settings?.lock_reports_by_password && !location.state?.verified ? (
+                    <Navigate
+                      to="/verify-password"
+                      state={{
+                        redirect: "/reports",
+                        name: "os relatórios",
+                        fromRoleSwitch: false
+                      }}
+                      replace
+                    />
+                  ) : (
+                    <Reports />
+                  )}
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="calendar"
+              element={
+                <ProtectedRoute>
+                  {shouldSelectRole ? (
+                    <Navigate to="/select-role" replace />
+                  ) : (
+                    <Calendar />
+                  )}
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="reminders"
+              element={
+                <ProtectedRoute>
+                  {shouldSelectRole ? (
+                    <Navigate to="/select-role" replace />
+                  ) : (
+                    <Reminders />
+                  )}
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="settings"
+              element={
+                <ProtectedRoute>
+                  {shouldSelectRole ? (
+                    <Navigate to="/select-role" replace />
+                  ) : settings?.lock_settings_by_password && !location.state?.verified ? (
+                    <Navigate
+                      to="/verify-password"
+                      state={{
+                        redirect: "/settings",
+                        name: "as configurações",
+                        fromRoleSwitch: false
+                      }}
+                      replace
+                    />
+                  ) : (
+                    <Settings />
+                  )}
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="subscription-expired"
+              element={
+                <ProtectedRoute>
+                  <SubscriptionExpired />
+                </ProtectedRoute>
+              }
+            />
+          </Route>
+
+          {/* Protected Routes Outside Layout scheme*/}
+          {settings?.enable_roles && roles.length > 0 && (
+            <Route
+              path="/select-role"
+              element={<RoleSelector />}
+            />
+          )}
+        </>
       )}
 
-      {/* Protected Routes Outside Layout scheme*/}
-      {isAuthenticated && settings?.enable_roles && roles.length > 0 && (
-        <Route
-          path="/select-role"
-          element={<RoleSelector />}
-        />
+      {!isAuthenticated && (
+        <Route path="*" element={<Navigate to="/login" replace />} />
       )}
 
       <Route path="*" element={<NotFound />} />

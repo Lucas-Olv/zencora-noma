@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
 import { Session, User } from "@supabase/supabase-js";
+import type { Tables } from "@/integrations/supabase/types";
 
 // Tipos
 export type OrderType = {
@@ -276,9 +277,17 @@ export const appSessionsService = {
   getTenantAppSessions: async (tenantId: string) => {
     return await supabase.from("app_sessions").select("*").eq("tenant_id", tenantId).maybeSingle();
   },
+  
+  getAppSessionBySessionToken: async (sessionToken: string) => {
+    return await supabase.from("app_sessions").select("*").eq("session_token", sessionToken).maybeSingle();
+  },
 
-  createAppSession: async (session: Omit<AppSessionType, "id" | "created_at" | "updated_at">) => {
-    return await supabase.from("app_sessions").insert(session).select().single();
+  createAppSession: async (data: Omit<Tables<"app_sessions">, "id" | "created_at" | "updated_at" | "session_token">) => {
+    return await supabase
+      .from("app_sessions")
+      .insert(data)
+      .select()
+      .single();
   },
 
   updateAppSession: async (id: string, data: Partial<Omit<AppSessionType, "id" | "created_at" | "updated_at">>) => {
@@ -295,6 +304,10 @@ export const rolesService = {
       .select("*")
       .eq("tenant_id", tenantId)
       .order("name", { ascending: true });
+  },
+
+  getRoleById: async (id: string) => {
+    return await supabase.from("roles").select("*").eq("id", id).single();
   },
 
   // Cria um novo papel
