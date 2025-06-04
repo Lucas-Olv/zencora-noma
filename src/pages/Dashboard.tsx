@@ -41,13 +41,11 @@ const Dashboard = () => {
   });
   const [loading, setLoading] = useState(true);
 
-  
   useEffect(() => {
     document.title = "Dashboard | Zencora Noma";
     fetchStats();
     fetchReminders();
   }, [tenant, isLoading]);
-
 
   const fetchStats = async () => {
     try {
@@ -118,13 +116,14 @@ const Dashboard = () => {
   };
 
   const fetchReminders = async () => {
-
     if (isLoading) return;
     if (!tenant) {
       throw new Error("Tenant não encontrado");
     }
 
-    const { data, error } = await remindersService.getTenantReminders(tenant.id);
+    const { data, error } = await remindersService.getTenantReminders(
+      tenant.id,
+    );
 
     if (error) throw error;
 

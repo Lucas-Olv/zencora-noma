@@ -3,7 +3,8 @@ import { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 
 const ProtectedRoute = ({ children }: { children: ReactNode }) => {
-  const { isAuthenticated, loading, settings, selectedRole } = useWorkspaceContext();
+  const { isAuthenticated, loading, settings, selectedRole } =
+    useWorkspaceContext();
   const location = useLocation();
 
   if (loading)

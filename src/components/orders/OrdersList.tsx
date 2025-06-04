@@ -28,14 +28,14 @@ interface OrdersListProps {
   onCreate?: () => void;
 }
 
-function OrdersList({ 
-  orders, 
+function OrdersList({
+  orders,
   loading = false,
   title = "Lista de Encomendas",
   description = "Lista de todas as encomendas",
   onEdit,
   onDelete,
-  onCreate
+  onCreate,
 }: OrdersListProps) {
   const navigate = useNavigate();
 
@@ -71,7 +71,10 @@ function OrdersList({
           <div className="space-y-2">
             {orders.map((order) => {
               const isOverdue = new Date(order.due_date) < new Date();
-              const status = (isOverdue && order.status === "pending") ? "overdue" : order.status;
+              const status =
+                isOverdue && order.status === "pending"
+                  ? "overdue"
+                  : order.status;
               return (
                 <div
                   key={order.id}
@@ -96,10 +99,15 @@ function OrdersList({
                       <div className="mt-2">
                         <span className="text-sm text-muted-foreground">
                           Entrega:{" "}
-                          <span className={cn(
-                            "font-semibold",
-                            isOverdue && (order.status === "pending" || order.status === "production") && "text-red-500"
-                          )}>
+                          <span
+                            className={cn(
+                              "font-semibold",
+                              isOverdue &&
+                                (order.status === "pending" ||
+                                  order.status === "production") &&
+                                "text-red-500",
+                            )}
+                          >
                             {order.due_date
                               ? formatDate(order.due_date)
                               : "Sem data"}
@@ -182,4 +190,4 @@ function OrdersList({
   );
 }
 
-export default OrdersList; 
+export default OrdersList;

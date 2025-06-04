@@ -28,8 +28,16 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { SubscriptionGate, useSubscriptionRoutes } from "@/components/subscription/SubscriptionGate";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  SubscriptionGate,
+  useSubscriptionRoutes,
+} from "@/components/subscription/SubscriptionGate";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { SettingsGate } from "@/components/settings/SettingsGate";
 import { Loader2 } from "lucide-react";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
@@ -96,30 +104,40 @@ interface NavButtonProps {
 
 const NavButton = ({ item, isActive, onClick }: NavButtonProps) => {
   const { blockedRoutes, allowedRoutes } = useSubscriptionRoutes();
-  const { settings, isBlocked, isTrial, isActive: subscriptionActive, subscription } = useWorkspaceContext();
+  const {
+    settings,
+    isBlocked,
+    isTrial,
+    isActive: subscriptionActive,
+    subscription,
+  } = useWorkspaceContext();
   const isRouteBlocked = blockedRoutes.includes(item.href);
   const isRouteAllowed = allowedRoutes.includes(item.href);
 
   // Verifica se o item é settings e se o usuário tem acesso baseado no plano
-  const isSettingsItem = item.href === '/settings';
-  const hasPlanAccess = !isSettingsItem || 
+  const isSettingsItem = item.href === "/settings";
+  const hasPlanAccess =
+    !isSettingsItem ||
     isTrial || // Permite acesso durante o trial
-    subscription?.plan === 'pro' || 
-    subscription?.plan === 'enterprise';
+    subscription?.plan === "pro" ||
+    subscription?.plan === "enterprise";
 
   // Só mostra o cadeado se:
   // 1. A rota estiver bloqueada E a assinatura estiver bloqueada
   // 2. A rota não estiver na lista de permitidas E a assinatura estiver bloqueada
   // 3. É um item de settings e o usuário não tem acesso ao plano
-  const shouldShowLock = ((isRouteBlocked || (!isRouteAllowed && isBlocked)) && !isTrial && !subscriptionActive) || 
+  const shouldShowLock =
+    ((isRouteBlocked || (!isRouteAllowed && isBlocked)) &&
+      !isTrial &&
+      !subscriptionActive) ||
     (isSettingsItem && !hasPlanAccess);
 
   // Verifica se a tela requer senha baseado no item
   const requiresPassword = (() => {
     switch (item.href) {
-      case '/reports':
+      case "/reports":
         return settings?.lock_reports_by_password;
-      case '/settings':
+      case "/settings":
         return settings?.lock_settings_by_password;
       default:
         return false;
@@ -137,12 +155,14 @@ const NavButton = ({ item, isActive, onClick }: NavButtonProps) => {
           isActive
             ? "bg-primary text-primary-foreground hover:bg-primary/90"
             : "opacity-80 hover:opacity-100",
-          "h-10" // Adiciona altura fixa para consistência
+          "h-10", // Adiciona altura fixa para consistência
         )}
       >
         <item.icon className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
         <span className="flex-1 text-left">{item.title}</span>
-        {(shouldShowLock || requiresPassword) && <Lock className="h-4 w-4 ml-auto" />}
+        {(shouldShowLock || requiresPassword) && (
+          <Lock className="h-4 w-4 ml-auto" />
+        )}
       </button>
     </div>
   );
@@ -160,7 +180,7 @@ const NavButton = ({ item, isActive, onClick }: NavButtonProps) => {
                 fallback={button}
               >
                 <SettingsGate
-                  requirePanelAccess={item.href.replace('/', '')}
+                  requirePanelAccess={item.href.replace("/", "")}
                   fallback={button}
                 >
                   {button}
@@ -177,7 +197,13 @@ const NavButton = ({ item, isActive, onClick }: NavButtonProps) => {
   }
 
   // Se a rota estiver bloqueada e não houver assinatura ativa (e não estiver no trial)
-  if (isRouteBlocked && !isRouteAllowed && isBlocked && !isTrial && !subscriptionActive) {
+  if (
+    isRouteBlocked &&
+    !isRouteAllowed &&
+    isBlocked &&
+    !isTrial &&
+    !subscriptionActive
+  ) {
     return (
       <TooltipProvider>
         <Tooltip>
@@ -189,7 +215,7 @@ const NavButton = ({ item, isActive, onClick }: NavButtonProps) => {
                 fallback={button}
               >
                 <SettingsGate
-                  requirePanelAccess={item.href.replace('/', '')}
+                  requirePanelAccess={item.href.replace("/", "")}
                   fallback={button}
                 >
                   {button}
@@ -207,7 +233,7 @@ const NavButton = ({ item, isActive, onClick }: NavButtonProps) => {
 
   return (
     <SettingsGate
-      requirePanelAccess={item.href.replace('/', '')}
+      requirePanelAccess={item.href.replace("/", "")}
       fallback={button}
     >
       {button}
@@ -219,7 +245,15 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { settings, appSession, isLoading, isBlocked, isTrial, isActive: subscriptionActive, subscription } = useWorkspaceContext();
+  const {
+    settings,
+    appSession,
+    isLoading,
+    isBlocked,
+    isTrial,
+    isActive: subscriptionActive,
+    subscription,
+  } = useWorkspaceContext();
 
   // Se o app não estiver pronto, mostra um loader
   if (isLoading) {
@@ -237,8 +271,11 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
 
   // Lógica para mostrar o cadeado nas configurações
   const isSettingsLocked = settings?.lock_settings_by_password;
-  const isSettingsBlocked = !isTrial && !subscriptionActive && 
-    (subscription?.plan !== 'pro' && subscription?.plan !== 'enterprise');
+  const isSettingsBlocked =
+    !isTrial &&
+    !subscriptionActive &&
+    subscription?.plan !== "pro" &&
+    subscription?.plan !== "enterprise";
 
   const handleProfileClick = async () => {
     try {
@@ -305,8 +342,8 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
         state: {
           redirect: "/select-role",
           name: "trocar de papel",
-          fromRoleSwitch: true
-        }
+          fromRoleSwitch: true,
+        },
       });
     } else {
       // Se não precisar de senha, limpa a role atual e vai direto para a seleção de papéis
@@ -362,16 +399,18 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
           <Button
             variant="ghost"
             className="w-full flex gap-3 justify-start h-10"
-            onClick={() => handleNavigation('/settings')}
+            onClick={() => handleNavigation("/settings")}
           >
             <Settings className="h-4 w-4" />
             Configurações
-            {(isSettingsLocked || isSettingsBlocked) && <Lock className="h-4 w-4 ml-auto" />}
+            {(isSettingsLocked || isSettingsBlocked) && (
+              <Lock className="h-4 w-4 ml-auto" />
+            )}
           </Button>
 
           {/* Perfil ou Trocar Papel */}
           {settings?.enable_roles ? (
-            appSession?.role === 'owner' ? (
+            appSession?.role === "owner" ? (
               <Button
                 variant="ghost"
                 className="w-full flex gap-3 justify-start h-10"

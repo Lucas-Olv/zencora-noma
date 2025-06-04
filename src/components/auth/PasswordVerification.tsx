@@ -1,6 +1,13 @@
 import { useState, FormEvent, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -48,12 +55,12 @@ export default function PasswordVerification() {
       }
 
       // If password is correct, navigate to the target path with verified state
-      navigate(targetPath, { 
+      navigate(targetPath, {
         replace: true,
-        state: { 
+        state: {
           ...location.state,
-          verified: true 
-        }
+          verified: true,
+        },
       });
     } catch (error: any) {
       toast({
@@ -118,7 +125,8 @@ export default function PasswordVerification() {
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Verificando...
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />{" "}
+                  Verificando...
                 </>
               ) : (
                 "Acessar"
@@ -129,4 +137,4 @@ export default function PasswordVerification() {
       </Card>
     </div>
   );
-} 
+}

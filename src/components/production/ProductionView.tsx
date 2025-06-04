@@ -8,7 +8,15 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Check, Clock, FileText, Loader2, Pencil, Printer, RefreshCw } from "lucide-react";
+import {
+  Check,
+  Clock,
+  FileText,
+  Loader2,
+  Pencil,
+  Printer,
+  RefreshCw,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
@@ -30,7 +38,13 @@ import { SubscriptionGate } from "../subscription/SubscriptionGate";
 import { supabase } from "@/integrations/supabase/client";
 import { SettingsGate } from "../settings/SettingsGate";
 
-function ConnectionStatus({ isConnected, onReconnect }: { isConnected: boolean | undefined; onReconnect: () => void }) {
+function ConnectionStatus({
+  isConnected,
+  onReconnect,
+}: {
+  isConnected: boolean | undefined;
+  onReconnect: () => void;
+}) {
   return (
     <div className="flex items-center gap-2">
       {isConnected === false && (
@@ -54,7 +68,7 @@ function ConnectionStatus({ isConnected, onReconnect }: { isConnected: boolean |
               "w-3 h-3 rounded-full",
               isConnected === undefined && "bg-gray-400",
               isConnected === true && "bg-green-500 animate-pulse",
-              isConnected === false && "bg-red-500"
+              isConnected === false && "bg-red-500",
             )}
           />
           <div
@@ -63,7 +77,7 @@ function ConnectionStatus({ isConnected, onReconnect }: { isConnected: boolean |
               isConnected === undefined && "bg-gray-400",
               isConnected === true && "bg-green-500",
               isConnected === false && "bg-red-500",
-              isConnected && "opacity-50 animate-ping"
+              isConnected && "opacity-50 animate-ping",
             )}
           />
         </div>
@@ -77,7 +91,9 @@ export function ProductionView() {
   const { isLoading, tenant } = useWorkspaceContext();
   const [orders, setOrders] = useState<OrderType[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isConnected, setIsConnected] = useState<boolean | undefined>(undefined);
+  const [isConnected, setIsConnected] = useState<boolean | undefined>(
+    undefined,
+  );
   const channelRef = useRef<any>(null);
   const navigate = useNavigate();
 
@@ -101,16 +117,21 @@ export function ProductionView() {
         .channel(`orders:${tenant.id}`, {
           config: { private: true },
         })
-        .on('broadcast', { event: 'INSERT' }, (payload) => {
+        .on("broadcast", { event: "INSERT" }, (payload) => {
           if (payload.payload?.record) {
-            setOrders(currentOrders => [...currentOrders, payload.payload.record]);
+            setOrders((currentOrders) => [
+              ...currentOrders,
+              payload.payload.record,
+            ]);
           }
         })
-        .on('broadcast', { event: 'UPDATE' }, (payload) => {
+        .on("broadcast", { event: "UPDATE" }, (payload) => {
           if (payload.payload?.record) {
-            setOrders(currentOrders => {
+            setOrders((currentOrders) => {
               const updatedOrders = [...currentOrders];
-              const orderIndex = updatedOrders.findIndex(o => o.id === payload.payload.record.id);
+              const orderIndex = updatedOrders.findIndex(
+                (o) => o.id === payload.payload.record.id,
+              );
               if (orderIndex >= 0) {
                 updatedOrders[orderIndex] = payload.payload.record;
               }
@@ -118,25 +139,27 @@ export function ProductionView() {
             });
           }
         })
-        .on('broadcast', { event: 'DELETE' }, (payload) => {
+        .on("broadcast", { event: "DELETE" }, (payload) => {
           if (payload.payload?.old_record?.id) {
-            setOrders(currentOrders => 
-              currentOrders.filter(order => order.id !== payload.payload.old_record.id)
+            setOrders((currentOrders) =>
+              currentOrders.filter(
+                (order) => order.id !== payload.payload.old_record.id,
+              ),
             );
           }
         })
         .subscribe((status) => {
           const wasConnected = isConnected;
-          setIsConnected(status === 'SUBSCRIBED');
-          
+          setIsConnected(status === "SUBSCRIBED");
+
           // Só mostra o toast se já estava conectado e perdeu a conexão
-          if (wasConnected && status === 'CLOSED') {
+          if (wasConnected && status === "CLOSED") {
             toast({
               title: "Conexão perdida",
               description: "Não é possível receber atualizações em tempo real",
               variant: "destructive",
             });
-          } else if (status === 'SUBSCRIBED' && !wasConnected) {
+          } else if (status === "SUBSCRIBED" && !wasConnected) {
             // Só mostra o toast de conexão estabelecida se não estava conectado antes
             toast({
               title: "Conexão estabelecida",
@@ -147,7 +170,7 @@ export function ProductionView() {
 
       channelRef.current = channel;
     } catch (error) {
-      console.error('Error setting up realtime subscription:', error);
+      console.error("Error setting up realtime subscription:", error);
       setIsConnected(false);
     }
   };
@@ -233,7 +256,8 @@ export function ProductionView() {
 
   const OrderCard = ({ order }: { order: OrderType }) => {
     const isOverdue = new Date(order.due_date) < new Date();
-    const status = (isOverdue && order.status === "pending") ? "overdue" : order.status;
+    const status =
+      isOverdue && order.status === "pending" ? "overdue" : order.status;
 
     if (isMobile) {
       return (
@@ -298,7 +322,11 @@ export function ProductionView() {
                   className="flex-1"
                   disabled={order.status === "done"}
                 >
-                  {order.status === "pending" ? "Iniciar Produção" : order.status === "done" ? "Concluído" : "Finalizar"}
+                  {order.status === "pending"
+                    ? "Iniciar Produção"
+                    : order.status === "done"
+                      ? "Concluído"
+                      : "Finalizar"}
                 </Button>
               </SettingsGate>
             </SubscriptionGate>
@@ -381,7 +409,11 @@ export function ProductionView() {
                     className="flex-1 sm:flex-none"
                     disabled={order.status === "done"}
                   >
-                    {order.status === "pending" ? "Iniciar Produção" : order.status === "done" ? "Concluído" : "Finalizar"}
+                    {order.status === "pending"
+                      ? "Iniciar Produção"
+                      : order.status === "done"
+                        ? "Concluído"
+                        : "Finalizar"}
                   </Button>
                 </SettingsGate>
               </SubscriptionGate>
@@ -408,16 +440,18 @@ export function ProductionView() {
 
   const OrderLabel = ({ order }: { order: OrderType }) => {
     const isOverdue = new Date(order.due_date) < new Date();
-    const status = (isOverdue && order.status === "pending") ? "overdue" : order.status;
+    const status =
+      isOverdue && order.status === "pending" ? "overdue" : order.status;
     const statusDisplay = getStatusDisplay(status, order.due_date);
 
     return (
       <div className="w-[100mm] h-[150mm] bg-white text-black p-6">
         <div className="border border-gray-300 rounded-xl shadow-sm h-full flex flex-col justify-between p-6 space-y-4">
-
           {/* Bloco do código da encomenda */}
           <div className="text-center py-4">
-            <p className="text-[10px] uppercase font-medium text-zinc-400 tracking-wide">Código</p>
+            <p className="text-[10px] uppercase font-medium text-zinc-400 tracking-wide">
+              Código
+            </p>
             <h1 className="font-mono text-2xl font-bold tracking-widest text-zinc-800">
               {getOrderCode(order.id)}
             </h1>
@@ -425,23 +459,31 @@ export function ProductionView() {
 
           {/* Informações principais */}
           <div className="flex-1 flex flex-col gap-4 text-zinc-800">
-
             <div className="grid grid-cols-2 gap-4">
               <LabelItem title="Cliente" content={order.client_name} />
               <LabelItem title="Entrega" content={formatDate(order.due_date)} />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <LabelItem title="Valor" content={`R$ ${order.price.toFixed(2).replace(".", ",")}`} />
+              <LabelItem
+                title="Valor"
+                content={`R$ ${order.price.toFixed(2).replace(".", ",")}`}
+              />
               <LabelItem title="Status" content={statusDisplay.label} />
             </div>
 
-            <LabelItem title="Descrição" content={order.description || "Sem descrição"} />
+            <LabelItem
+              title="Descrição"
+              content={order.description || "Sem descrição"}
+            />
           </div>
 
           {/* Rodapé */}
           <div className="text-center text-[10px] text-zinc-400 border-t pt-2">
-            <p>Gerado em {formatDate(new Date().toISOString(), "dd/MM/yyyy 'às' HH:mm")}</p>
+            <p>
+              Gerado em{" "}
+              {formatDate(new Date().toISOString(), "dd/MM/yyyy 'às' HH:mm")}
+            </p>
             <p className="mt-0.5">Por Zencora Noma</p>
           </div>
         </div>
@@ -449,13 +491,20 @@ export function ProductionView() {
     );
   };
 
-  const LabelItem = ({ title, content }: { title: string; content: React.ReactNode }) => (
+  const LabelItem = ({
+    title,
+    content,
+  }: {
+    title: string;
+    content: React.ReactNode;
+  }) => (
     <div className="flex flex-col">
-      <span className="text-[10px] uppercase font-medium text-zinc-400 tracking-wide">{title}</span>
+      <span className="text-[10px] uppercase font-medium text-zinc-400 tracking-wide">
+        {title}
+      </span>
       <span className="text-sm leading-tight break-words">{content}</span>
     </div>
   );
-
 
   const handleChangeOrderStatus = async (id: string, status: string) => {
     try {
@@ -515,9 +564,12 @@ export function ProductionView() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-          <CardTitle>Encomendas</CardTitle>
+            <CardTitle>Encomendas</CardTitle>
           </div>
-          <ConnectionStatus isConnected={isConnected} onReconnect={handleReconnect} />
+          <ConnectionStatus
+            isConnected={isConnected}
+            onReconnect={handleReconnect}
+          />
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="pending" className="w-full">
@@ -547,10 +599,11 @@ export function ProductionView() {
               >
                 <div className="space-y-4">
                   {pendingOrders.map((order) => {
-                    const statusDisplay = getStatusDisplay(order.status, order.due_date);
-                    return (
-                    <OrderCard key={order.id} order={order} />
+                    const statusDisplay = getStatusDisplay(
+                      order.status,
+                      order.due_date,
                     );
+                    return <OrderCard key={order.id} order={order} />;
                   })}
                 </div>
               </LoadingState>

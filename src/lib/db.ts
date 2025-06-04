@@ -1,6 +1,6 @@
-import Dexie, { Table } from 'dexie';
-import { Session, User } from '@supabase/supabase-js';
-import { Tables } from '@/integrations/supabase/types';
+import Dexie, { Table } from "dexie";
+import { Session, User } from "@supabase/supabase-js";
+import { Tables } from "@/integrations/supabase/types";
 
 type Tenant = Tables<"tenants">;
 type Settings = Tables<"settings">;
@@ -26,14 +26,14 @@ export class ZencoraDB extends Dexie {
   workspace!: Table<WorkspaceData>;
 
   constructor() {
-    super('zencoraDB');
+    super("zencoraDB");
     this.version(1).stores({
-      workspace: '++id,initialized,initializedAt,initializedBy'
+      workspace: "++id,initialized,initializedAt,initializedBy",
     });
   }
 
   async getWorkspaceData(): Promise<WorkspaceData | undefined> {
-    return await this.workspace.orderBy('id').last();
+    return await this.workspace.orderBy("id").last();
   }
 
   async saveWorkspaceData(data: WorkspaceData): Promise<number> {
@@ -102,7 +102,6 @@ export class ZencoraDB extends Dexie {
   async clearWorkspaceData(): Promise<void> {
     await this.workspace.clear();
   }
-
 }
 
-export const db = new ZencoraDB(); 
+export const db = new ZencoraDB();

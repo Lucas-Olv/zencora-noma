@@ -3,7 +3,13 @@ import { useNavigate, Link } from "react-router-dom";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { db } from "@/lib/db";
 import { Crown } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import ThemeToggle from "../layout/ThemeToggle";
 import type { Tables } from "@/integrations/supabase/types";
@@ -13,14 +19,14 @@ import { useToast } from "@/components/ui/use-toast";
 export default function RoleSelector() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { 
-    settings, 
-    roles, 
-    session, 
-    tenant, 
-    setAppSession, 
+  const {
+    settings,
+    roles,
+    session,
+    tenant,
+    setAppSession,
     appSession: currentAppSession,
-    setSelectedRole 
+    setSelectedRole,
   } = useWorkspaceContext();
   const [loading, setLoading] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
@@ -42,23 +48,25 @@ export default function RoleSelector() {
       setIsNavigating(true);
 
       const selectedRoleId = role?.id;
-      const selectedRoleName = role ? role.name : 'owner';
+      const selectedRoleName = role ? role.name : "owner";
 
       // Atualiza o selectedRole no contexto e IndexedDB
       await db.updateSelectedRoleData(role);
       setSelectedRole(role);
 
       // Se já existe uma sessão para este role, apenas atualiza
-      if ((role === null && currentAppSession?.role === 'owner') || 
-          (role && currentAppSession?.role_id === role.id)) {
+      if (
+        (role === null && currentAppSession?.role === "owner") ||
+        (role && currentAppSession?.role_id === role.id)
+      ) {
         // Busca a sessão atualizada do Supabase para garantir dados completos
-        const { data: updatedAppSession, error: updateError } = await appSessionsService.updateAppSession(
-          currentAppSession.id,
-          {
+        const { data: updatedAppSession, error: updateError } =
+          await appSessionsService.updateAppSession(currentAppSession.id, {
             last_used_at: new Date().toISOString(),
-            expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days
-          }
-        );
+            expires_at: new Date(
+              Date.now() + 7 * 24 * 60 * 60 * 1000,
+            ).toISOString(), // 7 days
+          });
 
         if (updateError) throw updateError;
 
@@ -78,13 +86,16 @@ export default function RoleSelector() {
       }
 
       // Se não existe sessão para este role, cria uma nova
-      const { data: newAppSession, error: appSessionError } = await appSessionsService.createAppSession({
-        tenant_id: tenant.id,
-        role: selectedRoleName,
-        role_id: selectedRoleId,
-        last_used_at: new Date().toISOString(),
-        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days
-      });
+      const { data: newAppSession, error: appSessionError } =
+        await appSessionsService.createAppSession({
+          tenant_id: tenant.id,
+          role: selectedRoleName,
+          role_id: selectedRoleId,
+          last_used_at: new Date().toISOString(),
+          expires_at: new Date(
+            Date.now() + 7 * 24 * 60 * 60 * 1000,
+          ).toISOString(), // 7 days
+        });
 
       if (appSessionError) throw appSessionError;
 
@@ -223,4 +234,4 @@ export default function RoleSelector() {
       </div>
     </div>
   );
-} 
+}

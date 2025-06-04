@@ -14,7 +14,8 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import {
-  CheckCircle2, Eye,
+  CheckCircle2,
+  Eye,
   Plus,
   Search,
   X,
@@ -41,8 +42,7 @@ const OrdersView = () => {
   const [orders, setOrders] = useState<OrderType[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedOrder, setSelectedOrder] =
-    useState<OrderType | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<OrderType | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
   const [dialogOrderId, setDialogOrderId] = useState<string | undefined>();
@@ -65,16 +65,18 @@ const OrdersView = () => {
 
   const OrderLabel = ({ order }: { order: OrderType }) => {
     const isOverdue = new Date(order.due_date) < new Date();
-    const status = (isOverdue && order.status === "pending") ? "overdue" : order.status;
+    const status =
+      isOverdue && order.status === "pending" ? "overdue" : order.status;
     const statusDisplay = getStatusDisplay(status, order.due_date);
 
     return (
       <div className="w-[100mm] h-[150mm] bg-white text-black p-6">
         <div className="border border-gray-300 rounded-xl shadow-sm h-full flex flex-col justify-between p-6 space-y-4">
-
           {/* Bloco do código da encomenda */}
           <div className="text-center py-4">
-            <p className="text-[10px] uppercase font-medium text-zinc-400 tracking-wide">Código</p>
+            <p className="text-[10px] uppercase font-medium text-zinc-400 tracking-wide">
+              Código
+            </p>
             <h1 className="font-mono text-2xl font-bold tracking-widest text-zinc-800">
               {getOrderCode(order.id)}
             </h1>
@@ -82,23 +84,31 @@ const OrdersView = () => {
 
           {/* Informações principais */}
           <div className="flex-1 flex flex-col gap-4 text-zinc-800">
-
             <div className="grid grid-cols-2 gap-4">
               <LabelItem title="Cliente" content={order.client_name} />
               <LabelItem title="Entrega" content={formatDate(order.due_date)} />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <LabelItem title="Valor" content={`R$ ${order.price.toFixed(2).replace(".", ",")}`} />
+              <LabelItem
+                title="Valor"
+                content={`R$ ${order.price.toFixed(2).replace(".", ",")}`}
+              />
               <LabelItem title="Status" content={statusDisplay.label} />
             </div>
 
-            <LabelItem title="Descrição" content={order.description || "Sem descrição"} />
+            <LabelItem
+              title="Descrição"
+              content={order.description || "Sem descrição"}
+            />
           </div>
 
           {/* Rodapé */}
           <div className="text-center text-[10px] text-zinc-400 border-t pt-2">
-            <p>Gerado em {formatDate(new Date().toISOString(), "dd/MM/yyyy 'às' HH:mm")}</p>
+            <p>
+              Gerado em{" "}
+              {formatDate(new Date().toISOString(), "dd/MM/yyyy 'às' HH:mm")}
+            </p>
             <p className="mt-0.5">Por Zencora Noma</p>
           </div>
         </div>
@@ -106,9 +116,17 @@ const OrdersView = () => {
     );
   };
 
-  const LabelItem = ({ title, content }: { title: string; content: React.ReactNode }) => (
+  const LabelItem = ({
+    title,
+    content,
+  }: {
+    title: string;
+    content: React.ReactNode;
+  }) => (
     <div className="flex flex-col">
-      <span className="text-[10px] uppercase font-medium text-zinc-400 tracking-wide">{title}</span>
+      <span className="text-[10px] uppercase font-medium text-zinc-400 tracking-wide">
+        {title}
+      </span>
       <span className="text-sm leading-tight break-words">{content}</span>
     </div>
   );
@@ -189,12 +207,19 @@ const OrdersView = () => {
   const handleListUpdate = (updatedOrder: OrderType) => {
     if (dialogMode === "create") {
       let newOrders = [updatedOrder as OrderType, ...orders];
-      newOrders.sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime());
+      newOrders.sort(
+        (a, b) =>
+          new Date(a.due_date).getTime() - new Date(b.due_date).getTime(),
+      );
       setOrders(newOrders);
     } else {
-      setOrders(orders.map(order =>
-        order.id === updatedOrder.id ? { ...order, ...updatedOrder, id: order.id } : order
-      ));
+      setOrders(
+        orders.map((order) =>
+          order.id === updatedOrder.id
+            ? { ...order, ...updatedOrder, id: order.id }
+            : order,
+        ),
+      );
     }
   };
 
@@ -202,18 +227,18 @@ const OrdersView = () => {
     searchTerm.trim() === ""
       ? orders
       : orders.filter(
-        (order) =>
-          getOrderCode(order.id)
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase()) ||
-          order.client_name
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase()) ||
-          (order.description &&
-            order.description
+          (order) =>
+            getOrderCode(order.id)
               .toLowerCase()
-              .includes(searchTerm.toLowerCase())),
-      );
+              .includes(searchTerm.toLowerCase()) ||
+            order.client_name
+              .toLowerCase()
+              .includes(searchTerm.toLowerCase()) ||
+            (order.description &&
+              order.description
+                .toLowerCase()
+                .includes(searchTerm.toLowerCase())),
+        );
 
   return (
     <div className="space-y-6">
@@ -307,7 +332,10 @@ const OrdersView = () => {
                   <TableBody>
                     {filteredOrders.map((order) => {
                       const isOverdue = new Date(order.due_date) < new Date();
-                      const status = (isOverdue && order.status === "pending") ? "overdue" : order.status;
+                      const status =
+                        isOverdue && order.status === "pending"
+                          ? "overdue"
+                          : order.status;
                       return (
                         <TableRow key={order.id}>
                           <TableCell className="font-mono text-sm text-muted-foreground">
@@ -356,7 +384,6 @@ const OrdersView = () => {
                                 >
                                   <X className="h-4 w-4" />
                                 </Button>
-
                               </SubscriptionGate>
                               <SubscriptionGate blockMode="disable">
                                 <Button
@@ -390,9 +417,7 @@ const OrdersView = () => {
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  onClick={() =>
-                                    handleEditOrder(order)
-                                  }
+                                  onClick={() => handleEditOrder(order)}
                                   title="Editar encomenda"
                                   className="flex items-center justify-center"
                                 >
@@ -436,7 +461,10 @@ const OrdersView = () => {
               <div className="md:hidden space-y-4">
                 {filteredOrders.map((order) => {
                   const isOverdue = new Date(order.due_date) < new Date();
-                  const status = (isOverdue && order.status === "pending") ? "overdue" : order.status;
+                  const status =
+                    isOverdue && order.status === "pending"
+                      ? "overdue"
+                      : order.status;
                   return (
                     <Card key={order.id}>
                       <CardContent className="p-4">
@@ -520,9 +548,7 @@ const OrdersView = () => {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                onClick={() =>
-                                  handleEditOrder(order)
-                                }
+                                onClick={() => handleEditOrder(order)}
                                 title="Editar encomenda"
                               >
                                 <Pencil className="h-4 w-4" />
@@ -584,4 +610,4 @@ const OrdersView = () => {
   );
 };
 
-export default OrdersView; 
+export default OrdersView;

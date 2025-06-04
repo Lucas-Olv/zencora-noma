@@ -42,59 +42,62 @@ function RecentOrders({ orders, loading = false }: RecentOrdersProps) {
           <div className="space-y-4">
             {orders.map((order) => {
               const isOverdue = new Date(order.due_date) < new Date();
-              const status = (isOverdue && order.status === "pending") ? "overdue" : order.status;
+              const status =
+                isOverdue && order.status === "pending"
+                  ? "overdue"
+                  : order.status;
               return (
-              <div
-                key={order.id}
-                className="grid grid-cols-1 gap-4 rounded-lg border p-4 hover:bg-accent/50 cursor-pointer transition-colors"
-                onClick={() => navigate(`/orders/${order.id}`)}
-              >
-                <div className="grid grid-cols-[minmax(0,1fr),auto] gap-4">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="font-mono text-sm text-muted-foreground shrink-0">
-                        {getOrderCode(order.id)}
-                      </p>
-                      <h3 className="font-semibold truncate">
-                        {order.client_name}
-                      </h3>
-                    </div>
-                    <div className="mt-1">
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {order.description}
-                      </p>
-                    </div>
-                    <div className="mt-2">
-                      <span className="text-sm text-muted-foreground">
-                        Entrega:{" "}
-                        <span className="font-semibold">
-                          {order.due_date
-                            ? formatDate(order.due_date)
-                            : "Sem data"}
+                <div
+                  key={order.id}
+                  className="grid grid-cols-1 gap-4 rounded-lg border p-4 hover:bg-accent/50 cursor-pointer transition-colors"
+                  onClick={() => navigate(`/orders/${order.id}`)}
+                >
+                  <div className="grid grid-cols-[minmax(0,1fr),auto] gap-4">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="font-mono text-sm text-muted-foreground shrink-0">
+                          {getOrderCode(order.id)}
+                        </p>
+                        <h3 className="font-semibold truncate">
+                          {order.client_name}
+                        </h3>
+                      </div>
+                      <div className="mt-1">
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {order.description}
+                        </p>
+                      </div>
+                      <div className="mt-2">
+                        <span className="text-sm text-muted-foreground">
+                          Entrega:{" "}
+                          <span className="font-semibold">
+                            {order.due_date
+                              ? formatDate(order.due_date)
+                              : "Sem data"}
+                          </span>
                         </span>
-                      </span>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-center justify-end">
-                    <Badge
-                      variant="outline"
-                      className={cn(
-                        "w-fit",
+                    <div className="flex items-center justify-end">
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          "w-fit",
                           status === "overdue" &&
                             "bg-red-100/80 text-red-800 dark:bg-red-900/30 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-900/50",
                           status === "pending" &&
-                          "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50",
+                            "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50",
                           status === "production" &&
-                          "bg-purple-100/80 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200 hover:bg-purple-200 dark:hover:bg-purple-900/50",
+                            "bg-purple-100/80 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200 hover:bg-purple-200 dark:hover:bg-purple-900/50",
                           status === "done" &&
-                          "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50",
-                      )}
-                    >
+                            "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50",
+                        )}
+                      >
                         {status === "overdue" && "Atrasado"}
                         {status === "pending" && "Pendente"}
                         {status === "production" && "Produção"}
                         {status === "done" && "Concluído"}
-                    </Badge>
+                      </Badge>
                     </div>
                   </div>
                 </div>

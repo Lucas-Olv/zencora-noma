@@ -2,7 +2,13 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+} from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import Layout from "./components/layout/Layout";
 import Login from "./pages/Login";
@@ -22,16 +28,28 @@ import Contact from "./pages/Contact";
 import { SubscriptionExpired } from "./pages/SubscriptionExpired";
 import ProtectedRoute from "@/components/routing/ProtectedRoute";
 import { SubscriptionGate } from "./components/subscription/SubscriptionGate";
-import Reminders from "./pages/Reminders"
+import Reminders from "./pages/Reminders";
 import RoleSelector from "@/components/auth/RoleSelector";
 import PasswordVerification from "@/components/auth/PasswordVerification";
-import { useWorkspaceContext, WorkspaceProvider } from "@/contexts/WorkspaceContext";
+import {
+  useWorkspaceContext,
+  WorkspaceProvider,
+} from "@/contexts/WorkspaceContext";
 const queryClient = new QueryClient();
 
-const BLOCKED_ROUTES = ["/dashboard", "/production", "/reports", "/calendar", "/settings", "/profile", "/reminders"];
+const BLOCKED_ROUTES = [
+  "/dashboard",
+  "/production",
+  "/reports",
+  "/calendar",
+  "/settings",
+  "/profile",
+  "/reminders",
+];
 
 const AppRoutes = () => {
-  const { isAuthenticated, isLoading, settings, roles, appSession} = useWorkspaceContext();
+  const { isAuthenticated, isLoading, settings, roles, appSession } =
+    useWorkspaceContext();
   const location = useLocation();
 
   if (isLoading) {
@@ -43,7 +61,11 @@ const AppRoutes = () => {
   }
 
   // Se estiver autenticado, tem roles habilitados e roles disponíveis, mas não tem role selecionada
-  const shouldSelectRole = isAuthenticated && settings?.enable_roles && roles.length > 0 && !appSession;
+  const shouldSelectRole =
+    isAuthenticated &&
+    settings?.enable_roles &&
+    roles.length > 0 &&
+    !appSession;
 
   return (
     <Routes>
@@ -151,13 +173,14 @@ const AppRoutes = () => {
                 <ProtectedRoute>
                   {shouldSelectRole ? (
                     <Navigate to="/select-role" replace />
-                  ) : settings?.lock_reports_by_password && !location.state?.verified ? (
+                  ) : settings?.lock_reports_by_password &&
+                    !location.state?.verified ? (
                     <Navigate
                       to="/verify-password"
                       state={{
                         redirect: "/reports",
                         name: "os relatórios",
-                        fromRoleSwitch: false
+                        fromRoleSwitch: false,
                       }}
                       replace
                     />
@@ -197,13 +220,14 @@ const AppRoutes = () => {
                 <ProtectedRoute>
                   {shouldSelectRole ? (
                     <Navigate to="/select-role" replace />
-                  ) : settings?.lock_settings_by_password && !location.state?.verified ? (
+                  ) : settings?.lock_settings_by_password &&
+                    !location.state?.verified ? (
                     <Navigate
                       to="/verify-password"
                       state={{
                         redirect: "/settings",
                         name: "as configurações",
-                        fromRoleSwitch: false
+                        fromRoleSwitch: false,
                       }}
                       replace
                     />
@@ -225,10 +249,7 @@ const AppRoutes = () => {
 
           {/* Protected Routes Outside Layout scheme*/}
           {settings?.enable_roles && roles.length > 0 && (
-            <Route
-              path="/select-role"
-              element={<RoleSelector />}
-            />
+            <Route path="/select-role" element={<RoleSelector />} />
           )}
         </>
       )}

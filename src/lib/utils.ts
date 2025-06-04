@@ -68,9 +68,15 @@ export function usePrint(
   });
 }
 
-export function getStatusDisplay(status: string | null, dueDate?: string | null) {
+export function getStatusDisplay(
+  status: string | null,
+  dueDate?: string | null,
+) {
   // Verifica se está atrasado (apenas para status pendente ou produção)
-  const isOverdue = dueDate && ["pending", "production"].includes(status || "") && new Date(dueDate) < new Date();
+  const isOverdue =
+    dueDate &&
+    ["pending", "production"].includes(status || "") &&
+    new Date(dueDate) < new Date();
 
   if (isOverdue) {
     return {

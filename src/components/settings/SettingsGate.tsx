@@ -1,18 +1,18 @@
 // components/SettingsGate.tsx
-import { ReactNode, cloneElement } from 'react';
-import { useWorkspaceContext } from '@/contexts/WorkspaceContext';
-import { Loader2 } from 'lucide-react';
+import { ReactNode, cloneElement } from "react";
+import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
+import { Loader2 } from "lucide-react";
 
-type PermissionType = 'create' | 'edit' | 'delete';
+type PermissionType = "create" | "edit" | "delete";
 
 type Props = {
   children: ReactNode;
   fallback?: ReactNode;
   requireRolesEnabled?: boolean;
-  requireFeature?: keyof ReturnType<typeof useWorkspaceContext>['settings'];
+  requireFeature?: keyof ReturnType<typeof useWorkspaceContext>["settings"];
   requirePanelAccess?: string; // ex: 'dashboard', 'orders', etc.
   permission?: PermissionType;
-  blockMode?: 'hide' | 'disable';
+  blockMode?: "hide" | "disable";
 };
 
 export const SettingsGate = ({
@@ -22,7 +22,7 @@ export const SettingsGate = ({
   requireFeature,
   requirePanelAccess,
   permission,
-  blockMode = 'hide',
+  blockMode = "hide",
 }: Props) => {
   const { settings, selectedRole, isLoading, isOwner } = useWorkspaceContext();
 
@@ -41,19 +41,19 @@ export const SettingsGate = ({
   if (requirePanelAccess && settings?.enable_roles && selectedRole) {
     const hasAccess = (() => {
       switch (requirePanelAccess) {
-        case 'dashboard':
+        case "dashboard":
           return selectedRole.can_access_dashboard;
-        case 'orders':
+        case "orders":
           return selectedRole.can_access_orders;
-        case 'calendar':
+        case "calendar":
           return selectedRole.can_access_calendar;
-        case 'production':
+        case "production":
           return selectedRole.can_access_production;
-        case 'reports':
+        case "reports":
           return selectedRole.can_access_reports;
-        case 'reminders':
+        case "reminders":
           return selectedRole.can_access_reminders;
-        case 'settings':
+        case "settings":
           return selectedRole.can_access_settings;
         default:
           return false;
@@ -67,11 +67,11 @@ export const SettingsGate = ({
   if (permission && settings?.enable_roles && selectedRole) {
     const hasPermission = (() => {
       switch (permission) {
-        case 'create':
+        case "create":
           return selectedRole.can_create_orders;
-        case 'edit':
+        case "edit":
           return selectedRole.can_edit_orders;
-        case 'delete':
+        case "delete":
           return selectedRole.can_delete_orders;
         default:
           return false;
@@ -80,7 +80,7 @@ export const SettingsGate = ({
 
     if (!hasPermission) {
       // Se não tem permissão e o modo é 'disable', desabilita o elemento
-      if (blockMode === 'disable') {
+      if (blockMode === "disable") {
         const element = children as React.ReactElement;
         return cloneElement(element, {
           ...element.props,
@@ -88,7 +88,7 @@ export const SettingsGate = ({
           style: {
             ...(element.props?.style || {}),
             opacity: 0.5,
-            cursor: 'not-allowed',
+            cursor: "not-allowed",
           },
         });
       }

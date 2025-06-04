@@ -12,7 +12,13 @@ import { Tables } from "@/integrations/supabase/types";
 import { remindersService } from "@/services/supabaseService";
 import { useRef, useEffect, useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
 
 type Reminder = Tables<"reminders">;
@@ -22,14 +28,22 @@ interface RecentRemindersProps {
   loading?: boolean;
 }
 
-function RecentReminders({ reminders: initialReminders, loading = false }: RecentRemindersProps) {
+function RecentReminders({
+  reminders: initialReminders,
+  loading = false,
+}: RecentRemindersProps) {
   const { toast } = useToast();
-  const [selectedReminder, setSelectedReminder] = useState<Reminder | null>(null);
+  const [selectedReminder, setSelectedReminder] = useState<Reminder | null>(
+    null,
+  );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [reminders, setReminders] = useState<Reminder[]>(initialReminders);
 
   useEffect(() => {
-    const sortedReminders = initialReminders.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    const sortedReminders = initialReminders.sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    );
     const slicedReminders = sortedReminders.slice(0, 5);
     setReminders(slicedReminders);
   }, [initialReminders]);
@@ -64,18 +78,21 @@ function RecentReminders({ reminders: initialReminders, loading = false }: Recen
 
   const handleToggleDone = async (reminder: Reminder) => {
     try {
-      const { data, error } = await remindersService.updateReminder(reminder.id, {
-        is_done: !reminder.is_done,
-        tenant_id: reminder.tenant_id,
-        title: reminder.title,
-        content: reminder.content,
-      });
+      const { data, error } = await remindersService.updateReminder(
+        reminder.id,
+        {
+          is_done: !reminder.is_done,
+          tenant_id: reminder.tenant_id,
+          title: reminder.title,
+          content: reminder.content,
+        },
+      );
 
       if (error) throw error;
 
       if (data) {
         setReminders((prev) =>
-          prev.map((r) => (r.id === reminder.id ? data : r))
+          prev.map((r) => (r.id === reminder.id ? data : r)),
         );
       }
       toast({
@@ -118,7 +135,9 @@ function RecentReminders({ reminders: initialReminders, loading = false }: Recen
                   checked={reminder.is_done}
                   onCheckedChange={() => handleToggleDone(reminder)}
                 />
-                <span className={`flex-1 ${reminder.is_done ? "line-through text-muted-foreground" : ""}`}>
+                <span
+                  className={`flex-1 ${reminder.is_done ? "line-through text-muted-foreground" : ""}`}
+                >
                   {reminder.title}
                 </span>
                 <Button
@@ -160,7 +179,6 @@ function RecentReminders({ reminders: initialReminders, loading = false }: Recen
             </DialogFooter>
           </DialogContent>
         </Dialog>
-
       </CardContent>
     </Card>
   );

@@ -36,7 +36,9 @@ const RemindersView = () => {
   const { tenant } = useWorkspaceContext();
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [newReminderTitle, setNewReminderTitle] = useState("");
-  const [selectedReminder, setSelectedReminder] = useState<Reminder | null>(null);
+  const [selectedReminder, setSelectedReminder] = useState<Reminder | null>(
+    null,
+  );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [editedContent, setEditedContent] = useState("");
@@ -47,7 +49,9 @@ const RemindersView = () => {
 
   const fetchReminders = async () => {
     try {
-      const { data, error } = await remindersService.getTenantReminders(tenant?.id);
+      const { data, error } = await remindersService.getTenantReminders(
+        tenant?.id,
+      );
 
       if (error) throw error;
       setReminders(data || []);
@@ -92,18 +96,21 @@ const RemindersView = () => {
 
   const handleToggleDone = async (reminder: Reminder) => {
     try {
-      const { data, error } = await remindersService.updateReminder(reminder.id, {
-        is_done: !reminder.is_done,
-        tenant_id: reminder.tenant_id,
-        title: reminder.title,
-        content: reminder.content,
-      });
+      const { data, error } = await remindersService.updateReminder(
+        reminder.id,
+        {
+          is_done: !reminder.is_done,
+          tenant_id: reminder.tenant_id,
+          title: reminder.title,
+          content: reminder.content,
+        },
+      );
 
       if (error) throw error;
 
       if (data) {
         setReminders((prev) =>
-          prev.map((r) => (r.id === reminder.id ? data : r))
+          prev.map((r) => (r.id === reminder.id ? data : r)),
         );
       }
       toast({
@@ -129,18 +136,21 @@ const RemindersView = () => {
     if (!selectedReminder) return;
 
     try {
-      const { data, error } = await remindersService.updateReminder(selectedReminder.id, {
-        content: editedContent,
-        tenant_id: selectedReminder.tenant_id,
-        title: selectedReminder.title,
-        is_done: selectedReminder.is_done,
-      });
+      const { data, error } = await remindersService.updateReminder(
+        selectedReminder.id,
+        {
+          content: editedContent,
+          tenant_id: selectedReminder.tenant_id,
+          title: selectedReminder.title,
+          is_done: selectedReminder.is_done,
+        },
+      );
 
       if (error) throw error;
 
       if (data) {
         setReminders((prev) =>
-          prev.map((r) => (r.id === selectedReminder.id ? data : r))
+          prev.map((r) => (r.id === selectedReminder.id ? data : r)),
         );
         setIsDialogOpen(false);
         toast({
@@ -161,7 +171,9 @@ const RemindersView = () => {
     if (!selectedReminder) return;
 
     try {
-      const { error } = await remindersService.deleteReminder(selectedReminder.id);
+      const { error } = await remindersService.deleteReminder(
+        selectedReminder.id,
+      );
       if (error) throw error;
 
       setReminders((prev) => prev.filter((r) => r.id !== selectedReminder.id));
@@ -214,13 +226,17 @@ const RemindersView = () => {
               <TabsTrigger value="pending">
                 Pendentes
                 {pendingReminders.length > 0 && (
-                  <Badge variant="default" className="ml-2">{pendingReminders.length}</Badge>
+                  <Badge variant="default" className="ml-2">
+                    {pendingReminders.length}
+                  </Badge>
                 )}
               </TabsTrigger>
               <TabsTrigger value="completed">
                 Concluídos
                 {completedReminders.length > 0 && (
-                  <Badge variant="default" className="ml-2">{completedReminders.length}</Badge>
+                  <Badge variant="default" className="ml-2">
+                    {completedReminders.length}
+                  </Badge>
                 )}
               </TabsTrigger>
             </TabsList>
@@ -236,9 +252,7 @@ const RemindersView = () => {
                       checked={reminder.is_done}
                       onCheckedChange={() => handleToggleDone(reminder)}
                     />
-                    <span className="flex-1">
-                      {reminder.title}
-                    </span>
+                    <span className="flex-1">{reminder.title}</span>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -301,9 +315,7 @@ const RemindersView = () => {
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>
-                  {selectedReminder?.title}
-                </DialogTitle>
+                <DialogTitle>{selectedReminder?.title}</DialogTitle>
               </DialogHeader>
               <div className="py-4">
                 <Textarea
@@ -314,7 +326,10 @@ const RemindersView = () => {
                 />
               </div>
               <DialogFooter className="flex justify-end gap-2 md:gap-0">
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsDialogOpen(false)}
+                >
                   Cancelar
                 </Button>
                 <Button onClick={handleSaveDetails}>Salvar</Button>
@@ -322,19 +337,26 @@ const RemindersView = () => {
             </DialogContent>
           </Dialog>
 
-          <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <AlertDialog
+            open={isDeleteDialogOpen}
+            onOpenChange={setIsDeleteDialogOpen}
+          >
             <AlertDialogContent className="w-[calc(100%-2rem)] max-w-[400px] mx-auto rounded-xl">
               <AlertDialogHeader>
                 <AlertDialogTitle>Excluir lembrete?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Tem certeza que deseja excluir este lembrete? Esta ação não pode ser desfeita.
+                  Tem certeza que deseja excluir este lembrete? Esta ação não
+                  pode ser desfeita.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel onClick={() => setIsDeleteDialogOpen(false)}>
                   Cancelar
                 </AlertDialogCancel>
-                <AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={handleDelete}>
+                <AlertDialogAction
+                  className="bg-red-600 hover:bg-red-700"
+                  onClick={handleDelete}
+                >
                   Excluir
                 </AlertDialogAction>
               </AlertDialogFooter>
@@ -346,4 +368,4 @@ const RemindersView = () => {
   );
 };
 
-export default RemindersView; 
+export default RemindersView;

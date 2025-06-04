@@ -29,7 +29,7 @@ export const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
   const { isAuthenticated, settings, roles } = useWorkspaceContext();
-  
+
   useEffect(() => {
     // Check if register=true is in the URL
     if (searchParams.get("register") === "true") {
@@ -45,7 +45,7 @@ export const LoginForm = () => {
       }
     }
   }, [searchParams, isAuthenticated, settings, roles, navigate]);
-  
+
   const getErrorMessage = (error: any) => {
     const errorMessages: { [key: string]: string } = {
       "Invalid login credentials": "Credenciais de login inválidas",
@@ -64,21 +64,21 @@ export const LoginForm = () => {
       "Ocorreu um erro. Por favor, tente novamente."
     );
   };
-  
+
   const handleSignUp = async (e: FormEvent) => {
     e.preventDefault();
     try {
       setLoading(true);
-      
+
       // Criar o usuário na autenticação
       const { data: authData, error: authError } =
         await supabaseService.auth.signUpWithEmail(email, password, {
           name,
           product: import.meta.env.VITE_PRODUCT_CODE,
         });
-      
+
       if (authError) throw authError;
-      
+
       if (!authData.user) {
         throw new Error("Erro ao criar usuário na autenticação");
       }
@@ -93,14 +93,14 @@ export const LoginForm = () => {
         setActiveTab("login");
         return;
       }
-      
+
       // Se o email não precisa ser confirmado, faz login automaticamente
       if (authData.session?.access_token) {
-      toast({
-        title: "Conta criada com sucesso!",
-        description: "Bem-vindo ao Zencora Noma.",
-      });
-      navigate("/dashboard");
+        toast({
+          title: "Conta criada com sucesso!",
+          description: "Bem-vindo ao Zencora Noma.",
+        });
+        navigate("/dashboard");
       }
     } catch (error: any) {
       console.error("Erro ao criar conta:", error);
@@ -113,7 +113,7 @@ export const LoginForm = () => {
       setLoading(false);
     }
   };
-  
+
   const handleSignIn = async (e: FormEvent) => {
     e.preventDefault();
     try {
@@ -122,11 +122,10 @@ export const LoginForm = () => {
         email,
         password,
       );
-      
-      if (error) throw error;
-      
-      if (data.session?.access_token) {
 
+      if (error) throw error;
+
+      if (data.session?.access_token) {
         toast({
           title: "Login realizado com sucesso!",
           description: "Bem-vindo de volta ao Zencora Noma.",
@@ -162,7 +161,7 @@ export const LoginForm = () => {
           <TabsTrigger value="login">Entrar</TabsTrigger>
           <TabsTrigger value="register">Criar Conta</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="login" className="flex items-start">
           <Card className="w-full">
             <form onSubmit={handleSignIn}>
@@ -172,7 +171,7 @@ export const LoginForm = () => {
                   Entre com sua conta Zencora para acessar o sistema.
                 </CardDescription>
               </CardHeader>
-              
+
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
@@ -185,7 +184,7 @@ export const LoginForm = () => {
                     onChange={(e) => setEmail(e.target.value)}
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="password">Senha</Label>
                   <div className="relative">
@@ -213,7 +212,7 @@ export const LoginForm = () => {
                   </div>
                 </div>
               </CardContent>
-              
+
               <CardFooter>
                 <Button className="w-full" disabled={loading}>
                   {loading ? (
@@ -229,7 +228,7 @@ export const LoginForm = () => {
             </form>
           </Card>
         </TabsContent>
-        
+
         <TabsContent value="register" className="flex items-start">
           <Card className="w-full">
             <form onSubmit={handleSignUp}>
@@ -239,7 +238,7 @@ export const LoginForm = () => {
                   Crie uma conta para começar a usar o Zencora Noma.
                 </CardDescription>
               </CardHeader>
-              
+
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="register-name">Nome</Label>
@@ -251,7 +250,7 @@ export const LoginForm = () => {
                     onChange={(e) => setName(e.target.value)}
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="register-email">Email</Label>
                   <Input
@@ -263,7 +262,7 @@ export const LoginForm = () => {
                     onChange={(e) => setEmail(e.target.value)}
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="register-password">Senha</Label>
                   <div className="relative">
@@ -291,7 +290,7 @@ export const LoginForm = () => {
                   </div>
                 </div>
               </CardContent>
-              
+
               <CardFooter>
                 <Button className="w-full" disabled={loading}>
                   {loading ? (

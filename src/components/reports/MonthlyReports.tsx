@@ -194,7 +194,7 @@ const MonthlyReports = () => {
                 (sum, order) => sum + (order.price || 0),
                 0,
               ),
-              Encomendas: dayOrders.length
+              Encomendas: dayOrders.length,
             };
           });
         }
@@ -330,20 +330,22 @@ const MonthlyReports = () => {
       head: [["Cliente", "Descrição", "Valor", "Data", "Status"]],
       body: orders.map((order) => {
         const isOverdue = new Date(order.due_date) < new Date();
-        const status = isOverdue && (order.status === "pending" || order.status === "production")
-          ? "Atrasado"
-          : order.status === "pending"
-            ? "Pendente"
-            : order.status === "production"
-              ? "Produção"
-              : "Concluído";
+        const status =
+          isOverdue &&
+          (order.status === "pending" || order.status === "production")
+            ? "Atrasado"
+            : order.status === "pending"
+              ? "Pendente"
+              : order.status === "production"
+                ? "Produção"
+                : "Concluído";
 
         return [
-        order.client_name,
-        order.description || "Sem descrição",
-        formatCurrency(order.price),
-        formatDate(order.due_date),
-          status
+          order.client_name,
+          order.description || "Sem descrição",
+          formatCurrency(order.price),
+          formatDate(order.due_date),
+          status,
         ];
       }),
       theme: "grid",
@@ -417,61 +419,66 @@ const MonthlyReports = () => {
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <div className="flex flex-col sm:flex-row gap-4">
             <SubscriptionGate blockMode="disable">
-            <Select
-              value={dateRange?.from ? format(dateRange.from, "yyyy-MM") : ""}
-              onValueChange={(value) => {
-                const [year, month] = value.split("-");
-                const start = new Date(parseInt(year), parseInt(month) - 1, 1);
-                const end = new Date(parseInt(year), parseInt(month), 0);
-                setDateRange({ from: start, to: end });
-              }}
-            >
-              <SelectTrigger className="w-full sm:w-[180px]">
-                <SelectValue placeholder="Selecione o mês" />
-              </SelectTrigger>
-              <SelectContent>
-                {Array.from({ length: 12 }, (_, i) => {
-                  const date = new Date();
-                  date.setMonth(date.getMonth() - i);
-                  const monthYear = format(date, "yyyy-MM");
-                  return (
-                    <SelectItem
-                      key={monthYear}
-                      value={monthYear}
-                    >
-                      {format(date, "MMMM yyyy", { locale: ptBR })}
-                    </SelectItem>
+              <Select
+                value={dateRange?.from ? format(dateRange.from, "yyyy-MM") : ""}
+                onValueChange={(value) => {
+                  const [year, month] = value.split("-");
+                  const start = new Date(
+                    parseInt(year),
+                    parseInt(month) - 1,
+                    1,
                   );
-                }).filter((_, i, arr) => {
-                  // Remove duplicatas verificando se é a primeira ocorrência do mês/ano
-                  const monthYear = arr[i].props.value;
-                  return arr.findIndex(item => item.props.value === monthYear) === i;
-                })}
+                  const end = new Date(parseInt(year), parseInt(month), 0);
+                  setDateRange({ from: start, to: end });
+                }}
+              >
+                <SelectTrigger className="w-full sm:w-[180px]">
+                  <SelectValue placeholder="Selecione o mês" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Array.from({ length: 12 }, (_, i) => {
+                    const date = new Date();
+                    date.setMonth(date.getMonth() - i);
+                    const monthYear = format(date, "yyyy-MM");
+                    return (
+                      <SelectItem key={monthYear} value={monthYear}>
+                        {format(date, "MMMM yyyy", { locale: ptBR })}
+                      </SelectItem>
+                    );
+                  }).filter((_, i, arr) => {
+                    // Remove duplicatas verificando se é a primeira ocorrência do mês/ano
+                    const monthYear = arr[i].props.value;
+                    return (
+                      arr.findIndex(
+                        (item) => item.props.value === monthYear,
+                      ) === i
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </SubscriptionGate>
             <div className="flex gap-2">
               <SubscriptionGate>
                 <DateRangePicker
-                value={dateRange}
-                onChange={setDateRange}
-                className="w-full sm:w-[300px]"
-              />
+                  value={dateRange}
+                  onChange={setDateRange}
+                  className="w-full sm:w-[300px]"
+                />
               </SubscriptionGate>
-              <SubscriptionGate blockMode="disable">               
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handleDownloadPDF}
-                disabled={loading}
-                className="shrink-0 h-10 w-10"
-              >
-                {loading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Download className="h-4 w-4" />
-                )}
-              </Button>
+              <SubscriptionGate blockMode="disable">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleDownloadPDF}
+                  disabled={loading}
+                  className="shrink-0 h-10 w-10"
+                >
+                  {loading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Download className="h-4 w-4" />
+                  )}
+                </Button>
               </SubscriptionGate>
             </div>
           </div>
@@ -599,7 +606,9 @@ const MonthlyReports = () => {
               <div className="space-y-2 sm:space-y-3">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <h3 className="text-lg font-semibold">Encomendas por Dia</h3>
+                    <h3 className="text-lg font-semibold">
+                      Encomendas por Dia
+                    </h3>
                     <p className="text-sm text-muted-foreground">
                       Quantidade de encomendas por dia no período
                     </p>
@@ -616,12 +625,8 @@ const MonthlyReports = () => {
                           tick={{ fontSize: 12 }}
                           interval="preserveStartEnd"
                         />
-                        <YAxis
-                          tick={{ fontSize: 12 }}
-                        />
-                        <Tooltip
-                          labelStyle={{ fontSize: 12 }}
-                        />
+                        <YAxis tick={{ fontSize: 12 }} />
+                        <Tooltip labelStyle={{ fontSize: 12 }} />
                         <Bar
                           dataKey="Encomendas"
                           fill="hsl(var(--primary))"
@@ -636,7 +641,7 @@ const MonthlyReports = () => {
           </Card>
         </div>
       </div>
-      <OrdersList 
+      <OrdersList
         orders={orders}
         loading={loading}
         title="Encomendas do Período"

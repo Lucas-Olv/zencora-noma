@@ -32,26 +32,30 @@ export function Footer() {
     };
   }, []);
 
-  const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, path: string) => {
-    if (path.startsWith('/#')) {
-      if (location.pathname === '/') {
+  const handleLinkClick = (
+    e: React.MouseEvent<HTMLAnchorElement>,
+    path: string,
+  ) => {
+    if (path.startsWith("/#")) {
+      if (location.pathname === "/") {
         e.preventDefault();
         const element = document.getElementById(path.substring(2));
         if (element) {
           const headerOffset = 80; // Altura do header fixo
           const elementPosition = element.getBoundingClientRect().top;
-          const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+          const offsetPosition =
+            elementPosition + window.pageYOffset - headerOffset;
 
           window.scrollTo({
             top: offsetPosition,
-            behavior: 'smooth'
+            behavior: "smooth",
           });
         }
         return;
       }
       return;
     }
-    
+
     e.preventDefault();
     window.scrollTo(0, 0);
     navigate(path);

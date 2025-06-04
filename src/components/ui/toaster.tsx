@@ -12,7 +12,7 @@ export function Toaster() {
   const { toasts } = useToast();
 
   // Verifica se há toasts ativos (com propriedade 'open' true)
-  const hasActiveToasts = toasts.some(toast => toast.open);
+  const hasActiveToasts = toasts.some((toast) => toast.open);
 
   return (
     <ToastProvider>

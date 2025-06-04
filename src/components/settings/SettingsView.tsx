@@ -26,11 +26,22 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Pencil, Plus, Trash2 } from "lucide-react";
-import { rolesService, RoleType, SettingsType } from "@/services/supabaseService";
+import {
+  rolesService,
+  RoleType,
+  SettingsType,
+} from "@/services/supabaseService";
 import { db } from "@/lib/db";
 
 export default function SettingsView() {
-  const { tenant, settings, roles, updateSettings, updateRoles, reloadSettings } = useWorkspaceContext();
+  const {
+    tenant,
+    settings,
+    roles,
+    updateSettings,
+    updateRoles,
+    reloadSettings,
+  } = useWorkspaceContext();
   const { toast } = useToast();
   const [isCreateRoleDialogOpen, setIsCreateRoleDialogOpen] = useState(false);
   const [isEditRoleDialogOpen, setIsEditRoleDialogOpen] = useState(false);
@@ -50,7 +61,10 @@ export default function SettingsView() {
     can_edit_orders: false,
   });
 
-  const handleUpdateSettings = async (field: keyof SettingsType, value: boolean) => {
+  const handleUpdateSettings = async (
+    field: keyof SettingsType,
+    value: boolean,
+  ) => {
     try {
       if (!settings || !tenant?.id) return;
 
@@ -70,7 +84,8 @@ export default function SettingsView() {
     } catch (error) {
       toast({
         title: "Erro ao atualizar configurações",
-        description: "Não foi possível atualizar as configurações. Tente novamente.",
+        description:
+          "Não foi possível atualizar as configurações. Tente novamente.",
         variant: "destructive",
       });
     }
@@ -123,11 +138,14 @@ export default function SettingsView() {
     try {
       if (!selectedRole) return;
 
-      const { data, error } = await rolesService.updateRole(selectedRole.id, selectedRole);
+      const { data, error } = await rolesService.updateRole(
+        selectedRole.id,
+        selectedRole,
+      );
 
       if (error) throw error;
 
-      const updatedRoles = roles.map(r => r.id === data.id ? data : r);
+      const updatedRoles = roles.map((r) => (r.id === data.id ? data : r));
       updateRoles(updatedRoles);
       await db.updateRolesData(updatedRoles);
 
@@ -153,7 +171,7 @@ export default function SettingsView() {
 
       if (error) throw error;
 
-      const updatedRoles = roles.filter(r => r.id !== selectedRole.id);
+      const updatedRoles = roles.filter((r) => r.id !== selectedRole.id);
       updateRoles(updatedRoles);
       await db.updateRolesData(updatedRoles);
 
@@ -192,12 +210,15 @@ export default function SettingsView() {
               <div className="space-y-0.5">
                 <Label>Ativar funcionalidade de papéis</Label>
                 <p className="text-sm text-muted-foreground">
-                  Permite criar e gerenciar papéis de usuário com diferentes permissões.
+                  Permite criar e gerenciar papéis de usuário com diferentes
+                  permissões.
                 </p>
               </div>
               <Switch
                 checked={settings?.enable_roles}
-                onCheckedChange={(checked) => handleUpdateSettings("enable_roles", checked)}
+                onCheckedChange={(checked) =>
+                  handleUpdateSettings("enable_roles", checked)
+                }
               />
             </div>
             <Separator />
@@ -241,7 +262,10 @@ export default function SettingsView() {
               <Switch
                 checked={settings?.require_password_to_switch_role}
                 onCheckedChange={(checked) =>
-                  handleUpdateSettings("require_password_to_switch_role", checked)
+                  handleUpdateSettings(
+                    "require_password_to_switch_role",
+                    checked,
+                  )
                 }
                 disabled={!settings?.enable_roles}
               />
@@ -302,7 +326,10 @@ export default function SettingsView() {
       </div>
 
       {/* Dialog de Criar Papel */}
-      <Dialog open={isCreateRoleDialogOpen} onOpenChange={setIsCreateRoleDialogOpen}>
+      <Dialog
+        open={isCreateRoleDialogOpen}
+        onOpenChange={setIsCreateRoleDialogOpen}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Criar Novo Papel</DialogTitle>
@@ -315,7 +342,9 @@ export default function SettingsView() {
               <Label>Nome do Papel</Label>
               <Input
                 value={newRole.name}
-                onChange={(e) => setNewRole({ ...newRole, name: e.target.value })}
+                onChange={(e) =>
+                  setNewRole({ ...newRole, name: e.target.value })
+                }
                 placeholder="Ex: Gerente, Vendedor, etc."
               />
             </div>
@@ -404,7 +433,7 @@ export default function SettingsView() {
                 <div className="flex items-center justify-between">
                   <Label>Editar Encomendas</Label>
                   <Switch
-                      checked={newRole.can_edit_orders}
+                    checked={newRole.can_edit_orders}
                     onCheckedChange={(checked) =>
                       setNewRole({ ...newRole, can_edit_orders: checked })
                     }
@@ -423,7 +452,10 @@ export default function SettingsView() {
             </div>
           </div>
           <DialogFooter className="flex justify-end gap-2 md:gap-0">
-            <Button variant="outline" onClick={() => setIsCreateRoleDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsCreateRoleDialogOpen(false)}
+            >
               Cancelar
             </Button>
             <Button onClick={handleCreateRole}>Criar</Button>
@@ -432,7 +464,10 @@ export default function SettingsView() {
       </Dialog>
 
       {/* Dialog de Editar Papel */}
-      <Dialog open={isEditRoleDialogOpen} onOpenChange={setIsEditRoleDialogOpen}>
+      <Dialog
+        open={isEditRoleDialogOpen}
+        onOpenChange={setIsEditRoleDialogOpen}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Editar Papel</DialogTitle>
@@ -447,7 +482,9 @@ export default function SettingsView() {
                 value={selectedRole?.name}
                 onChange={(e) =>
                   setSelectedRole(
-                    selectedRole ? { ...selectedRole, name: e.target.value } : null
+                    selectedRole
+                      ? { ...selectedRole, name: e.target.value }
+                      : null,
                   )
                 }
                 placeholder="Ex: Gerente, Vendedor, etc."
@@ -465,7 +502,7 @@ export default function SettingsView() {
                       setSelectedRole(
                         selectedRole
                           ? { ...selectedRole, can_access_dashboard: checked }
-                          : null
+                          : null,
                       )
                     }
                   />
@@ -478,7 +515,7 @@ export default function SettingsView() {
                       setSelectedRole(
                         selectedRole
                           ? { ...selectedRole, can_access_reports: checked }
-                          : null
+                          : null,
                       )
                     }
                   />
@@ -491,7 +528,7 @@ export default function SettingsView() {
                       setSelectedRole(
                         selectedRole
                           ? { ...selectedRole, can_access_calendar: checked }
-                          : null
+                          : null,
                       )
                     }
                   />
@@ -504,7 +541,7 @@ export default function SettingsView() {
                       setSelectedRole(
                         selectedRole
                           ? { ...selectedRole, can_access_production: checked }
-                          : null
+                          : null,
                       )
                     }
                   />
@@ -517,7 +554,7 @@ export default function SettingsView() {
                       setSelectedRole(
                         selectedRole
                           ? { ...selectedRole, can_access_orders: checked }
-                          : null
+                          : null,
                       )
                     }
                   />
@@ -530,7 +567,7 @@ export default function SettingsView() {
                       setSelectedRole(
                         selectedRole
                           ? { ...selectedRole, can_access_reminders: checked }
-                          : null
+                          : null,
                       )
                     }
                   />
@@ -543,7 +580,7 @@ export default function SettingsView() {
                       setSelectedRole(
                         selectedRole
                           ? { ...selectedRole, can_access_settings: checked }
-                          : null
+                          : null,
                       )
                     }
                   />
@@ -562,7 +599,7 @@ export default function SettingsView() {
                       setSelectedRole(
                         selectedRole
                           ? { ...selectedRole, can_create_orders: checked }
-                          : null
+                          : null,
                       )
                     }
                   />
@@ -575,7 +612,7 @@ export default function SettingsView() {
                       setSelectedRole(
                         selectedRole
                           ? { ...selectedRole, can_edit_orders: checked }
-                          : null
+                          : null,
                       )
                     }
                   />
@@ -588,7 +625,7 @@ export default function SettingsView() {
                       setSelectedRole(
                         selectedRole
                           ? { ...selectedRole, can_delete_orders: checked }
-                          : null
+                          : null,
                       )
                     }
                   />
@@ -597,7 +634,10 @@ export default function SettingsView() {
             </div>
           </div>
           <DialogFooter className="flex justify-end gap-2 md:gap-0">
-            <Button variant="outline" onClick={() => setIsEditRoleDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsEditRoleDialogOpen(false)}
+            >
               Cancelar
             </Button>
             <Button onClick={handleUpdateRole}>Salvar</Button>
@@ -606,20 +646,28 @@ export default function SettingsView() {
       </Dialog>
 
       {/* Dialog de Excluir Papel */}
-      <AlertDialog open={isDeleteRoleDialogOpen} onOpenChange={setIsDeleteRoleDialogOpen}>
+      <AlertDialog
+        open={isDeleteRoleDialogOpen}
+        onOpenChange={setIsDeleteRoleDialogOpen}
+      >
         <AlertDialogContent className="w-[calc(100%-2rem)] max-w-[400px] mx-auto rounded-xl">
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir Papel</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir o papel "{selectedRole?.name}"? Esta ação não
-              pode ser desfeita.
+              Tem certeza que deseja excluir o papel "{selectedRole?.name}"?
+              Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex justify-end gap-2 md:gap-0">
             <AlertDialogCancel onClick={() => setIsDeleteRoleDialogOpen(false)}>
               Cancelar
             </AlertDialogCancel>
-            <AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={handleDeleteRole}>Excluir</AlertDialogAction>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700"
+              onClick={handleDeleteRole}
+            >
+              Excluir
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

@@ -18,12 +18,14 @@ export type OrderType = {
 };
 export type TenantType = Database["public"]["Tables"]["tenants"]["Row"];
 export type UserType = Database["public"]["Tables"]["users"]["Row"];
-export type SubscriptionType = Database["public"]["Tables"]["subscriptions"]["Row"];
+export type SubscriptionType =
+  Database["public"]["Tables"]["subscriptions"]["Row"];
 export type ReminderType = Database["public"]["Tables"]["reminders"]["Row"];
 export type SettingsType = Database["public"]["Tables"]["settings"]["Row"];
 export type RoleType = Database["public"]["Tables"]["roles"]["Row"];
 export type ProductType = Database["public"]["Tables"]["products"]["Row"];
-export type AppSessionType = Database["public"]["Tables"]["app_sessions"]["Row"];
+export type AppSessionType =
+  Database["public"]["Tables"]["app_sessions"]["Row"];
 
 // Serviço de autenticação
 export const authService = {
@@ -77,7 +79,9 @@ export const authService = {
 
   // Verifica a senha do usuário atual
   verifyPassword: async (password: string) => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user?.email) throw new Error("Usuário não encontrado");
 
     return await supabase.auth.signInWithPassword({
@@ -96,7 +100,11 @@ export const usersService = {
     email: string,
     role = "admin",
   ) => {
-    return await supabase.from("users").insert({ id, name, email, role }).select().single();
+    return await supabase
+      .from("users")
+      .insert({ id, name, email, role })
+      .select()
+      .single();
   },
 
   // Obtém um usuário pelo ID
@@ -115,13 +123,17 @@ export const subscriptionsService = {
     status = "trial",
     expiresAt: string,
   ) => {
-    return await supabase.from("subscriptions").insert({
-      user_id: userId,
-      product_id: productId,
-      plan,
-      status,
-      expires_at: expiresAt,
-    }).select().single();
+    return await supabase
+      .from("subscriptions")
+      .insert({
+        user_id: userId,
+        product_id: productId,
+        plan,
+        status,
+        expires_at: expiresAt,
+      })
+      .select()
+      .single();
   },
 
   // Obtém a assinatura de um usuário
@@ -181,11 +193,11 @@ export const tenantsService = {
       .insert({
         owner_id: ownerId,
         name,
-        product_id: productId
+        product_id: productId,
       })
       .select()
       .single();
-  }
+  },
 };
 
 // Serviço de encomendas
@@ -206,11 +218,7 @@ export const ordersService = {
 
   // Obtém uma encomenda pelo ID
   getOrderById: async (id: string) => {
-    return await supabase
-      .from("orders")
-      .select("*")
-      .eq("id", id)
-      .single();
+    return await supabase.from("orders").select("*").eq("id", id).single();
   },
 
   // Atualiza uma encomenda
@@ -218,7 +226,12 @@ export const ordersService = {
     id: string,
     data: Partial<Omit<OrderType, "id" | "created_at">>,
   ) => {
-    return await supabase.from("orders").update(data).eq("id", id).select().single();
+    return await supabase
+      .from("orders")
+      .update(data)
+      .eq("id", id)
+      .select()
+      .single();
   },
 
   // Exclui uma encomenda
@@ -227,7 +240,10 @@ export const ordersService = {
   },
 
   // Atualiza o status de uma encomenda
-  updateOrderStatus: async (id: string, status: "pending" | "production" | "done") => {
+  updateOrderStatus: async (
+    id: string,
+    status: "pending" | "production" | "done",
+  ) => {
     return await supabase.from("orders").update({ status }).eq("id", id);
   },
 };
@@ -235,15 +251,26 @@ export const ordersService = {
 export const remindersService = {
   // Obtém todos os lembretes de um tenant
   getTenantReminders: async (tenantId: string) => {
-    return await supabase.from("reminders").select("*").eq("tenant_id", tenantId);
+    return await supabase
+      .from("reminders")
+      .select("*")
+      .eq("tenant_id", tenantId);
   },
 
   createReminder: async (reminder: Omit<ReminderType, "id" | "created_at">) => {
     return await supabase.from("reminders").insert(reminder).select().single();
   },
 
-  updateReminder: async (id: string, data: Partial<Omit<ReminderType, "id" | "created_at">>) => {
-    return await supabase.from("reminders").update(data).eq("id", id).select().single();
+  updateReminder: async (
+    id: string,
+    data: Partial<Omit<ReminderType, "id" | "created_at">>,
+  ) => {
+    return await supabase
+      .from("reminders")
+      .update(data)
+      .eq("id", id)
+      .select()
+      .single();
   },
 
   deleteReminder: async (id: string) => {
@@ -263,35 +290,50 @@ export const settingsService = {
   },
 
   // Cria ou atualiza as configurações de um tenant
-  upsertSettings: async (settings: Omit<SettingsType, "id" | "created_at" | "updated_at">) => {
-    return await supabase
-      .from("settings")
-      .upsert(settings)
-      .select()
-      .single();
+  upsertSettings: async (
+    settings: Omit<SettingsType, "id" | "created_at" | "updated_at">,
+  ) => {
+    return await supabase.from("settings").upsert(settings).select().single();
   },
 };
 
 export const appSessionsService = {
   // Obtém todas as sessões de um tenant
   getTenantAppSessions: async (tenantId: string) => {
-    return await supabase.from("app_sessions").select("*").eq("tenant_id", tenantId).maybeSingle();
-  },
-  
-  getAppSessionBySessionToken: async (sessionToken: string) => {
-    return await supabase.from("app_sessions").select("*").eq("session_token", sessionToken).maybeSingle();
-  },
-
-  createAppSession: async (data: Omit<Tables<"app_sessions">, "id" | "created_at" | "updated_at" | "session_token">) => {
     return await supabase
       .from("app_sessions")
-      .insert(data)
-      .select()
-      .single();
+      .select("*")
+      .eq("tenant_id", tenantId)
+      .maybeSingle();
   },
 
-  updateAppSession: async (id: string, data: Partial<Omit<AppSessionType, "id" | "created_at" | "updated_at">>) => {
-    return await supabase.from("app_sessions").update(data).eq("id", id).select().single();
+  getAppSessionBySessionToken: async (sessionToken: string) => {
+    return await supabase
+      .from("app_sessions")
+      .select("*")
+      .eq("session_token", sessionToken)
+      .maybeSingle();
+  },
+
+  createAppSession: async (
+    data: Omit<
+      Tables<"app_sessions">,
+      "id" | "created_at" | "updated_at" | "session_token"
+    >,
+  ) => {
+    return await supabase.from("app_sessions").insert(data).select().single();
+  },
+
+  updateAppSession: async (
+    id: string,
+    data: Partial<Omit<AppSessionType, "id" | "created_at" | "updated_at">>,
+  ) => {
+    return await supabase
+      .from("app_sessions")
+      .update(data)
+      .eq("id", id)
+      .select()
+      .single();
   },
 };
 
@@ -311,16 +353,17 @@ export const rolesService = {
   },
 
   // Cria um novo papel
-  createRole: async (role: Omit<RoleType, "id" | "created_at" | "updated_at">) => {
-    return await supabase
-      .from("roles")
-      .insert(role)
-      .select()
-      .single();
+  createRole: async (
+    role: Omit<RoleType, "id" | "created_at" | "updated_at">,
+  ) => {
+    return await supabase.from("roles").insert(role).select().single();
   },
 
   // Atualiza um papel existente
-  updateRole: async (id: string, role: Partial<Omit<RoleType, "id" | "created_at" | "updated_at">>) => {
+  updateRole: async (
+    id: string,
+    role: Partial<Omit<RoleType, "id" | "created_at" | "updated_at">>,
+  ) => {
     return await supabase
       .from("roles")
       .update(role)
@@ -331,10 +374,7 @@ export const rolesService = {
 
   // Exclui um papel
   deleteRole: async (id: string) => {
-    return await supabase
-      .from("roles")
-      .delete()
-      .eq("id", id);
+    return await supabase.from("roles").delete().eq("id", id);
   },
 };
 

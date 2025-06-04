@@ -43,15 +43,16 @@ export const Nav = () => {
 
   const scrollToSection = (sectionId: string) => {
     // Se não estiver na landing page, primeiro navega para ela
-    if (location.pathname !== '/') {
-      navigate('/');
+    if (location.pathname !== "/") {
+      navigate("/");
       // Aguarda a navegação e então faz o scroll
       setTimeout(() => {
         const element = document.getElementById(sectionId);
         if (element) {
           const headerOffset = 80;
           const elementPosition = element.getBoundingClientRect().top;
-          const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+          const offsetPosition =
+            elementPosition + window.pageYOffset - headerOffset;
 
           window.scrollTo({
             top: offsetPosition,
@@ -67,7 +68,8 @@ export const Nav = () => {
     if (element) {
       const headerOffset = 80;
       const elementPosition = element.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+      const offsetPosition =
+        elementPosition + window.pageYOffset - headerOffset;
 
       window.scrollTo({
         top: offsetPosition,
@@ -109,7 +111,8 @@ export const Nav = () => {
                   if (element) {
                     const headerOffset = 80;
                     const elementPosition = element.getBoundingClientRect().top;
-                    const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                    const offsetPosition =
+                      elementPosition + window.pageYOffset - headerOffset;
 
                     window.scrollTo({
                       top: offsetPosition,
@@ -179,9 +182,9 @@ export const Nav = () => {
       <div
         className={cn(
           "fixed top-[70px] left-0 right-0 z-[100] bg-background shadow-lg md:hidden transform transition-all duration-300 ease-in-out",
-          isMobileMenuOpen 
-            ? "translate-y-0 opacity-100" 
-            : "-translate-y-4 opacity-0 pointer-events-none"
+          isMobileMenuOpen
+            ? "translate-y-0 opacity-100"
+            : "-translate-y-4 opacity-0 pointer-events-none",
         )}
       >
         <div className="container mx-auto px-4 py-4 flex flex-col space-y-4">
@@ -194,7 +197,8 @@ export const Nav = () => {
                 if (element) {
                   const headerOffset = 80;
                   const elementPosition = element.getBoundingClientRect().top;
-                  const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                  const offsetPosition =
+                    elementPosition + window.pageYOffset - headerOffset;
 
                   window.scrollTo({
                     top: offsetPosition,
@@ -247,9 +251,7 @@ export const Nav = () => {
       <div
         className={cn(
           "fixed inset-0 z-[99] bg-background/80 backdrop-blur-sm md:hidden transition-opacity duration-300",
-          isMobileMenuOpen 
-            ? "opacity-100" 
-            : "opacity-0 pointer-events-none"
+          isMobileMenuOpen ? "opacity-100" : "opacity-0 pointer-events-none",
         )}
         style={{ top: "73px" }}
         onClick={closeMobileMenu}

@@ -44,29 +44,28 @@ const formSchema = z.object({
     .regex(/^$|^\(\d{2}\) \d{5}-\d{4}$/, "O telefone inválido")
     .optional(),
   description: z.string().min(1, "Por favor, descreva a encomenda"),
-  due_date: z.string().min(1, "Por favor, selecione a data de entrega")
+  due_date: z
+    .string()
+    .min(1, "Por favor, selecione a data de entrega")
     .refine((date) => {
       // Criar as datas no fuso horário local
       const today = new Date();
-      const selectedDate = new Date(date + 'T00:00:00');
-      
+      const selectedDate = new Date(date + "T00:00:00");
+
       // Reset hours to 0 for both dates to compare only the dates
       today.setHours(0, 0, 0, 0);
       selectedDate.setHours(0, 0, 0, 0);
-      
+
       return selectedDate.getTime() >= today.getTime();
     }, "A data de entrega não pode ser anterior a hoje"),
   due_time: z.string().min(1, "Por favor, selecione a hora de entrega"),
   price: z
     .string()
     .min(1, "Por favor, informe um valor válido")
-    .refine(
-      (value) => {
-        const numericValue = parseFloat(value.replace(".", "").replace(",", "."));
-        return !isNaN(numericValue) && numericValue > 0;
-      },
-      "O valor deve ser maior que zero"
-    ),
+    .refine((value) => {
+      const numericValue = parseFloat(value.replace(".", "").replace(",", "."));
+      return !isNaN(numericValue) && numericValue > 0;
+    }, "O valor deve ser maior que zero"),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -126,8 +125,10 @@ const OrderDialog = ({
     const numbers = value.replace(/\D/g, "").slice(0, 11);
     if (numbers.length <= 11) {
       if (numbers.length <= 2) return numbers;
-      if (numbers.length <= 6) return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
-      if (numbers.length <= 10) return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 6)}-${numbers.slice(6)}`;
+      if (numbers.length <= 6)
+        return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
+      if (numbers.length <= 10)
+        return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 6)}-${numbers.slice(6)}`;
       return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7, 11)}`;
     }
     return value;
@@ -137,7 +138,7 @@ const OrderDialog = ({
   const formatPrice = (value: string) => {
     // Remove tudo que não é número
     const numbers = value.replace(/\D/g, "");
-    
+
     // Se não houver números, retorna vazio
     if (numbers.length === 0) return "";
 
@@ -145,9 +146,9 @@ const OrderDialog = ({
     const amount = parseInt(numbers) / 100;
 
     // Formata o número com 2 casas decimais
-    return amount.toLocaleString('pt-BR', {
+    return amount.toLocaleString("pt-BR", {
       minimumFractionDigits: 2,
-      maximumFractionDigits: 2
+      maximumFractionDigits: 2,
     });
   };
 
@@ -158,7 +159,7 @@ const OrderDialog = ({
     try {
       const [hours, minutes] = data.due_time.split(":");
       // Criar a data no fuso horário local
-      const dueDate = new Date(data.due_date + 'T00:00:00');
+      const dueDate = new Date(data.due_date + "T00:00:00");
       dueDate.setHours(parseInt(hours), parseInt(minutes));
 
       const orderData = {
@@ -173,16 +174,22 @@ const OrderDialog = ({
       };
 
       if (mode === "create") {
-        const { data: newOrder, error } = await supabaseService.orders.createOrder(orderData);
+        const { data: newOrder, error } =
+          await supabaseService.orders.createOrder(orderData);
         if (error) throw error;
 
         // Atualiza a lista otimisticamente
-        queryClient.setQueryData<OrderType[]>(["orders", tenant.id], (old = []) => {
-          return [newOrder as OrderType, ...old];
-        });
+        queryClient.setQueryData<OrderType[]>(
+          ["orders", tenant.id],
+          (old = []) => {
+            return [newOrder as OrderType, ...old];
+          },
+        );
 
         // Invalida a query para forçar uma nova busca
-        await queryClient.invalidateQueries({ queryKey: ["orders", tenant.id] });
+        await queryClient.invalidateQueries({
+          queryKey: ["orders", tenant.id],
+        });
 
         onSuccess?.(newOrder as OrderType);
 
@@ -191,19 +198,24 @@ const OrderDialog = ({
           description: "A encomenda foi criada com sucesso.",
         });
       } else if (mode === "edit" && orderId) {
-        const { data: updatedOrder, error } = await supabaseService.orders.updateOrder(
-          orderId,
-          orderData,
-        );
+        const { data: updatedOrder, error } =
+          await supabaseService.orders.updateOrder(orderId, orderData);
         if (error) throw error;
 
         // Atualiza a lista otimisticamente
-        queryClient.setQueryData<OrderType[]>(["orders", tenant.id], (old = []) => {
-          return old.map((order) => (order.id === orderId ? updatedOrder as OrderType : order));
-        });
+        queryClient.setQueryData<OrderType[]>(
+          ["orders", tenant.id],
+          (old = []) => {
+            return old.map((order) =>
+              order.id === orderId ? (updatedOrder as OrderType) : order,
+            );
+          },
+        );
 
         // Invalida a query para forçar uma nova busca
-        await queryClient.invalidateQueries({ queryKey: ["orders", tenant.id] });
+        await queryClient.invalidateQueries({
+          queryKey: ["orders", tenant.id],
+        });
 
         // Notifica o componente pai sobre a atualização
         onSuccess?.(updatedOrder as OrderType);
@@ -359,7 +371,11 @@ const OrderDialog = ({
               >
                 Cancelar
               </Button>
-              <Button type="submit" disabled={loading} className="w-full sm:w-auto">
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full sm:w-auto"
+              >
                 {loading ? "Salvando..." : "Salvar"}
               </Button>
             </div>
@@ -370,4 +386,4 @@ const OrderDialog = ({
   );
 };
 
-export default OrderDialog; 
+export default OrderDialog;
