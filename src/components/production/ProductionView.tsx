@@ -28,6 +28,7 @@ import { supabaseService, OrderType } from "@/services/supabaseService";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { SubscriptionGate } from "../subscription/SubscriptionGate";
 import { supabase } from "@/integrations/supabase/client";
+import { SettingsGate } from "../settings/SettingsGate";
 
 function ConnectionStatus({ isConnected, onReconnect }: { isConnected: boolean | undefined; onReconnect: () => void }) {
   return (
@@ -286,30 +287,32 @@ export function ProductionView() {
           </div>
           <div className="flex items-center gap-2">
             <SubscriptionGate blockMode="disable">
-            <Button
-              variant={order.status === "pending" ? "outline" : "default"}
-              size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleChangeOrderStatus(order.id, order.status);
-                }}
-              className="flex-1"
-                disabled={order.status === "done"}
-            >
-                {order.status === "pending" ? "Iniciar Produção" : order.status === "done" ? "Concluído" : "Finalizar"}
-              </Button>
+              <SettingsGate permission="edit">
+                <Button
+                  variant={order.status === "pending" ? "outline" : "default"}
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleChangeOrderStatus(order.id, order.status);
+                  }}
+                  className="flex-1"
+                  disabled={order.status === "done"}
+                >
+                  {order.status === "pending" ? "Iniciar Produção" : order.status === "done" ? "Concluído" : "Finalizar"}
+                </Button>
+              </SettingsGate>
             </SubscriptionGate>
             <SubscriptionGate blockMode="disable">
               <Button
                 variant="ghost"
-              size="icon"
+                size="icon"
                 onClick={(e) => {
                   e.stopPropagation();
-                setSelectedOrder(order);
-                setTimeout(handlePrint, 100);
-              }}
-              title="Imprimir"
-            >
+                  setSelectedOrder(order);
+                  setTimeout(handlePrint, 100);
+                }}
+                title="Imprimir"
+              >
                 <Printer className="h-4 w-4" />
               </Button>
             </SubscriptionGate>
@@ -367,18 +370,20 @@ export function ProductionView() {
             </Badge>
             <div className="flex items-center gap-2">
               <SubscriptionGate blockMode="disable">
-                <Button
-                  variant={order.status === "pending" ? "outline" : "default"}
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleChangeOrderStatus(order.id, order.status);
-                  }}
-                  className="flex-1 sm:flex-none"
-                  disabled={order.status === "done"}
-              >
-                  {order.status === "pending" ? "Iniciar Produção" : order.status === "done" ? "Concluído" : "Finalizar"}
-              </Button>
+                <SettingsGate permission="edit">
+                  <Button
+                    variant={order.status === "pending" ? "outline" : "default"}
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleChangeOrderStatus(order.id, order.status);
+                    }}
+                    className="flex-1 sm:flex-none"
+                    disabled={order.status === "done"}
+                  >
+                    {order.status === "pending" ? "Iniciar Produção" : order.status === "done" ? "Concluído" : "Finalizar"}
+                  </Button>
+                </SettingsGate>
               </SubscriptionGate>
               <SubscriptionGate blockMode="disable">
                 <Button
@@ -386,11 +391,11 @@ export function ProductionView() {
                   size="icon"
                   onClick={(e) => {
                     e.stopPropagation();
-                  setSelectedOrder(order);
-                  setTimeout(handlePrint, 100);
-                }}
-                title="Imprimir"
-              >
+                    setSelectedOrder(order);
+                    setTimeout(handlePrint, 100);
+                  }}
+                  title="Imprimir"
+                >
                   <Printer className="h-4 w-4" />
                 </Button>
               </SubscriptionGate>

@@ -11,6 +11,10 @@ import {
 import { LoadingState } from "@/components/ui/loading-state";
 import { Badge } from "@/components/ui/badge";
 import { Tables } from "@/integrations/supabase/types";
+import { Button } from "@/components/ui/button";
+import { SettingsGate } from "../settings/SettingsGate";
+import { SubscriptionGate } from "../subscription/SubscriptionGate";
+import { Plus, Pencil, Trash2 } from "lucide-react";
 
 type Order = Tables<"orders">;
 
@@ -19,21 +23,43 @@ interface OrdersListProps {
   loading?: boolean;
   title?: string;
   description?: string;
+  onEdit?: (order: Order) => void;
+  onDelete?: (order: Order) => void;
+  onCreate?: () => void;
 }
 
 function OrdersList({ 
   orders, 
   loading = false,
   title = "Lista de Encomendas",
-  description = "Lista de todas as encomendas"
+  description = "Lista de todas as encomendas",
+  onEdit,
+  onDelete,
+  onCreate
 }: OrdersListProps) {
   const navigate = useNavigate();
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
+          <CardTitle>{title}</CardTitle>
+          <CardDescription>{description}</CardDescription>
+        </div>
+        <SubscriptionGate blockMode="disable">
+          <SettingsGate permission="create">
+            <Button
+              onClick={(e) => {
+                e.stopPropagation();
+                onCreate?.();
+              }}
+              className="flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Nova Encomenda
+            </Button>
+          </SettingsGate>
+        </SubscriptionGate>
       </CardHeader>
       <CardContent>
         <LoadingState
@@ -101,13 +127,48 @@ function OrdersList({
                         {status === "production" && "Produção"}
                         {status === "done" && "Concluído"}
                       </Badge>
-                      <div className="text-right">
-                        <p className="font-medium">
-                          {new Intl.NumberFormat("pt-BR", {
-                            style: "currency",
-                            currency: "BRL",
-                          }).format(order.price)}
-                        </p>
+                      <div className="flex items-center gap-2">
+                        <div className="text-right">
+                          <p className="font-medium">
+                            {new Intl.NumberFormat("pt-BR", {
+                              style: "currency",
+                              currency: "BRL",
+                            }).format(order.price)}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <SubscriptionGate blockMode="disable">
+                            <SettingsGate permission="edit">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onEdit?.(order);
+                                }}
+                                title="Editar"
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                            </SettingsGate>
+                          </SubscriptionGate>
+                          <SubscriptionGate blockMode="disable">
+                            <SettingsGate permission="delete">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onDelete?.(order);
+                                }}
+                                title="Excluir"
+                                className="text-red-500 hover:text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </SettingsGate>
+                          </SubscriptionGate>
+                        </div>
                       </div>
                     </div>
                   </div>

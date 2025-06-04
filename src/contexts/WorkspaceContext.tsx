@@ -124,6 +124,20 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
             return;
           }
         }
+
+                  // Verifica app session
+                  const integrityCheck =  
+                  appSession?.id === workspaceData.appSession?.id &&
+                  appSession?.tenant_id === workspaceData.appSession?.tenant_id &&
+                  appSession?.session_token === workspaceData.appSession?.session_token &&
+                  appSession?.role === workspaceData.appSession?.role &&
+                  appSession?.expires_at === workspaceData.appSession?.expires_at;
+
+        if (!integrityCheck) {
+          console.warn('Violação de integridade detectada: dados não correspondem');
+          await supabase.auth.signOut();
+          return;
+        }
     
         // Verifica o papel da appSession, se existir
         if (appSession?.role_id) {
@@ -305,7 +319,6 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
             const { data: appSessionData, error: appSessionError } = await appSessionsService.createAppSession({
               tenant_id: foundTenantData.id,
               role: 'owner',
-              session_token: session.access_token,
               last_used_at: new Date().toISOString(),
               expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
             });
@@ -320,7 +333,6 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
         const { data: appSessionData, error: appSessionError } = await appSessionsService.createAppSession({
           tenant_id: foundTenantData.id,
           role: 'owner',
-          session_token: session.access_token,
           last_used_at: new Date().toISOString(),
           expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
         });

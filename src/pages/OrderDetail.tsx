@@ -37,6 +37,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabaseService, OrderType } from "@/services/supabaseService";
 import OrderDialog from "@/components/orders/OrderDialog";
 import { SubscriptionGate } from "@/components/subscription/SubscriptionGate";
+import { SettingsGate } from "@/components/settings/SettingsGate";
 // Interface para a ordem com dados do colaborador
 interface OrderWithCollaborator extends OrderType {
   collaborator?: {
@@ -338,36 +339,38 @@ const OrderDetail = () => {
           <div className="w-full">
             <h3 className="font-semibold mb-3">Ações</h3>
             <div className="grid grid-rows-2 sm:grid-cols-1 gap-3">
-              {order.status !== "pending" && (
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => updateOrderStatus("pending")}
-                >
-                  <Clock className="h-4 w-4 row-span-full mr-2" />
-                  Marcar como Pendente
-                </Button>
-              )}
-              {order.status !== "production" && (
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => updateOrderStatus("production")}
-                >
-                  <Package className="h-4 w-4 row-span-full mr-2" />
-                  Marcar como Produção
-                </Button>
-              )}
-              {order.status !== "done" && (
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => updateOrderStatus("done")}
-                >
-                  <CheckCircle className="h-4 w-4 row-span-full mr-2" />
-                  Marcar como Concluída
-                </Button>
-              )}
+              <SettingsGate permission="edit">
+                {order.status !== "pending" && (
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => updateOrderStatus("pending")}
+                  >
+                    <Clock className="h-4 w-4 row-span-full mr-2" />
+                    Marcar como Pendente
+                  </Button>
+                )}
+                {order.status !== "production" && (
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => updateOrderStatus("production")}
+                  >
+                    <Package className="h-4 w-4 row-span-full mr-2" />
+                    Marcar como Produção
+                  </Button>
+                )}
+                {order.status !== "done" && (
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => updateOrderStatus("done")}
+                  >
+                    <CheckCircle className="h-4 w-4 row-span-full mr-2" />
+                    Marcar como Concluída
+                  </Button>
+                )}
+              </SettingsGate>
             </div>
           </div>
         </CardFooter>
@@ -377,38 +380,42 @@ const OrderDetail = () => {
       <Card>
       <CardContent className="flex flex-col gap-3 pt-6">
         <div className="grid grid-rows-2 sm:grid-cols-1 gap-3">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setDialogOpen(true)}
-          >
-            <Edit className="h-4 w-4 mr-1" />
-            Editar
-          </Button>
+          <SettingsGate permission="edit">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setDialogOpen(true)}
+            >
+              <Edit className="h-4 w-4 mr-1" />
+              Editar
+            </Button>
+          </SettingsGate>
 
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="destructive" size="sm">
-                <Trash className="h-4 w-4 mr-1" />
-                Excluir
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent className="w-[calc(100%-2rem)] max-w-[400px] mx-auto rounded-xl">
-              <AlertDialogHeader>
-                <AlertDialogTitle>Excluir encomenda?</AlertDialogTitle>
-                <AlertDialogDescription className="line-clamp-3 max-w-[80dvw] md:max-w-[18dvw]">
-                  Esta ação não poderá ser desfeita. Isso excluirá
-                  permanentemente a encomenda do cliente {order?.client_name}.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                <AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={handleDelete}>
+          <SettingsGate permission="delete">
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm">
+                  <Trash className="h-4 w-4 mr-1" />
                   Excluir
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="w-[calc(100%-2rem)] max-w-[400px] mx-auto rounded-xl">
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Excluir encomenda?</AlertDialogTitle>
+                  <AlertDialogDescription className="line-clamp-3 max-w-[80dvw] md:max-w-[18dvw]">
+                    Esta ação não poderá ser desfeita. Isso excluirá
+                    permanentemente a encomenda do cliente {order?.client_name}.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={handleDelete}>
+                    Excluir
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </SettingsGate>
           </div>
         </CardContent>
       </Card>

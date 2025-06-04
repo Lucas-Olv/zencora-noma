@@ -1,7 +1,9 @@
 // components/SettingsGate.tsx
-import { ReactNode } from 'react';
+import { ReactNode, cloneElement } from 'react';
 import { useWorkspaceContext } from '@/contexts/WorkspaceContext';
 import { Loader2 } from 'lucide-react';
+
+type PermissionType = 'create' | 'edit' | 'delete';
 
 type Props = {
   children: ReactNode;
@@ -9,6 +11,8 @@ type Props = {
   requireRolesEnabled?: boolean;
   requireFeature?: keyof ReturnType<typeof useWorkspaceContext>['settings'];
   requirePanelAccess?: string; // ex: 'dashboard', 'orders', etc.
+  permission?: PermissionType;
+  blockMode?: 'hide' | 'disable';
 };
 
 export const SettingsGate = ({
@@ -17,6 +21,8 @@ export const SettingsGate = ({
   requireRolesEnabled,
   requireFeature,
   requirePanelAccess,
+  permission,
+  blockMode = 'hide',
 }: Props) => {
   const { settings, selectedRole, isLoading, isOwner } = useWorkspaceContext();
 
@@ -55,6 +61,40 @@ export const SettingsGate = ({
     })();
 
     if (!hasAccess) return null;
+  }
+
+  // Verifica permissões específicas (create, edit, delete)
+  if (permission && settings?.enable_roles && selectedRole) {
+    const hasPermission = (() => {
+      switch (permission) {
+        case 'create':
+          return selectedRole.can_create_orders;
+        case 'edit':
+          return selectedRole.can_edit_orders;
+        case 'delete':
+          return selectedRole.can_delete_orders;
+        default:
+          return false;
+      }
+    })();
+
+    if (!hasPermission) {
+      // Se não tem permissão e o modo é 'disable', desabilita o elemento
+      if (blockMode === 'disable') {
+        const element = children as React.ReactElement;
+        return cloneElement(element, {
+          ...element.props,
+          disabled: true,
+          style: {
+            ...(element.props?.style || {}),
+            opacity: 0.5,
+            cursor: 'not-allowed',
+          },
+        });
+      }
+      // Se não tem permissão e o modo é 'hide', não renderiza nada
+      return null;
+    }
   }
 
   return <>{children}</>;
