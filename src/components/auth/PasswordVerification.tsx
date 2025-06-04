@@ -1,8 +1,11 @@
-import { useState } from "react";
+import { useState, FormEvent, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useToast } from "@/components/ui/use-toast";
-import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
-import { db } from "@/lib/db";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { supabaseService } from "@/services/supabaseService";
 
 export default function PasswordVerification() {
@@ -10,14 +13,26 @@ export default function PasswordVerification() {
   const location = useLocation();
   const { toast } = useToast();
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Extract parameters from state with default values
+  // Extrair os parâmetros do state com valores padrão
   const targetPath = location.state?.redirect || "/dashboard";
   const targetName = location.state?.name || "a página";
   const fromRoleSwitch = location.state?.fromRoleSwitch || false;
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  useEffect(() => {
+    // Se não houver state, redirecionar para o dashboard
+    if (!location.state) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [location.state, navigate, targetPath, targetName, fromRoleSwitch]);
+
+  const handleBack = () => {
+    navigate(-1);
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
@@ -27,9 +42,9 @@ export default function PasswordVerification() {
 
       if (error) throw error;
 
-      // If from role switch, clear current role before redirecting
+      // Se for troca de papel, limpa a role atual antes de redirecionar
       if (fromRoleSwitch) {
-        await db.updateRolesData(null);
+        localStorage.removeItem("active_role_id");
       }
 
       // If password is correct, navigate to the target path with verified state
@@ -42,8 +57,8 @@ export default function PasswordVerification() {
       });
     } catch (error: any) {
       toast({
-        title: "Senha incorreta",
-        description: "A senha fornecida está incorreta. Tente novamente.",
+        title: "Erro na verificação",
+        description: "Senha incorreta. Por favor, tente novamente.",
         variant: "destructive",
       });
     } finally {
@@ -52,44 +67,66 @@ export default function PasswordVerification() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <div className="w-full max-w-md space-y-8 rounded-lg bg-white p-6 shadow-lg">
-        <div>
-          <h2 className="text-center text-3xl font-bold tracking-tight text-gray-900">
-            Verificação de Senha
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Digite sua senha para acessar {targetName}
-          </p>
-        </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div>
-            <label htmlFor="password" className="sr-only">
-              Senha
-            </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              required
-              className="relative block w-full appearance-none rounded-lg border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-primary-500 focus:outline-none focus:ring-primary-500 sm:text-sm"
-              placeholder="Senha"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
-
-          <div>
-            <button
-              type="submit"
-              className="group relative flex w-full justify-center rounded-lg border border-transparent bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+    <div className="flex flex-col items-center justify-center h-full">
+      <Card className="w-full max-w-md">
+        <form onSubmit={handleSubmit}>
+          <CardHeader>
+            <CardTitle>Verificação de Senha</CardTitle>
+            <CardDescription>
+              Digite sua senha para acessar {targetName}.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="password">Senha</Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  required
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="current-password"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-0 top-0 h-full"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+          <CardFooter className="flex justify-between gap-4">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={handleBack}
               disabled={loading}
             >
-              {loading ? "Verificando..." : "Verificar"}
-            </button>
-          </div>
+              Voltar
+            </Button>
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Verificando...
+                </>
+              ) : (
+                "Acessar"
+              )}
+            </Button>
+          </CardFooter>
         </form>
-      </div>
+      </Card>
     </div>
   );
 } 
