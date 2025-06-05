@@ -16,6 +16,7 @@ export type Database = {
           product_id: string;
           owner_id: string;
           created_at: string;
+          user_accepted_terms: boolean;
         };
         Insert: {
           id?: string;
@@ -23,13 +24,13 @@ export type Database = {
           product_id: string;
           owner_id: string;
           created_at?: string;
+          user_accepted_terms: boolean;
         };
         Update: {
           id?: string;
           name?: string;
           product_id?: string;
-          owner_id?: string;
-          created_at?: string;
+          user_accepted_terms: boolean;
         };
         Relationships: [
           {

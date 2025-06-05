@@ -35,6 +35,7 @@ import {
   useWorkspaceContext,
   WorkspaceProvider,
 } from "@/contexts/WorkspaceContext";
+import TermsAcceptance from "./pages/TermsAcceptance";
 const queryClient = new QueryClient();
 
 const BLOCKED_ROUTES = [
@@ -48,7 +49,7 @@ const BLOCKED_ROUTES = [
 ];
 
 const AppRoutes = () => {
-  const { isAuthenticated, isLoading, settings, roles, appSession } =
+  const { isAuthenticated, isLoading, settings, roles, appSession, tenant } =
     useWorkspaceContext();
   const location = useLocation();
 
@@ -67,6 +68,9 @@ const AppRoutes = () => {
     roles.length > 0 &&
     !appSession;
 
+  // Se estiver autenticado mas não aceitou os termos, redireciona para a tela de aceitação
+  const shouldAcceptTerms = isAuthenticated && tenant && !tenant.user_accepted_terms;
+
   return (
     <Routes>
       {/* Public Routes */}
@@ -74,7 +78,9 @@ const AppRoutes = () => {
         path="/"
         element={
           isAuthenticated ? (
-            shouldSelectRole ? (
+            shouldAcceptTerms ? (
+              <Navigate to="/terms-acceptance" />
+            ) : shouldSelectRole ? (
               <Navigate to="/select-role" />
             ) : (
               <Navigate to="/dashboard" />
@@ -92,7 +98,9 @@ const AppRoutes = () => {
         path="/login"
         element={
           isAuthenticated ? (
-            shouldSelectRole ? (
+            shouldAcceptTerms ? (
+              <Navigate to="/terms-acceptance" />
+            ) : shouldSelectRole ? (
               <Navigate to="/select-role" />
             ) : (
               <Navigate to="/dashboard" />
@@ -111,7 +119,9 @@ const AppRoutes = () => {
               path="dashboard"
               element={
                 <ProtectedRoute>
-                  {shouldSelectRole ? (
+                  {shouldAcceptTerms ? (
+                    <Navigate to="/terms-acceptance" replace />
+                  ) : shouldSelectRole ? (
                     <Navigate to="/select-role" replace />
                   ) : (
                     <Dashboard />
@@ -123,7 +133,9 @@ const AppRoutes = () => {
               path="orders"
               element={
                 <ProtectedRoute>
-                  {shouldSelectRole ? (
+                  {shouldAcceptTerms ? (
+                    <Navigate to="/terms-acceptance" replace />
+                  ) : shouldSelectRole ? (
                     <Navigate to="/select-role" replace />
                   ) : (
                     <Orders />
@@ -135,7 +147,9 @@ const AppRoutes = () => {
               path="orders/:id"
               element={
                 <ProtectedRoute>
-                  {shouldSelectRole ? (
+                  {shouldAcceptTerms ? (
+                    <Navigate to="/terms-acceptance" replace />
+                  ) : shouldSelectRole ? (
                     <Navigate to="/select-role" replace />
                   ) : (
                     <OrderDetail />
@@ -147,7 +161,9 @@ const AppRoutes = () => {
               path="production"
               element={
                 <ProtectedRoute>
-                  {shouldSelectRole ? (
+                  {shouldAcceptTerms ? (
+                    <Navigate to="/terms-acceptance" replace />
+                  ) : shouldSelectRole ? (
                     <Navigate to="/select-role" replace />
                   ) : (
                     <Production />
@@ -159,7 +175,9 @@ const AppRoutes = () => {
               path="verify-password"
               element={
                 <ProtectedRoute>
-                  {shouldSelectRole ? (
+                  {shouldAcceptTerms ? (
+                    <Navigate to="/terms-acceptance" replace />
+                  ) : shouldSelectRole ? (
                     <Navigate to="/select-role" replace />
                   ) : (
                     <PasswordVerification />
@@ -171,7 +189,9 @@ const AppRoutes = () => {
               path="reports"
               element={
                 <ProtectedRoute>
-                  {shouldSelectRole ? (
+                  {shouldAcceptTerms ? (
+                    <Navigate to="/terms-acceptance" replace />
+                  ) : shouldSelectRole ? (
                     <Navigate to="/select-role" replace />
                   ) : settings?.lock_reports_by_password &&
                     !location.state?.verified ? (
@@ -194,7 +214,9 @@ const AppRoutes = () => {
               path="calendar"
               element={
                 <ProtectedRoute>
-                  {shouldSelectRole ? (
+                  {shouldAcceptTerms ? (
+                    <Navigate to="/terms-acceptance" replace />
+                  ) : shouldSelectRole ? (
                     <Navigate to="/select-role" replace />
                   ) : (
                     <Calendar />
@@ -206,7 +228,9 @@ const AppRoutes = () => {
               path="reminders"
               element={
                 <ProtectedRoute>
-                  {shouldSelectRole ? (
+                  {shouldAcceptTerms ? (
+                    <Navigate to="/terms-acceptance" replace />
+                  ) : shouldSelectRole ? (
                     <Navigate to="/select-role" replace />
                   ) : (
                     <Reminders />
@@ -218,7 +242,9 @@ const AppRoutes = () => {
               path="settings"
               element={
                 <ProtectedRoute>
-                  {shouldSelectRole ? (
+                  {shouldAcceptTerms ? (
+                    <Navigate to="/terms-acceptance" replace />
+                  ) : shouldSelectRole ? (
                     <Navigate to="/select-role" replace />
                   ) : settings?.lock_settings_by_password &&
                     !location.state?.verified ? (
@@ -251,6 +277,14 @@ const AppRoutes = () => {
           {settings?.enable_roles && roles.length > 0 && (
             <Route path="/select-role" element={<RoleSelector />} />
           )}
+          <Route
+            path="/terms-acceptance"
+            element={
+              <ProtectedRoute>
+                <TermsAcceptance />
+              </ProtectedRoute>
+            }
+          />
         </>
       )}
 

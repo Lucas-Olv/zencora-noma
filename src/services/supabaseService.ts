@@ -198,6 +198,11 @@ export const tenantsService = {
       .select()
       .single();
   },
+
+  // Atualiza um tenant existente
+  updateTenant: async (id: string, data: Partial<Omit<TenantType, "id" | "created_at" | "owner_id">>) => {
+    return await supabase.from("tenants").update(data).eq("id", id).select().single();
+  },
 };
 
 // Serviço de encomendas
@@ -378,6 +383,60 @@ export const rolesService = {
   },
 };
 
+export const workspacesService = {
+  // Obtém o workspace de um usuário
+  getUserWorkspace: async () => {
+    const { data: session, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError) throw sessionError;
+
+    const { data: user, error: userError } = await supabase.auth.getUser();
+    if (userError) throw userError;
+
+    const { data: tenant, error: tenantError } = await supabase
+      .from("tenants")
+      .select("*")
+      .eq("owner_id", user.user.id)
+      .single();
+
+    if (tenantError) throw tenantError;
+
+    const { data: settings, error: settingsError } = await supabase
+      .from("settings")
+      .select("*")
+      .eq("tenant_id", tenant.id)
+      .single();
+
+    if (settingsError) throw settingsError;
+
+    const { data: roles, error: rolesError } = await supabase
+      .from("roles")
+      .select("*")
+      .eq("tenant_id", tenant.id);
+
+    if (rolesError) throw rolesError;
+
+    const { data: appSession, error: appSessionError } = await supabase
+      .from("app_sessions")
+      .select("*")
+      .eq("tenant_id", tenant.id)
+      .eq("user_id", user.user.id)
+      .single();
+
+    if (appSessionError) throw appSessionError;
+
+    return {
+      data: {
+        tenant,
+        settings,
+        roles,
+        appSession,
+        isOwner: true,
+      },
+      error: null,
+    };
+  },
+};
+
 // Exporta todos os serviços em um único objeto
 export const supabaseService = {
   auth: authService,
@@ -389,6 +448,7 @@ export const supabaseService = {
   reminders: remindersService,
   settings: settingsService,
   roles: rolesService,
+  workspaces: workspacesService,
 };
 
 // Exporta o objeto como default também
