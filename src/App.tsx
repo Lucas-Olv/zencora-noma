@@ -26,6 +26,7 @@ import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import Contact from "./pages/Contact";
 import { SubscriptionExpired } from "./pages/SubscriptionExpired";
+import { SubscriptionSuccess } from "./pages/SubscriptionSuccess";
 import ProtectedRoute from "@/components/routing/ProtectedRoute";
 import { SubscriptionGate } from "./components/subscription/SubscriptionGate";
 import Reminders from "./pages/Reminders";
@@ -268,6 +269,20 @@ const AppRoutes = () => {
               element={
                 <ProtectedRoute>
                   <SubscriptionExpired />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="success"
+              element={
+                <ProtectedRoute>
+                  {shouldAcceptTerms ? (
+                    <Navigate to="/terms-acceptance" replace />
+                  ) : shouldSelectRole ? (
+                    <Navigate to="/select-role" replace />
+                  ) : (
+                    <SubscriptionSuccess />
+                  )}
                 </ProtectedRoute>
               }
             />

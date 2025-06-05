@@ -50,6 +50,7 @@ interface WorkspaceContextType {
   reloadSettings: () => void;
   isOwner: boolean;
   updateRoles: (newRoles: RoleType[]) => void;
+  product: ProductType | null;
 }
 
 const WorkspaceContext = createContext<WorkspaceContextType | undefined>(
@@ -90,7 +91,8 @@ export const WorkspaceProvider = ({
   const workspaceStartedSync = useRef(false);
   const [appSession, setAppSession] = useState<AppSessionType | null>(null);
   const [selectedRole, setSelectedRole] = useState<RoleType | null>(null);
-  // Bloqueia se:
+  const [product, setProduct] = useState<ProductType | null>(null);
+    // Bloqueia se:
   // 1. Está expirado e fora do período de graça
   // 2. Tem falha de pagamento
   // 3. Está cancelado
@@ -217,6 +219,7 @@ export const WorkspaceProvider = ({
       setSettings(workspaceData.settings);
       setRoles(workspaceData.roles);
       setIsOwner(workspaceData.isOwner);
+      setProduct(workspaceData.product);
       setUser(session.user);
       setSession(session);
       setAppSession(workspaceData.appSession);
@@ -440,6 +443,7 @@ export const WorkspaceProvider = ({
         tenant: foundTenantData,
         settings: foundSettingsData,
         subscription: foundSubscriptionData,
+        product: productData,
         roles,
         isOwner,
         appSession: foundAppSessionData,
@@ -601,6 +605,7 @@ export const WorkspaceProvider = ({
         reloadSettings,
         isOwner,
         updateRoles,
+        product,
       }}
     >
       {children}

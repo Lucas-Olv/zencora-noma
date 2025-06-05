@@ -2,6 +2,21 @@ import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { useToast } from "@/components/ui/use-toast";
+import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
+import { useSubscriptionHandler } from "@/hooks/use-subscription-handler";
+
+// Price IDs for each plan
+const PRICE_IDS = {
+  essential: {
+    monthly: "prod_SRYwn3kA5ohCpb",
+    yearly: "prod_SRYzydrs4CnWwu",
+  },
+  pro: {
+    monthly: "prod_SRYyr3AIma4Koq",
+    yearly: "prod_SRZ0MUBAv4ssUs",
+  },
+};
 
 interface PricingTierProps {
   name: string;
@@ -13,6 +28,7 @@ interface PricingTierProps {
   delay: string;
   freeTrialDays?: number;
   smallText?: string;
+  onSubscribe: () => void;
 }
 
 function PricingTier({
@@ -25,6 +41,7 @@ function PricingTier({
   delay,
   freeTrialDays,
   smallText,
+  onSubscribe,
 }: PricingTierProps) {
   return (
     <div
@@ -69,9 +86,9 @@ function PricingTier({
               )}
               <Button
                 className="w-full bg-primary hover:bg-primary/90 dark:bg-primary dark:hover:bg-primary/90"
-                asChild
+                onClick={onSubscribe}
               >
-                <Link to="/login?register=true">{ctaText}</Link>
+                {ctaText}
               </Button>
             </div>
           </div>
@@ -107,9 +124,9 @@ function PricingTier({
             <Button
               variant="outline"
               className="w-full border-primary text-primary hover:bg-primary hover:text-white"
-              asChild
+              onClick={onSubscribe}
             >
-              <Link to="/login?register=true">{ctaText}</Link>
+              {ctaText}
             </Button>
           </div>
         </div>
@@ -118,11 +135,16 @@ function PricingTier({
   );
 }
 
-export function PricingSection() {
+interface PricingSectionProps {
+  useSubscription?: boolean;
+}
+
+export function PricingSection({ useSubscription = false }: PricingSectionProps) {
   const sectionRef = useRef<HTMLElement>(null);
-  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">(
-    "monthly",
-  );
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
+  const { toast } = useToast();
+  const { tenant } = useWorkspaceContext();
+  const { handleCheckout } = useSubscriptionHandler();
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -156,6 +178,14 @@ export function PricingSection() {
       return `R$${yearlyPrice.toFixed(2)}/ano`;
     }
     return `R$${monthlyPrice.toFixed(2)}/mês`;
+  };
+
+  const handleSubscribe = (planType: "essential" | "pro") => {
+    if (useSubscription) {
+      handleCheckout(planType, billingCycle);
+    } else {
+      window.location.href = "/login?register=true";
+    }
   };
 
   return (
@@ -209,9 +239,10 @@ export function PricingSection() {
               "Acesso via celular e computador",
               "Suporte por e-mail",
             ]}
-            ctaText="Assinar Essencial"
+            ctaText={useSubscription ? "Assinar Essencial" : "Começar agora"}
             delay="100ms"
             smallText="Ideal para autônomos e pequenos negócios que querem organização sem complicação."
+            onSubscribe={() => handleSubscribe("essential")}
           />
 
           <PricingTier
@@ -226,11 +257,12 @@ export function PricingSection() {
               "Relatórios avançados",
               "Prioridade no suporte",
             ]}
-            ctaText="Comece agora"
+            ctaText={useSubscription ? "Assinar Pro" : "Começar agora"}
             isPro
             delay="200ms"
             freeTrialDays={7}
             smallText="Perfeito para quem tem uma equipe ou lida com alto volume de pedidos."
+            onSubscribe={() => handleSubscribe("pro")}
           />
         </div>
       </div>

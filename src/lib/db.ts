@@ -7,6 +7,7 @@ type Settings = Tables<"settings">;
 type RoleType = Tables<"roles">;
 type SubscriptionType = Tables<"subscriptions">;
 type AppSessionType = Tables<"app_sessions">;
+type ProductType = Tables<"products">;
 
 interface WorkspaceData {
   id?: number;
@@ -15,6 +16,7 @@ interface WorkspaceData {
   initializedBy: string;
   tenant: Tenant | null;
   settings: Settings | null;
+  product: ProductType | null;
   selectedRole: RoleType | null;
   subscription: SubscriptionType | null;
   roles: RoleType[];
@@ -55,6 +57,14 @@ export class ZencoraDB extends Dexie {
     const workspace = await this.getWorkspaceData();
     if (workspace) {
       workspace.roles = roles;
+      await this.workspace.put(workspace);
+    }
+  }
+
+  async updateProductData(product: ProductType): Promise<void> {
+    const workspace = await this.getWorkspaceData();
+    if (workspace) {
+      workspace.product = product;
       await this.workspace.put(workspace);
     }
   }

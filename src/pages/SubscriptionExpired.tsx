@@ -115,7 +115,7 @@ export function SubscriptionExpired() {
 
         {/* Pricing Section */}
         <div className="mt-8">
-          <PricingSection />
+          <PricingSection useSubscription />
         </div>
 
         {/* Additional Info */}
