@@ -2,7 +2,7 @@ import { PricingSection } from "@/components/layout/PricingSection";
 import { AlertCircle, Clock, CreditCard, Zap } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -12,10 +12,20 @@ import {
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
+import { useEffect } from "react";
 
 export function SubscriptionExpired() {
-  const { subscription, isTrial, isPaymentFailed, isExpired } =
+  const navigate = useNavigate();
+  const { subscription, isTrial, isPaymentFailed, isExpired, isActive, isBlocked } =
     useWorkspaceContext();
+
+  // Verifica periodicamente o status da assinatura
+  useEffect(() => {
+    // Se a assinatura não estiver mais bloqueada, redireciona
+    if (!isBlocked) {
+      navigate("/", { replace: true });
+    }
+  }, [isBlocked, navigate]);
 
   // Determina o estado da assinatura e retorna as informações apropriadas
   const getSubscriptionState = () => {

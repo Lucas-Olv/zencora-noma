@@ -110,6 +110,7 @@ export const WorkspaceProvider = ({
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (session?.user) {
+          console.log("initializeWorkspace");
           initializeWorkspace();
         } else {
           cleanWorkspace();
@@ -176,6 +177,17 @@ export const WorkspaceProvider = ({
         return;
       }
 
+      // Busca os dados mais recentes da assinatura
+      const { data: latestSubscription, error: subscriptionError } = await subscriptionsService.getUserSubscription(workspaceData.tenant.owner_id);
+      if (!subscriptionError && latestSubscription) {
+        setSubscription(latestSubscription);
+        // Atualiza também no IndexedDB
+        await db.saveWorkspaceData({
+          ...workspaceData,
+          subscription: latestSubscription
+        });
+      }
+      
       // Verifica o papel da appSession, se existir
       if (appSession?.role_id) {
         const { data: role, error: roleError } = await rolesService.getRoleById(
@@ -203,7 +215,6 @@ export const WorkspaceProvider = ({
       // Tudo certo, atualiza o contexto
       setTenant(workspaceData.tenant);
       setSettings(workspaceData.settings);
-      setSubscription(workspaceData.subscription);
       setRoles(workspaceData.roles);
       setIsOwner(workspaceData.isOwner);
       setUser(session.user);
