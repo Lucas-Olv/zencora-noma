@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Check } from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
@@ -29,6 +29,7 @@ interface PricingTierProps {
   freeTrialDays?: number;
   smallText?: string;
   onSubscribe: () => void;
+  isLoading?: boolean;
 }
 
 function PricingTier({
@@ -42,6 +43,7 @@ function PricingTier({
   freeTrialDays,
   smallText,
   onSubscribe,
+  isLoading = false,
 }: PricingTierProps) {
   return (
     <div
@@ -87,8 +89,16 @@ function PricingTier({
               <Button
                 className="w-full bg-primary hover:bg-primary/90 dark:bg-primary dark:hover:bg-primary/90"
                 onClick={onSubscribe}
+                disabled={isLoading}
               >
-                {ctaText}
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Processando...
+                  </>
+                ) : (
+                  ctaText
+                )}
               </Button>
             </div>
           </div>
@@ -125,8 +135,16 @@ function PricingTier({
               variant="outline"
               className="w-full border-primary text-primary hover:bg-primary hover:text-white"
               onClick={onSubscribe}
+              disabled={isLoading}
             >
-              {ctaText}
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processando...
+                </>
+              ) : (
+                ctaText
+              )}
             </Button>
           </div>
         </div>
@@ -142,6 +160,7 @@ interface PricingSectionProps {
 export function PricingSection({ useSubscription = false }: PricingSectionProps) {
   const sectionRef = useRef<HTMLElement>(null);
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
+  const [isLoading, setIsLoading] = useState<"essential" | "pro" | null>(null);
   const { toast } = useToast();
   const { tenant } = useWorkspaceContext();
   const { handleCheckout } = useSubscriptionHandler();
@@ -180,9 +199,14 @@ export function PricingSection({ useSubscription = false }: PricingSectionProps)
     return `R$${monthlyPrice.toFixed(2)}/mês`;
   };
 
-  const handleSubscribe = (planType: "essential" | "pro") => {
+  const handleSubscribe = async (planType: "essential" | "pro") => {
     if (useSubscription) {
-      handleCheckout(planType, billingCycle);
+      setIsLoading(planType);
+      try {
+        await handleCheckout(planType, billingCycle);
+      } finally {
+        setIsLoading(null);
+      }
     } else {
       window.location.href = "/login?register=true";
     }
@@ -243,6 +267,7 @@ export function PricingSection({ useSubscription = false }: PricingSectionProps)
             delay="100ms"
             smallText="Ideal para autônomos e pequenos negócios que querem organização sem complicação."
             onSubscribe={() => handleSubscribe("essential")}
+            isLoading={isLoading === "essential"}
           />
 
           <PricingTier
@@ -263,6 +288,7 @@ export function PricingSection({ useSubscription = false }: PricingSectionProps)
             freeTrialDays={7}
             smallText="Perfeito para quem tem uma equipe ou lida com alto volume de pedidos."
             onSubscribe={() => handleSubscribe("pro")}
+            isLoading={isLoading === "pro"}
           />
         </div>
       </div>

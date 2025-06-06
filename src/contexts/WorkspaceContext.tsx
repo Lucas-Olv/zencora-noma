@@ -429,6 +429,7 @@ export const WorkspaceProvider = ({
       setUser(user);
       setIsAuthenticated(true);
       setTenant(foundTenantData);
+      setProduct(productData);
       setSettings(foundSettingsData);
       setSubscription(foundSubscriptionData);
       setRoles(roles);

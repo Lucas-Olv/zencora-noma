@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import { useToast } from "@/components/ui/use-toast";
 import { supabaseService } from "@/services/supabaseService";
+import { db } from "@/lib/db";
 
 const TermsAcceptance = () => {
   const [accepted, setAccepted] = useState(false);
@@ -23,6 +24,9 @@ const TermsAcceptance = () => {
       });
 
       if (error) throw error;
+
+      // Atualiza o tenant no IndexedDB
+      await db.updateTenantData(data);
 
       setTenant(data);
       toast({
