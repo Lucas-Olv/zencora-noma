@@ -76,11 +76,9 @@ export function PWAInstallPrompt() {
 
         <DialogFooter className="flex flex-col gap-2">
           <Button variant="outline" onClick={handleClose}>
-            <X className="mr-2 h-4 w-4" />
             Agora não
           </Button>
           <Button onClick={handleClose}>
-            <Download className="mr-2 h-4 w-4" />
             Entendi!
           </Button>
         </DialogFooter>
