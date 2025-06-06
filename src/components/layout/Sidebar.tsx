@@ -288,10 +288,20 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
         return;
       }
 
+      const websiteUrl = import.meta.env.VITE_ZENCORA_ACCOUNT_WEBSITE;
+      if (!websiteUrl) {
+        toast({
+          title: "Erro ao acessar perfil",
+          description: "URL do site de perfil não configurada.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const accessToken = data.session.access_token;
       const refreshToken = data.session.refresh_token;
 
-      const redirectUrl = `https://zencora.vercel.app/auth/redirect?access_token=${accessToken}&refresh_token=${refreshToken}`;
+      const redirectUrl = `${websiteUrl}account?access_token=${accessToken}&refresh_token=${refreshToken}`;
       window.location.href = redirectUrl;
     } catch (error: any) {
       toast({
