@@ -277,10 +277,9 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
 
   const handleProfileClick = async () => {
     try {
-      const { session, error } = await supabaseService.auth.getCurrentSession();
+      const { data } = await supabase.auth.getSession();
 
-      if (error) throw error;
-      if (!session) {
+      if (!data?.session) {
         toast({
           title: "Erro ao acessar perfil",
           description: "Você precisa estar logado para acessar seu perfil.",
@@ -289,27 +288,11 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
         return;
       }
 
-      const websiteUrl = import.meta.env.VITE_ZENCORA_ACCOUNT_WEBSITE;
-      if (!websiteUrl) {
-        toast({
-          title: "Erro ao acessar perfil",
-          description: "URL do site de perfil não configurada.",
-          variant: "destructive",
-        });
-        return;
-      }
+      const accessToken = data.session.access_token;
+      const refreshToken = data.session.refresh_token;
 
-      // Gera um token de acesso para o site externo
-      const { session: currentSession, error: tokenError } =
-        await supabaseService.auth.getCurrentSession();
-
-      if (tokenError) throw tokenError;
-      if (!currentSession?.access_token)
-        throw new Error("Token de acesso não encontrado");
-
-      // Adiciona o token como parâmetro na URL
-      const urlWithToken = `${websiteUrl}account?token=${currentSession.access_token}`;
-      window.open(urlWithToken, "_blank");
+      const redirectUrl = `https://zencora.vercel.app/auth/redirect?access_token=${accessToken}&refresh_token=${refreshToken}`;
+      window.location.href = redirectUrl;
     } catch (error: any) {
       toast({
         title: "Erro ao acessar perfil",
