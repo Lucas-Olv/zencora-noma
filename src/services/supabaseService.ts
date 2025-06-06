@@ -89,6 +89,11 @@ export const authService = {
       password,
     });
   },
+
+  // Envia email para redefinição de senha
+  resetPasswordForEmail: async (email: string) => {
+    return await supabase.auth.resetPasswordForEmail(email);
+  },
 };
 
 // Serviço de usuários

@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2, ArrowLeft } from "lucide-react";
 import { supabaseService } from "@/services/supabaseService";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { authService } from "@/services/supabaseService";
@@ -28,6 +28,7 @@ export const LoginForm = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
+  const [showResetPassword, setShowResetPassword] = useState(false);
   const { isAuthenticated, settings, roles } = useWorkspaceContext();
 
   useEffect(() => {
@@ -149,164 +150,250 @@ export const LoginForm = () => {
     }
   };
 
+  const handleResetPassword = async (e: FormEvent) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      const { error } = await supabaseService.auth.resetPasswordForEmail(email);
+
+      if (error) throw error;
+
+      toast({
+        title: "Email enviado com sucesso!",
+        description: "Verifique sua caixa de entrada para redefinir sua senha.",
+      });
+      setShowResetPassword(false);
+      setEmail("");
+    } catch (error: any) {
+      toast({
+        title: "Erro ao enviar email",
+        description: getErrorMessage(error),
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const renderResetPasswordForm = () => (
+    <Card className="w-full mt-4">
+      <form onSubmit={handleResetPassword}>
+        <CardHeader>
+          <Button
+            type="button"
+            variant="ghost"
+            className="w-fit p-0 hover:bg-transparent"
+            onClick={() => setShowResetPassword(false)}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Voltar
+          </Button>
+          <CardTitle>Recuperar Senha</CardTitle>
+          <CardDescription>
+            Digite seu email para receber as instruções de recuperação de senha.
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="reset-email">Email</Label>
+            <Input
+              id="reset-email"
+              type="email"
+              placeholder="seu@email.com"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+        </CardContent>
+
+        <CardFooter>
+          <Button className="w-full" disabled={loading}>
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Enviando...
+              </>
+            ) : (
+              "Enviar instruções"
+            )}
+          </Button>
+        </CardFooter>
+      </form>
+    </Card>
+  );
+
   return (
     <div className="w-full md:max-w-[20.5dvw] mx-auto">
       <h2 className="text-3xl font-bold text-center">Seja bem-vindo!</h2>
-      <Tabs
-        value={activeTab}
-        onValueChange={setActiveTab}
-        className="w-full p-4"
-      >
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="login">Entrar</TabsTrigger>
-          <TabsTrigger value="register">Criar Conta</TabsTrigger>
-        </TabsList>
+      {showResetPassword ? (
+        renderResetPasswordForm()
+      ) : (
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="w-full p-4"
+        >
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="login">Entrar</TabsTrigger>
+            <TabsTrigger value="register">Criar Conta</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="login" className="flex items-start">
-          <Card className="w-full">
-            <form onSubmit={handleSignIn}>
-              <CardHeader>
-                <CardTitle>Login</CardTitle>
-                <CardDescription>
-                  Entre com sua conta Zencora para acessar o sistema.
-                </CardDescription>
-              </CardHeader>
+          <TabsContent value="login" className="flex items-start">
+            <Card className="w-full">
+              <form onSubmit={handleSignIn}>
+                <CardHeader>
+                  <CardTitle>Login</CardTitle>
+                  <CardDescription>
+                    Entre com sua conta Zencora para acessar o sistema.
+                  </CardDescription>
+                </CardHeader>
 
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="seu@email.com"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="password">Senha</Label>
-                  <div className="relative">
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
                     <Input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
+                      id="email"
+                      type="email"
+                      placeholder="seu@email.com"
                       required
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                     />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="absolute right-0 top-0 h-full"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </Button>
                   </div>
-                </div>
-              </CardContent>
 
-              <CardFooter>
-                <Button className="w-full" disabled={loading}>
-                  {loading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />{" "}
-                      Entrando...
-                    </>
-                  ) : (
-                    "Entrar"
-                  )}
-                </Button>
-              </CardFooter>
-            </form>
-          </Card>
-        </TabsContent>
+                  <div className="space-y-2">
+                    <Label htmlFor="password">Senha</Label>
+                    <div className="relative">
+                      <Input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        required
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-0 top-0 h-full"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="link"
+                    className="w-full text-sm text-muted-foreground hover:text-primary"
+                    onClick={() => setShowResetPassword(true)}
+                  >
+                    Esqueceu sua senha?
+                  </Button>
+                </CardContent>
 
-        <TabsContent value="register" className="flex items-start">
-          <Card className="w-full">
-            <form onSubmit={handleSignUp}>
-              <CardHeader>
-                <CardTitle>Criar Conta</CardTitle>
-                <CardDescription>
-                  Crie uma conta para começar a usar o Zencora Noma.
-                </CardDescription>
-              </CardHeader>
+                <CardFooter>
+                  <Button className="w-full" disabled={loading}>
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />{" "}
+                        Entrando...
+                      </>
+                    ) : (
+                      "Entrar"
+                    )}
+                  </Button>
+                </CardFooter>
+              </form>
+            </Card>
+          </TabsContent>
 
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="register-name">Nome</Label>
-                  <Input
-                    id="register-name"
-                    placeholder="Seu nome"
-                    required
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                  />
-                </div>
+          <TabsContent value="register" className="flex items-start">
+            <Card className="w-full">
+              <form onSubmit={handleSignUp}>
+                <CardHeader>
+                  <CardTitle>Criar Conta</CardTitle>
+                  <CardDescription>
+                    Crie uma conta para começar a usar o Zencora Noma.
+                  </CardDescription>
+                </CardHeader>
 
-                <div className="space-y-2">
-                  <Label htmlFor="register-email">Email</Label>
-                  <Input
-                    id="register-email"
-                    type="email"
-                    placeholder="seu@email.com"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="register-password">Senha</Label>
-                  <div className="relative">
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="register-name">Nome</Label>
                     <Input
-                      id="register-password"
-                      type={showPassword ? "text" : "password"}
+                      id="register-name"
+                      placeholder="Seu nome"
                       required
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
                     />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="absolute right-0 top-0 h-full"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </Button>
                   </div>
-                </div>
-              </CardContent>
 
-              <CardFooter>
-                <Button className="w-full" disabled={loading}>
-                  {loading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Criando
-                      conta...
-                    </>
-                  ) : (
-                    "Criar Conta"
-                  )}
-                </Button>
-              </CardFooter>
-            </form>
-          </Card>
-        </TabsContent>
-      </Tabs>
+                  <div className="space-y-2">
+                    <Label htmlFor="register-email">Email</Label>
+                    <Input
+                      id="register-email"
+                      type="email"
+                      placeholder="seu@email.com"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="register-password">Senha</Label>
+                    <div className="relative">
+                      <Input
+                        id="register-password"
+                        type={showPassword ? "text" : "password"}
+                        required
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-0 top-0 h-full"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+
+                <CardFooter>
+                  <Button className="w-full" disabled={loading}>
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Criando
+                        conta...
+                      </>
+                    ) : (
+                      "Criar Conta"
+                    )}
+                  </Button>
+                </CardFooter>
+              </form>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      )}
     </div>
   );
 };
