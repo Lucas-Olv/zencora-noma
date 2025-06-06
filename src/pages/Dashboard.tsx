@@ -8,6 +8,7 @@ import { parseDate } from "@/lib/utils";
 import { remindersService, supabaseService } from "@/services/supabaseService";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import RecentReminders from "@/components/dashboard/RecentReminders";
+import { PWAInstallPrompt } from "@/components/pwa/PWAInstallPrompt";
 type Order = Tables<"orders">;
 type Reminder = Tables<"reminders">;
 
@@ -131,59 +132,62 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-        <p className="text-muted-foreground">
-          Bem-vindo(a) ao Zencora Noma. Veja um resumo de suas encomendas.
-        </p>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatsCard
-          title="Encomendas Ativas"
-          value={loading ? "-" : stats.activeOrders.toString()}
-          description={
-            loading
-              ? "Carregando..."
-              : `${stats.todayDeliveries} para entrega hoje`
-          }
-          icon={<ClipboardList className="h-5 w-5 text-primary" />}
-        />
-        <StatsCard
-          title="Produção"
-          value={loading ? "-" : stats.inProduction.toString()}
-          description={loading ? "Carregando..." : "Produção"}
-          icon={<Users className="h-5 w-5 text-secondary" />}
-        />
-        <StatsCard
-          title="Programadas"
-          value={loading ? "-" : stats.scheduled.toString()}
-          description={loading ? "Carregando..." : "Para os próximos dias"}
-          icon={<Calendar className="h-5 w-5 text-complementary" />}
-        />
-        <StatsCard
-          title="Faturamento (Mês)"
-          value={loading ? "-" : formatCurrency(stats.monthlyRevenue)}
-          description={
-            loading
-              ? "Carregando..."
-              : `${formatCurrency(stats.weeklyRevenue)} esta semana`
-          }
-          icon={<FileText className="h-5 w-5 text-green-600" />}
-        />
-      </div>
-
-      <div className="grid gap-6 grid-cols-1 lg:grid-cols-4">
-        <div className="lg:col-span-3">
-          <PerformanceMetrics orders={orders} loading={loading} />
+    <>
+      <PWAInstallPrompt />
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+          <p className="text-muted-foreground">
+            Bem-vindo(a) ao Zencora Noma. Veja um resumo de suas encomendas.
+          </p>
         </div>
-        <div className="lg:col-span-1 flex flex-col gap-6">
-          <RecentReminders reminders={reminders} loading={loading} />
-          <DeliveryCalendar orders={orders} loading={loading} />
+
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <StatsCard
+            title="Encomendas Ativas"
+            value={loading ? "-" : stats.activeOrders.toString()}
+            description={
+              loading
+                ? "Carregando..."
+                : `${stats.todayDeliveries} para entrega hoje`
+            }
+            icon={<ClipboardList className="h-5 w-5 text-primary" />}
+          />
+          <StatsCard
+            title="Produção"
+            value={loading ? "-" : stats.inProduction.toString()}
+            description={loading ? "Carregando..." : "Produção"}
+            icon={<Users className="h-5 w-5 text-secondary" />}
+          />
+          <StatsCard
+            title="Programadas"
+            value={loading ? "-" : stats.scheduled.toString()}
+            description={loading ? "Carregando..." : "Para os próximos dias"}
+            icon={<Calendar className="h-5 w-5 text-complementary" />}
+          />
+          <StatsCard
+            title="Faturamento (Mês)"
+            value={loading ? "-" : formatCurrency(stats.monthlyRevenue)}
+            description={
+              loading
+                ? "Carregando..."
+                : `${formatCurrency(stats.weeklyRevenue)} esta semana`
+            }
+            icon={<FileText className="h-5 w-5 text-green-600" />}
+          />
+        </div>
+
+        <div className="grid gap-6 grid-cols-1 lg:grid-cols-4">
+          <div className="lg:col-span-3">
+            <PerformanceMetrics orders={orders} loading={loading} />
+          </div>
+          <div className="lg:col-span-1 flex flex-col gap-6">
+            <RecentReminders reminders={reminders} loading={loading} />
+            <DeliveryCalendar orders={orders} loading={loading} />
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

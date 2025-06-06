@@ -58,7 +58,8 @@ import {
 } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
 import { SubscriptionGate } from "../subscription/SubscriptionGate";
-import OrdersList from "../orders/OrdersList";
+import ReportOrdersList from "./ReportOrdersList";
+import { LoadingState } from "@/components/ui/loading-state";
 
 type Order = Tables<"orders">;
 
@@ -442,7 +443,7 @@ const MonthlyReports = () => {
                     const monthYear = format(date, "yyyy-MM");
                     return (
                       <SelectItem key={monthYear} value={monthYear}>
-                        {format(date, "MMMM yyyy", { locale: ptBR })}
+                        {format(date, "MMMM yyyy", { locale: ptBR }).replace(/^\w/, c => c.toUpperCase())}
                       </SelectItem>
                     );
                   }).filter((_, i, arr) => {
@@ -581,10 +582,10 @@ const MonthlyReports = () => {
                           tick={{ fontSize: 12 }}
                           interval="preserveStartEnd"
                         />
-                        <YAxis
+                        {/* <YAxis
                           tick={{ fontSize: 12 }}
                           tickFormatter={(value) => formatCurrency(value)}
-                        />
+                        /> */}
                         <Tooltip
                           formatter={(value: number) => formatCurrency(value)}
                           labelStyle={{ fontSize: 12 }}
@@ -625,7 +626,7 @@ const MonthlyReports = () => {
                           tick={{ fontSize: 12 }}
                           interval="preserveStartEnd"
                         />
-                        <YAxis tick={{ fontSize: 12 }} />
+                        {/* <YAxis tick={{ fontSize: 12 }} /> */}
                         <Tooltip labelStyle={{ fontSize: 12 }} />
                         <Bar
                           dataKey="Encomendas"
@@ -641,12 +642,20 @@ const MonthlyReports = () => {
           </Card>
         </div>
       </div>
-      <OrdersList
-        orders={orders}
+      <LoadingState
         loading={loading}
-        title="Encomendas do Período"
-        description="Lista de todas as encomendas no período selecionado"
-      />
+        empty={!orders.length}
+        emptyText="Nenhuma encomenda encontrada"
+        emptyIcon={<FileText className="h-12 w-12 text-muted-foreground" />}
+      >
+        <div className="space-y-6">
+          <ReportOrdersList
+            orders={orders}
+            title="Encomendas do Mês"
+            description="Lista de todas as encomendas do mês atual"
+          />
+        </div>
+      </LoadingState>
     </div>
   );
 };

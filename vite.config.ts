@@ -50,7 +50,8 @@ export default defineConfig(({ mode }) => ({
             src: "maskable-icon.png",
             sizes: "512x512",
             type: "image/png",
-            purpose: "maskable"
+            purpose: "maskable",
+            maskable: true
           },
           {
             src: "apple-touch-icon.png",

@@ -320,8 +320,24 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
   };
 
   const handleLogout = async () => {
-    await db.clearWorkspaceData();
-    await supabase.auth.signOut();
+    try {
+      await db.clearWorkspaceData();
+      await supabase.auth.signOut();
+      
+      toast({
+        title: "Logout realizado com sucesso",
+        description: "Você foi desconectado com sucesso.",
+      });
+
+      // Redireciona para a landing page
+      window.location.href = "/";
+    } catch (error: any) {
+      toast({
+        title: "Erro ao fazer logout",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   const handleNavigation = (href: string) => {
