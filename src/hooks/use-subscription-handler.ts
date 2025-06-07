@@ -15,7 +15,7 @@ const PRICE_IDS = {
 
 export function useSubscriptionHandler() {
   const { toast } = useToast();
-  const { product } = useWorkspaceContext();
+  const { product, subscription } = useWorkspaceContext();
 
   const handleCheckout = async (planType: "essential" | "pro", billingCycle: "monthly" | "yearly") => {
     try {
@@ -25,6 +25,7 @@ export function useSubscriptionHandler() {
 
       const priceId = PRICE_IDS[planType][billingCycle];
       const userToken = JSON.parse(localStorage.getItem("sb-jbcxnoyvanlategfkwqa-auth-token") || "{}");
+      const subscriptionId = subscription?.id;
 
       const response = await fetch(`${import.meta.env.VITE_ZENCORA_PAYMENT_API_URL}/checkout/create-checkout-session`, {
         method: "POST",
@@ -35,6 +36,8 @@ export function useSubscriptionHandler() {
         body: JSON.stringify({
           productCode: product.code,
           priceId,
+          plan: planType,
+          subscriptionId,
         }),
       });
 
