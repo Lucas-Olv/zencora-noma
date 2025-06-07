@@ -469,6 +469,7 @@ export const WorkspaceProvider = ({
     setIsLoading(false);
     workspaceStartedSync.current = false;
     await db.clearWorkspaceData();
+    localStorage.removeItem("pwa_install_prompt_shown");
   };
 
   const reloadSettings = async () => {
