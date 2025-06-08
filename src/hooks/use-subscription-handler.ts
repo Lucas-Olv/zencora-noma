@@ -19,7 +19,7 @@ export function useSubscriptionHandler() {
 
   const handleCheckout = async (planType: "essential" | "pro", billingCycle: "monthly" | "yearly") => {
     try {
-      if (!product?.code) {
+      if (!product?.id) {
         throw new Error("Product ID not found");
       }
 
@@ -34,7 +34,7 @@ export function useSubscriptionHandler() {
           "Authorization": `Bearer ${userToken.access_token}`,
         },
         body: JSON.stringify({
-          productCode: product.code,
+          productId: product.id,
           priceId,
           plan: planType,
           subscriptionId,
