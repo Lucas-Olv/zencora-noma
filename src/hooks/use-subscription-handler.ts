@@ -15,26 +15,27 @@ const PRICE_IDS = {
 
 export function useSubscriptionHandler() {
   const { toast } = useToast();
-  const { product, subscription } = useWorkspaceContext();
+  const { product, subscription, session } = useWorkspaceContext();
 
   const handleCheckout = async (planType: "essential" | "pro", billingCycle: "monthly" | "yearly") => {
     try {
-      if (!product?.id) {
-        throw new Error("Product ID not found");
+      if (!product?.id && !product?.name) {
+        throw new Error("Product not found");
       }
 
       const priceId = PRICE_IDS[planType][billingCycle];
-      const userToken = JSON.parse(localStorage.getItem("sb-jbcxnoyvanlategfkwqa-auth-token") || "{}");
+      const userToken = session?.access_token;
       const subscriptionId = subscription?.id;
 
       const response = await fetch(`${import.meta.env.VITE_ZENCORA_PAYMENT_API_URL}/checkout/create-checkout-session`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${userToken.access_token}`,
+          "Authorization": `Bearer ${userToken}`,
         },
         body: JSON.stringify({
           productId: product.id,
+          productName: product.name,
           priceId,
           plan: planType,
           subscriptionId,
