@@ -14,7 +14,7 @@ const PRICE_IDS = {
   },
   pro: {
     monthly: "prod_SRYyr3AIma4Koq",
-    yearly: "prod_SRZ0MUBAv4ssUs",
+    yearly: "prod_SSnpEuDif9BA4c",
   },
 };
 
