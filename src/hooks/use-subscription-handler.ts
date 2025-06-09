@@ -27,7 +27,7 @@ export function useSubscriptionHandler() {
       const userToken = session?.access_token;
       const subscriptionId = subscription?.id;
 
-      const response = await fetch(`${import.meta.env.VITE_ZENCORA_PAYMENT_API_URL}/checkout/create-checkout-session`, {
+      const response = await fetch(`${import.meta.env.VITE_ZENCORA_PAYMENT_API_URL}checkout/create-checkout-session`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
