@@ -53,6 +53,7 @@ interface NavItem {
   title: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
+  proOnly?: boolean;
 }
 
 const mainNavItems: NavItem[] = [
@@ -70,6 +71,7 @@ const mainNavItems: NavItem[] = [
     title: "Produção",
     href: "/production",
     icon: Users,
+    proOnly: true,
   },
   {
     title: "Relatórios",
@@ -93,6 +95,7 @@ const bottomNavItems: NavItem[] = [
     title: "Configurações",
     href: "/settings",
     icon: Settings,
+    proOnly: true,
   },
 ];
 
@@ -114,21 +117,24 @@ const NavButton = ({ item, isActive, onClick }: NavButtonProps) => {
   const isRouteBlocked = blockedRoutes.includes(item.href);
   const isRouteAllowed = allowedRoutes.includes(item.href);
 
-  // Verifica se o item é settings e se o usuário tem acesso baseado no plano
-  const isSettingsItem = item.href === "/settings";
+  // Verifica se o usuário tem acesso ao item baseado no plano
   const hasPlanAccess =
-    !isSettingsItem ||
+    !item.proOnly ||
     isTrial || // Permite acesso durante o trial
     subscription?.plan === "pro" ||
     subscription?.plan === "enterprise";
 
+  // Se o item requer plano Pro e o usuário não tem acesso, não renderiza o botão
+  if (item.proOnly && !hasPlanAccess) {
+    return null;
+  }
+
   // Só mostra o cadeado se:
   // 1. A rota estiver bloqueada E a assinatura estiver bloqueada
   // 2. A rota não estiver na lista de permitidas E a assinatura estiver bloqueada
-  // 3. É um item de settings e o usuário não tem acesso ao plano
   const shouldShowLock =
     (isBlocked && isRouteBlocked) || // Mostra cadeado se estiver bloqueado e a rota estiver na lista de bloqueadas
-    (isSettingsItem && !hasPlanAccess); // Mostra cadeado se for settings e não tiver acesso ao plano
+    (item.proOnly && !hasPlanAccess); // Mostra cadeado se for item Pro e não tiver acesso ao plano
 
   // Verifica se a tela requer senha baseado no item
   const requiresPassword = (() => {
@@ -165,8 +171,8 @@ const NavButton = ({ item, isActive, onClick }: NavButtonProps) => {
     </div>
   );
 
-  // Se for settings e não tiver acesso ao plano (e não estiver no trial)
-  if (isSettingsItem && !hasPlanAccess && !isTrial) {
+  // Se for item Pro e não tiver acesso ao plano (e não estiver no trial)
+  if (item.proOnly && !hasPlanAccess && !isTrial) {
     return (
       <TooltipProvider>
         <Tooltip>
@@ -187,42 +193,7 @@ const NavButton = ({ item, isActive, onClick }: NavButtonProps) => {
             </div>
           </TooltipTrigger>
           <TooltipContent>
-            <p>Configurações disponíveis apenas para planos Pro e Enterprise</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    );
-  }
-
-  // Se a rota estiver bloqueada e não houver assinatura ativa (e não estiver no trial)
-  if (
-    isRouteBlocked &&
-    !isRouteAllowed &&
-    isBlocked &&
-    !isTrial &&
-    !subscriptionActive
-  ) {
-    return (
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div>
-              <SubscriptionGate
-                blockedRoutes={blockedRoutes}
-                blockMode="disable"
-                fallback={button}
-              >
-                <SettingsGate
-                  requirePanelAccess={item.href.replace("/", "")}
-                  fallback={button}
-                >
-                  {button}
-                </SettingsGate>
-              </SubscriptionGate>
-            </div>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Recurso disponível apenas para assinantes</p>
+            <p>Recurso disponível apenas para planos Pro e Enterprise</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -230,12 +201,18 @@ const NavButton = ({ item, isActive, onClick }: NavButtonProps) => {
   }
 
   return (
-    <SettingsGate
-      requirePanelAccess={item.href.replace("/", "")}
+    <SubscriptionGate
+      blockedRoutes={blockedRoutes}
+      blockMode="disable"
       fallback={button}
     >
-      {button}
-    </SettingsGate>
+      <SettingsGate
+        requirePanelAccess={item.href.replace("/", "")}
+        fallback={button}
+      >
+        {button}
+      </SettingsGate>
+    </SubscriptionGate>
   );
 };
 
@@ -251,6 +228,7 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
     isTrial,
     isActive: subscriptionActive,
     subscription,
+    roles,
   } = useWorkspaceContext();
 
   // Se o app não estiver pronto, mostra um loader
@@ -403,17 +381,20 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
 
         <div className="mt-auto border-t border-border pt-4">
           {/* Configurações */}
-          <Button
-            variant="ghost"
-            className="w-full flex gap-3 justify-start h-10"
-            onClick={() => handleNavigation("/settings")}
-          >
-            <Settings className="h-4 w-4" />
-            Configurações
-            {(isSettingsLocked || isSettingsBlocked || isBlocked) && (
-              <Lock className="h-4 w-4 ml-auto" />
-            )}
-          </Button>
+          {(!subscription?.plan || subscription?.plan === "pro" || subscription?.plan === "enterprise" || isTrial) && 
+           (appSession?.role === "owner" || appSession?.role_id && roles.find(r => r.id === appSession.role_id)?.can_access_settings) && (
+            <Button
+              variant="ghost"
+              className="w-full flex gap-3 justify-start h-10"
+              onClick={() => handleNavigation("/settings")}
+            >
+              <Settings className="h-4 w-4" />
+              Configurações
+              {(isSettingsLocked || isSettingsBlocked || isBlocked) && (
+                <Lock className="h-4 w-4 ml-auto" />
+              )}
+            </Button>
+          )}
 
           {/* Perfil ou Trocar Papel */}
           {settings?.enable_roles ? (

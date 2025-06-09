@@ -48,7 +48,9 @@ const SubscriptionInfo = () => {
                 ? "Sua assinatura irá expirar em breve"
                 : isAboutToRenew
                   ? "Sua assinatura será renovada em breve"
-                  : "";
+                  : subscription?.status === "active"
+                    ? "Sua assinatura está ativa"
+                    : "";
 
   const headerSubscriptionStatusWarningColor =
     isTrial && isExpired
@@ -65,7 +67,9 @@ const SubscriptionInfo = () => {
                 ? "text-red-500"
                 : isAboutToRenew
                   ? "text-yellow-500"
-                  : "";
+                  : subscription?.status === "active"
+                    ? "text-green-500"
+                    : "";
 
   // Avoid hydration mismatch
   useEffect(() => {

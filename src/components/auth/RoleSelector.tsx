@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { db } from "@/lib/db";
 import { Crown } from "lucide-react";
@@ -18,6 +18,7 @@ import { useToast } from "@/components/ui/use-toast";
 
 export default function RoleSelector() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const {
     settings,
@@ -141,10 +142,23 @@ export default function RoleSelector() {
   useEffect(() => {
     if (!settings?.enable_roles || roles.length === 0) {
       navigate("/dashboard", { replace: true });
+      return;
     }
-  }, [settings, roles, navigate]);
+
+    // Se já existe um papel selecionado E não estamos vindo da verificação de senha, redireciona para o dashboard
+    const state = location.state as { verified?: boolean } | null;
+    if ((currentAppSession?.role_id || currentAppSession?.role === "owner") && !state?.verified) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [settings, roles, navigate, currentAppSession, location.state]);
 
   if (!settings?.enable_roles || roles.length === 0) {
+    return null;
+  }
+
+  // Se já existe um papel selecionado E não estamos vindo da verificação de senha, não mostra a tela de seleção
+  const state = location.state as { verified?: boolean } | null;
+  if ((currentAppSession?.role_id || currentAppSession?.role === "owner") && !state?.verified) {
     return null;
   }
 

@@ -51,6 +51,7 @@ interface WorkspaceContextType {
   isOwner: boolean;
   updateRoles: (newRoles: RoleType[]) => void;
   product: ProductType | null;
+  inGracePeriod: boolean;
 }
 
 const WorkspaceContext = createContext<WorkspaceContextType | undefined>(
@@ -212,6 +213,14 @@ export const WorkspaceProvider = ({
           await supabase.auth.signOut();
           return;
         }
+
+        // Restaura o papel selecionado
+        setSelectedRole(role);
+        localStorage.setItem(ROLE_STORAGE_KEY, role.id);
+      } else if (workspaceData.selectedRole) {
+        // Se não tem role_id na appSession mas tem selectedRole no workspaceData
+        setSelectedRole(workspaceData.selectedRole);
+        localStorage.setItem(ROLE_STORAGE_KEY, workspaceData.selectedRole.id);
       }
 
       // Tudo certo, atualiza o contexto
@@ -608,6 +617,7 @@ export const WorkspaceProvider = ({
         isOwner,
         updateRoles,
         product,
+        inGracePeriod,
       }}
     >
       {children}

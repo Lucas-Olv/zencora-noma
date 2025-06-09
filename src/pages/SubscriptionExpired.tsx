@@ -10,7 +10,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { useEffect } from "react";
 
@@ -105,11 +104,6 @@ export function SubscriptionExpired() {
                 </span>
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <Button asChild variant="outline" className="w-full sm:w-auto">
-                <Link to="/dashboard">Voltar ao dashboard</Link>
-              </Button>
-            </CardContent>
           </Card>
         )}
 
