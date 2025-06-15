@@ -14,9 +14,12 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import { Eye, EyeOff, Loader2, ArrowLeft } from "lucide-react";
-import { supabaseService } from "@/services/supabaseService";
-import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
-import { authService } from "@/services/supabaseService";
+import { useMutation } from "@tanstack/react-query";
+import { useSessionStore } from "@/storage/session";
+import { verifyToken } from "@/lib/jwt";
+import { Session } from "@/lib/types";
+import { postCoreApiPublic } from "@/lib/apiHelpers";
+import { useProductStore } from "@/storage/product";
 
 export const LoginForm = () => {
   const { toast } = useToast();
@@ -25,27 +28,84 @@ export const LoginForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
   const [showResetPassword, setShowResetPassword] = useState(false);
-  const { isAuthenticated, settings, roles } = useWorkspaceContext();
+  const { setSession } = useSessionStore();
+
+    const { mutate: register, error: registerError, data: registerData, isPending: isRegisterPending } = useMutation({
+    mutationFn: () => postCoreApiPublic('/api/core/v1/signup', { email, password, name }),
+    onSuccess: () => {
+      toast({
+        title: "Conta criada com sucesso",
+        description: "Verifique seu email para confirmar sua conta.",
+      });
+      setActiveTab('login');
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao criar conta",
+        description: getErrorMessage(error),  
+      });
+      console.log(error);
+    }
+  });
+  
+  const { mutate: resetPassword, error: resetPasswordError, data: resetPasswordData, isPending: isResetPasswordPending } = useMutation({
+    mutationFn: () => postCoreApiPublic('/api/core/v1/forgot-password', { email }),
+    onSuccess: () => {
+      toast({
+        title: "Solicitação de recuperação enviada",
+        description: "Sua solicitação para recuperação de senha foi enviada com sucesso. Verifique seu e-mail.",
+      });
+      setActiveTab('login');
+      setShowResetPassword(false);
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao solicitar recuperação de senha",
+        description: "Ocorreu um erro ao solicitar a recuperação da senha, tente novamente.",  
+      });
+      console.log(error);
+    }
+  });
+
+  const { mutate: login, isPending: isLoginPending, error: loginError, data: loginData } = useMutation({
+    mutationFn: ({ email, password, productId, sessionSystem }: { email: string; password: string; productId: string; sessionSystem: string }) =>
+      postCoreApiPublic('/api/core/v1/signin', { email, password, productId, sessionSystem }),
+    onSuccess: async (response) => {
+      try {
+        const payload = await verifyToken(response.data.accessToken);
+        const session: Session = {
+          id: payload.sessionId as string,
+          user: {
+            id: payload.sub as string,
+            name: payload.name as string,
+            email: payload.email as string,
+            sessionId: payload.sessionId as string
+          },
+          token: response.data.accessToken,
+          productId: payload.productId as string
+        };
+        setSession(session, response.data.accessToken);
+        toast({ title: 'Login realizado com sucesso', description: 'Bem vindo de volta!' });
+        navigate('/account');
+      } catch (error) {
+        console.error('Erro ao verificar token:', error);
+        toast({ title: 'Erro ao verificar token', description: 'Por favor, tente novamente.' });
+      }
+    },
+    onError: (error) => {
+      toast({ title: 'Erro no login', description: getErrorMessage(error) });
+    }
+  });
 
   useEffect(() => {
     // Check if register=true is in the URL
     if (searchParams.get("register") === "true") {
       setActiveTab("register");
     }
-
-    // Se já estiver autenticado, redireciona para a tela apropriada
-    if (isAuthenticated) {
-      if (settings?.enable_roles && roles.length > 0) {
-        navigate("/select-role");
-      } else {
-        navigate("/dashboard");
-      }
-    }
-  }, [searchParams, isAuthenticated, settings, roles, navigate]);
+  }, [searchParams]);
 
   const getErrorMessage = (error: any) => {
     const errorMessages: { [key: string]: string } = {
@@ -68,111 +128,30 @@ export const LoginForm = () => {
 
   const handleSignUp = async (e: FormEvent) => {
     e.preventDefault();
-    try {
-      setLoading(true);
-
-      // Criar o usuário na autenticação
-      const { data: authData, error: authError } =
-        await supabaseService.auth.signUpWithEmail(email, password, {
-          name,
-          product: import.meta.env.VITE_PRODUCT_CODE,
-        });
-
-      if (authError) throw authError;
-
-      if (!authData.user) {
-        throw new Error("Erro ao criar usuário na autenticação");
-      }
-
-      // Verificar se o email precisa ser confirmado
-      if (authData.session === null) {
-        toast({
-          title: "Conta criada com sucesso!",
-          description:
-            "Por favor, verifique seu email para confirmar sua conta antes de fazer login.",
-        });
-        setActiveTab("login");
-        return;
-      }
-
-      // Se o email não precisa ser confirmado, faz login automaticamente
-      if (authData.session?.access_token) {
-        toast({
-          title: "Conta criada com sucesso!",
-          description: "Bem-vindo ao Zencora Noma.",
-        });
-        navigate("/dashboard");
-      }
-    } catch (error: any) {
-      console.error("Erro ao criar conta:", error);
-      toast({
-        title: "Erro ao criar conta",
-        description: getErrorMessage(error),
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
+    register()
   };
 
   const handleSignIn = async (e: FormEvent) => {
     e.preventDefault();
-    try {
-      setLoading(true);
-      const { data, error } = await supabaseService.auth.signInWithEmail(
-        email,
-        password,
-      );
-
-      if (error) throw error;
-
-      if (data.session?.access_token) {
-        toast({
-          title: "Login realizado com sucesso!",
-          description: "Bem-vindo de volta ao Zencora Noma.",
-        });
-
-        // Verifica se deve redirecionar para a tela de roles
-        if (settings?.enable_roles && roles.length > 0) {
-          navigate("/select-role");
-        } else {
-          navigate("/dashboard");
-        }
-      }
-    } catch (error: any) {
-      toast({
-        title: "Erro ao fazer login",
-        description: getErrorMessage(error),
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
+    login({ email, password, productId: useProductStore.getState().product.id.toString(), sessionSystem: getPlatform() });
   };
+
+     const getPlatform = (): string => {
+    const platform = navigator.platform.toLowerCase();
+    const userAgent = navigator.userAgent.toLowerCase();
+  
+    if (platform.includes('win')) return 'Windows';
+    if (platform.includes('mac')) return 'macOS';
+    if (platform.includes('linux')) return 'Linux';
+    if (/android/.test(userAgent)) return 'Android';
+    if (/iphone|ipad|ipod/.test(userAgent)) return 'iOS';
+  
+    return 'Unknown';
+  }
 
   const handleResetPassword = async (e: FormEvent) => {
     e.preventDefault();
-    try {
-      setLoading(true);
-      const { error } = await supabaseService.auth.resetPasswordForEmail(email);
-
-      if (error) throw error;
-
-      toast({
-        title: "Email enviado com sucesso!",
-        description: "Verifique sua caixa de entrada para redefinir sua senha.",
-      });
-      setShowResetPassword(false);
-      setEmail("");
-    } catch (error: any) {
-      toast({
-        title: "Erro ao enviar email",
-        description: getErrorMessage(error),
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
+    resetPassword();
   };
 
   const renderResetPasswordForm = () => (
@@ -209,8 +188,8 @@ export const LoginForm = () => {
         </CardContent>
 
         <CardFooter>
-          <Button className="w-full" disabled={loading}>
-            {loading ? (
+          <Button className="w-full" disabled={isResetPasswordPending}>
+            {isResetPasswordPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Enviando...
@@ -225,7 +204,7 @@ export const LoginForm = () => {
   );
 
   return (
-    <div className="w-full md:max-w-[20.5dvw] mx-auto">
+    <div className="w-full max-w-md mx-auto">
       <h2 className="text-3xl font-bold text-center">Seja bem-vindo!</h2>
       {showResetPassword ? (
         renderResetPasswordForm()
@@ -300,8 +279,8 @@ export const LoginForm = () => {
                 </CardContent>
 
                 <CardFooter>
-                  <Button className="w-full" disabled={loading}>
-                    {loading ? (
+                  <Button className="w-full" disabled={isLoginPending}>
+                    {isLoginPending ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />{" "}
                         Entrando...
@@ -378,8 +357,8 @@ export const LoginForm = () => {
                 </CardContent>
 
                 <CardFooter>
-                  <Button className="w-full" disabled={loading}>
-                    {loading ? (
+                  <Button className="w-full" disabled={isRegisterPending}>
+                    {isRegisterPending ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Criando
                         conta...

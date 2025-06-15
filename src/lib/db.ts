@@ -1,34 +1,29 @@
 import Dexie, { Table } from "dexie";
-import { Session, User } from "@supabase/supabase-js";
-import { Tables } from "@/integrations/supabase/types";
-
-type Tenant = Tables<"tenants">;
-type Settings = Tables<"settings">;
-type RoleType = Tables<"roles">;
-type SubscriptionType = Tables<"subscriptions">;
-type AppSessionType = Tables<"app_sessions">;
-type ProductType = Tables<"products">;
+import {
+  Product,
+  Session,
+  Tenant,
+  Settings,
+  Subscription
+} from "@/lib/types";
 
 interface WorkspaceData {
   id?: number;
-  initialized: boolean;
-  initializedAt: string;
-  initializedBy: string;
   tenant: Tenant | null;
   settings: Settings | null;
-  product: ProductType | null;
-  selectedRole: RoleType | null;
-  subscription: SubscriptionType | null;
-  roles: RoleType[];
   isOwner: boolean;
-  appSession: AppSessionType | null;
+  product: Product | null;
+  session: Session;
+  subscription: Subscription;
+  initialized: boolean;
+  initializedAt: number;
+  initializedBy: string;
 }
 
-export class ZencoraDB extends Dexie {
+export class ZencoraNomaDB extends Dexie {
   workspace!: Table<WorkspaceData>;
-
   constructor() {
-    super("zencoraDB");
+    super("zencora-noma-db");
     this.version(1).stores({
       workspace: "++id,initialized,initializedAt,initializedBy",
     });
@@ -53,15 +48,31 @@ export class ZencoraDB extends Dexie {
     }
   }
 
-  async updateRolesData(roles: RoleType[]): Promise<void> {
+  async clearProductData(): Promise<void> {
     const workspace = await this.getWorkspaceData();
     if (workspace) {
-      workspace.roles = roles;
+      workspace.product = null;
       await this.workspace.put(workspace);
     }
   }
 
-  async updateProductData(product: ProductType): Promise<void> {
+  async clearSessionData(): Promise<void> {
+    const workspace = await this.getWorkspaceData();
+    if (workspace) {
+      workspace.session = null;
+      await this.workspace.put(workspace);
+    }
+  }
+
+  async updateSessionData(session: Session): Promise<void> {
+    const workspace = await this.getWorkspaceData();
+    if (workspace) {
+      workspace.session = session;
+      await this.workspace.put(workspace);
+    }
+  }
+
+  async updateProductData(product: Product): Promise<void> {
     const workspace = await this.getWorkspaceData();
     if (workspace) {
       workspace.product = product;
@@ -77,22 +88,6 @@ export class ZencoraDB extends Dexie {
     }
   }
 
-  async updateAppSessionData(appSession: AppSessionType): Promise<void> {
-    const workspace = await this.getWorkspaceData();
-    if (workspace) {
-      workspace.appSession = appSession;
-      await this.workspace.put(workspace);
-    }
-  }
-
-  async updateSelectedRoleData(selectedRole: RoleType | null): Promise<void> {
-    const workspace = await this.getWorkspaceData();
-    if (workspace) {
-      workspace.selectedRole = selectedRole;
-      await this.workspace.put(workspace);
-    }
-  }
-
   async updateTenantData(tenant: Tenant): Promise<void> {
     const workspace = await this.getWorkspaceData();
     if (workspace) {
@@ -101,7 +96,7 @@ export class ZencoraDB extends Dexie {
     }
   }
 
-  async updateSubscriptionData(subscription: SubscriptionType): Promise<void> {
+  async updateSubscriptionData(subscription: Subscription): Promise<void> {
     const workspace = await this.getWorkspaceData();
     if (workspace) {
       workspace.subscription = subscription;
@@ -114,4 +109,4 @@ export class ZencoraDB extends Dexie {
   }
 }
 
-export const db = new ZencoraDB();
+export const db = new ZencoraNomaDB();

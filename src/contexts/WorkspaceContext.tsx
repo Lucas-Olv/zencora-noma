@@ -18,6 +18,8 @@ import { Tables } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 import dayjs from "dayjs";
 import { db } from "@/lib/db";
+import { useProductStore } from "@/storage/product";
+import { useSessionStore } from "@/storage/session";
 
 type Tenant = Tables<"tenants">;
 type Settings = Tables<"settings">;
@@ -110,20 +112,16 @@ export const WorkspaceProvider = ({
     isPaymentFailed;
 
   useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (session?.user) {
-          console.log("initializeWorkspace");
-          initializeWorkspace();
-        } else {
-          cleanWorkspace();
-        }
-      },
-    );
 
-    return () => {
-      authListener?.subscription.unsubscribe();
-    };
+    const loadWorkspace = async ()  => {
+    setIsLoading(true);
+        await useProductStore.getState().loadProduct();
+        await useSessionStore.getState().restoreSession();
+        setIsLoading(false);
+    }
+
+    loadWorkspace();
+    return;
   }, []);
 
   const initializeWorkspace = async () => {
