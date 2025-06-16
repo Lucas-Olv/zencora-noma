@@ -56,19 +56,9 @@ export const SubscriptionGate = ({
   blockMode = "hide",
   onBlock,
 }: Props) => {
-  const {
-    isLoading: subscriptionLoading,
-    isLoading: workspaceLoading,
-    isTrial,
-    isActive,
-    isBlocked,
-    subscription,
-    isExpired,
-    inGracePeriod,
-  } = useWorkspaceContext();
-  const { isAuthenticated } = useWorkspaceContext();
   const navigate = useNavigate();
   const location = useLocation();
+  const { isLoading } = useWorkspaceContext();
 
   const path = location.pathname;
 
@@ -134,9 +124,6 @@ export const SubscriptionGate = ({
     (isEssentialPlan &&
       (path.startsWith("/production") || path.startsWith("/settings")));
 
-  // Verifica se ainda está carregando
-  const isLoading =
-    isAuthenticated && (subscriptionLoading || workspaceLoading);
 
   useEffect(() => {
     if (!isLoading && shouldBlock && redirectTo && path !== redirectTo) {

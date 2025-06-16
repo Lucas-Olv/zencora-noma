@@ -37,6 +37,10 @@ import {
   WorkspaceProvider,
 } from "@/contexts/WorkspaceContext";
 import TermsAcceptance from "./pages/TermsAcceptance";
+import { useSessionStore } from "./storage/session";
+import { useTenantStorage } from "./storage/tenant";
+import { useSettingsStorage } from "./storage/settings";
+import { useEffect } from "react";
 const queryClient = new QueryClient();
 
 const BLOCKED_ROUTES = [
@@ -50,8 +54,12 @@ const BLOCKED_ROUTES = [
 ];
 
 const AppRoutes = () => {
-  const { isAuthenticated, isLoading, settings, roles, appSession, tenant } =
+  const { isLoading } =
     useWorkspaceContext();
+
+  const { session } = useSessionStore();
+  const { tenant } = useTenantStorage();
+  const { settings } = useSettingsStorage();
   const location = useLocation();
 
   if (isLoading) {
@@ -62,16 +70,9 @@ const AppRoutes = () => {
     );
   }
 
-  // Se estiver autenticado, tem roles habilitados e roles disponíveis, mas não tem role selecionada
-  const shouldSelectRole =
-    isAuthenticated &&
-    settings?.enable_roles &&
-    roles.length > 0 &&
-    !appSession;
-
   // Se estiver autenticado mas não aceitou os termos, redireciona para a tela de aceitação
   const shouldAcceptTerms =
-    isAuthenticated && tenant && !tenant.user_accepted_terms;
+    session && tenant && !tenant.user_accepted_terms;
 
   return (
     <Routes>
@@ -79,14 +80,10 @@ const AppRoutes = () => {
       <Route
         path="/"
         element={
-          isAuthenticated ? (
+          session ? (
             shouldAcceptTerms ? (
               <Navigate to="/terms-acceptance" />
-            ) : shouldSelectRole ? (
-              <Navigate to="/select-role" />
-            ) : (
-              <Navigate to="/dashboard" />
-            )
+            ) : <Navigate to="/dashboard" />
           ) : (
             <Landing />
           )
@@ -99,11 +96,9 @@ const AppRoutes = () => {
       <Route
         path="/login"
         element={
-          isAuthenticated ? (
+          session ? (
             shouldAcceptTerms ? (
               <Navigate to="/terms-acceptance" />
-            ) : shouldSelectRole ? (
-              <Navigate to="/select-role" />
             ) : (
               <Navigate to="/dashboard" />
             )
@@ -114,7 +109,7 @@ const AppRoutes = () => {
       />
 
       {/* Protected Routes */}
-      {isAuthenticated && (
+      {session && (
         <>
           <Route path="/" element={<Layout />}>
             <Route
@@ -123,8 +118,6 @@ const AppRoutes = () => {
                 <ProtectedRoute>
                   {shouldAcceptTerms ? (
                     <Navigate to="/terms-acceptance" replace />
-                  ) : shouldSelectRole ? (
-                    <Navigate to="/select-role" replace />
                   ) : (
                     <Dashboard />
                   )}
@@ -137,9 +130,7 @@ const AppRoutes = () => {
                 <ProtectedRoute>
                   {shouldAcceptTerms ? (
                     <Navigate to="/terms-acceptance" replace />
-                  ) : shouldSelectRole ? (
-                    <Navigate to="/select-role" replace />
-                  ) : (
+                  ) :  (
                     <Orders />
                   )}
                 </ProtectedRoute>
@@ -151,9 +142,7 @@ const AppRoutes = () => {
                 <ProtectedRoute>
                   {shouldAcceptTerms ? (
                     <Navigate to="/terms-acceptance" replace />
-                  ) : shouldSelectRole ? (
-                    <Navigate to="/select-role" replace />
-                  ) : (
+                  ) :(
                     <OrderDetail />
                   )}
                 </ProtectedRoute>
@@ -165,8 +154,6 @@ const AppRoutes = () => {
                 <ProtectedRoute>
                   {shouldAcceptTerms ? (
                     <Navigate to="/terms-acceptance" replace />
-                  ) : shouldSelectRole ? (
-                    <Navigate to="/select-role" replace />
                   ) : (
                     <Production />
                   )}
@@ -179,8 +166,6 @@ const AppRoutes = () => {
                 <ProtectedRoute>
                   {shouldAcceptTerms ? (
                     <Navigate to="/terms-acceptance" replace />
-                  ) : shouldSelectRole ? (
-                    <Navigate to="/select-role" replace />
                   ) : (
                     <PasswordVerification />
                   )}
@@ -193,8 +178,6 @@ const AppRoutes = () => {
                 <ProtectedRoute>
                   {shouldAcceptTerms ? (
                     <Navigate to="/terms-acceptance" replace />
-                  ) : shouldSelectRole ? (
-                    <Navigate to="/select-role" replace />
                   ) : settings?.lock_reports_by_password &&
                     !location.state?.verified ? (
                     <Navigate
@@ -218,8 +201,6 @@ const AppRoutes = () => {
                 <ProtectedRoute>
                   {shouldAcceptTerms ? (
                     <Navigate to="/terms-acceptance" replace />
-                  ) : shouldSelectRole ? (
-                    <Navigate to="/select-role" replace />
                   ) : (
                     <Calendar />
                   )}
@@ -232,8 +213,6 @@ const AppRoutes = () => {
                 <ProtectedRoute>
                   {shouldAcceptTerms ? (
                     <Navigate to="/terms-acceptance" replace />
-                  ) : shouldSelectRole ? (
-                    <Navigate to="/select-role" replace />
                   ) : (
                     <Reminders />
                   )}
@@ -246,8 +225,6 @@ const AppRoutes = () => {
                 <ProtectedRoute>
                   {shouldAcceptTerms ? (
                     <Navigate to="/terms-acceptance" replace />
-                  ) : shouldSelectRole ? (
-                    <Navigate to="/select-role" replace />
                   ) : settings?.lock_settings_by_password &&
                     !location.state?.verified ? (
                     <Navigate
@@ -279,20 +256,13 @@ const AppRoutes = () => {
                 <ProtectedRoute>
                   {shouldAcceptTerms ? (
                     <Navigate to="/terms-acceptance" replace />
-                  ) : shouldSelectRole ? (
-                    <Navigate to="/select-role" replace />
-                  ) : (
+                  ): (
                     <SubscriptionSuccess />
                   )}
                 </ProtectedRoute>
               }
             />
           </Route>
-
-          {/* Protected Routes Outside Layout scheme*/}
-          {settings?.enable_roles && roles.length > 0 && (
-            <Route path="/select-role" element={<RoleSelector />} />
-          )}
           <Route
             path="/terms-acceptance"
             element={
@@ -304,7 +274,7 @@ const AppRoutes = () => {
         </>
       )}
 
-      {!isAuthenticated && (
+      {!session && (
         <Route path="*" element={<Navigate to="/login" replace />} />
       )}
 

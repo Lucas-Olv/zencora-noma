@@ -12,6 +12,7 @@ export type Subscription = {
   expires_at: string;
   product?: { name: string; app_icon: string };
   grace_period_until?: string;
+  isTrial?: boolean;
 };
 
 export type User = {
@@ -33,12 +34,15 @@ export type Tenant = {
   id: string;
   ownerId: string;
   productId: string;
+  user_accepted_terms: boolean;
 };
 
 export type Settings = {
   id: string;
   tenantId: string;
   settings: string;
+  lock_reports_by_password?: boolean;
+  lock_settings_by_password?: boolean;
 };
 
 export type Product = {

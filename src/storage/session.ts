@@ -45,7 +45,6 @@ export const useSessionStore = create<SessionState>()(
           const sessionData = await db.getSessionData();
           if (!sessionData?.token) return;
           const payload = await verifyToken(sessionData.token);
-          if (payload?.exp * 1000 < Date.now()) return;
           set({
             token: sessionData.token,
             user: {

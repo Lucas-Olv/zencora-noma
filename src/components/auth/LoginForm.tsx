@@ -33,7 +33,6 @@ export const LoginForm = () => {
   const [activeTab, setActiveTab] = useState("login");
   const [showResetPassword, setShowResetPassword] = useState(false);
   const { setSession } = useSessionStore();
-  const { setIsAuthenticated } = useWorkspaceContext();
 
   const {
     mutate: register,
@@ -124,12 +123,11 @@ export const LoginForm = () => {
           productId: payload.productId as string,
         };
         setSession(session, response.data.accessToken);
-        setIsAuthenticated(true);
         toast({
           title: "Login realizado com sucesso",
           description: "Bem vindo de volta!",
         });
-        navigate("/account");
+        navigate("/dashboard");
       } catch (error) {
         console.error("Erro ao verificar token:", error);
         toast({
