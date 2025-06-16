@@ -23,6 +23,13 @@ export const postCoreApiPublic = <T = any>(
     .then((res) => res.data);
 };
 
+export const getCoreApi = <T = any>(
+  url: string,
+  config: CustomAxiosConfig = {withCredentials: true},
+): Promise<T> => {
+  return coreApi.get<T>(url, config).then((res) => res.data);
+};
+
 // Helpers genéricos para lidar com a Noma API
 export const getNomaApi = <T = any>(
   url: string,

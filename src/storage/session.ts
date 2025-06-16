@@ -42,12 +42,12 @@ export const useSessionStore = create<SessionState>()(
 
       restoreSession: async () => {
         try {
-          const data = await db.getWorkspaceData();
-          if (!data?.session.token) return;
-          const payload = await verifyToken(data.session.token);
+          const sessionData = await db.getSessionData();
+          if (!sessionData?.token) return;
+          const payload = await verifyToken(sessionData.token);
           if (payload?.exp * 1000 < Date.now()) return;
           set({
-            token: data.session.token,
+            token: sessionData.token,
             user: {
               id: payload.sub,
               email: payload.email as string,
@@ -62,7 +62,7 @@ export const useSessionStore = create<SessionState>()(
                 name: payload.name as string,
                 sessionId: payload.sessionId as string,
               },
-              token: data.session.token,
+              token: sessionData.token,
               productId: payload.productId as string,
             },
             isAuthenticated: true,

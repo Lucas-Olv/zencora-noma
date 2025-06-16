@@ -20,6 +20,7 @@ import dayjs from "dayjs";
 import { db } from "@/lib/db";
 import { useProductStore } from "@/storage/product";
 import { useSessionStore } from "@/storage/session";
+import { useSubscriptionStorage } from "@/storage/subscription";
 
 type Tenant = Tables<"tenants">;
 type Settings = Tables<"settings">;
@@ -115,8 +116,10 @@ export const WorkspaceProvider = ({
 
     const loadWorkspace = async ()  => {
     setIsLoading(true);
+        await db.init();
         await useProductStore.getState().loadProduct();
         await useSessionStore.getState().restoreSession();
+        await useSubscriptionStorage.getState().loadSubscription();
         setIsLoading(false);
     }
 

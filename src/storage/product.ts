@@ -17,7 +17,7 @@ export const useProductStore = create<ProductState>((set, get) => ({
 
   setProduct: async (product) => {
     await db.clearProductData();
-    await db.updateProductData(product);
+    await db.saveProductData(product);
     set({ product });
   },
 
@@ -30,9 +30,9 @@ export const useProductStore = create<ProductState>((set, get) => ({
     const { product } = get();
     if (product) return;
 
-    const [workspace] = await db.workspace.toArray();
-    if (workspace) {
-      set({ product: workspace.product });
+    const productData = await db.getProductData();
+    if (productData) {
+      set({ product: productData });
       return;
     }
 
@@ -41,7 +41,7 @@ export const useProductStore = create<ProductState>((set, get) => ({
 
       if (response?.data) {
         await db.clearProductData();
-        await db.updateProductData(response.data);
+        await db.saveProductData(response.data);
         set({ product: response.data });
       } else {
         set({ product: null });
