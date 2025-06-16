@@ -15,8 +15,14 @@ import { useEffect } from "react";
 
 export function SubscriptionExpired() {
   const navigate = useNavigate();
-  const { subscription, isTrial, isPaymentFailed, isExpired, isActive, isBlocked } =
-    useWorkspaceContext();
+  const {
+    subscription,
+    isTrial,
+    isPaymentFailed,
+    isExpired,
+    isActive,
+    isBlocked,
+  } = useWorkspaceContext();
 
   // Verifica periodicamente o status da assinatura
   useEffect(() => {

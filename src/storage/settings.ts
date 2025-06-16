@@ -9,7 +9,7 @@ interface SettingsState {
   loadSettings: () => Promise<void>;
 }
 
-export const useSubscriptionStorage = create<SettingsState>((set, get) => ({
+export const useSettingsStorage = create<SettingsState>((set, get) => ({
   settings: null,
 
   setSettings: async (settings) => {
@@ -24,7 +24,7 @@ export const useSubscriptionStorage = create<SettingsState>((set, get) => ({
   },
 
   loadSettings: async () => {
-          const { settings } = get();
+    const { settings } = get();
     if (settings) return;
 
     const settingsData = await db.getSettingsData();
@@ -32,5 +32,5 @@ export const useSubscriptionStorage = create<SettingsState>((set, get) => ({
       set({ settings: settingsData });
       return;
     }
-    }
+  },
 }));

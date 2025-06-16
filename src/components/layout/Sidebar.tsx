@@ -294,7 +294,7 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
     try {
       await db.clearWorkspaceData();
       await supabase.auth.signOut();
-      
+
       toast({
         title: "Logout realizado com sucesso",
         description: "Você foi desconectado com sucesso.",
@@ -381,20 +381,26 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
 
         <div className="mt-auto border-t border-border pt-4">
           {/* Configurações */}
-          {(!subscription?.plan || subscription?.plan === "pro" || subscription?.plan === "enterprise" || isTrial) && 
-           (appSession?.role === "owner" || appSession?.role_id && roles.find(r => r.id === appSession.role_id)?.can_access_settings) && (
-            <Button
-              variant="ghost"
-              className="w-full flex gap-3 justify-start h-10"
-              onClick={() => handleNavigation("/settings")}
-            >
-              <Settings className="h-4 w-4" />
-              Configurações
-              {(isSettingsLocked || isSettingsBlocked || isBlocked) && (
-                <Lock className="h-4 w-4 ml-auto" />
-              )}
-            </Button>
-          )}
+          {(!subscription?.plan ||
+            subscription?.plan === "pro" ||
+            subscription?.plan === "enterprise" ||
+            isTrial) &&
+            (appSession?.role === "owner" ||
+              (appSession?.role_id &&
+                roles.find((r) => r.id === appSession.role_id)
+                  ?.can_access_settings)) && (
+              <Button
+                variant="ghost"
+                className="w-full flex gap-3 justify-start h-10"
+                onClick={() => handleNavigation("/settings")}
+              >
+                <Settings className="h-4 w-4" />
+                Configurações
+                {(isSettingsLocked || isSettingsBlocked || isBlocked) && (
+                  <Lock className="h-4 w-4 ml-auto" />
+                )}
+              </Button>
+            )}
 
           {/* Perfil ou Trocar Papel */}
           {settings?.enable_roles ? (

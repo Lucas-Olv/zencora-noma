@@ -20,10 +20,11 @@ export function PWAInstallPrompt() {
   useEffect(() => {
     // Verifica se o prompt já foi mostrado
     const hasShownPrompt = localStorage.getItem(PWA_INSTALL_PROMPT_KEY);
-    
+
     // Verifica se o app pode ser instalado como PWA
-    const isInstallable = window.matchMedia('(display-mode: standalone)').matches === false;
-    
+    const isInstallable =
+      window.matchMedia("(display-mode: standalone)").matches === false;
+
     // Só mostra o prompt se for dispositivo móvel
     if (!hasShownPrompt && isInstallable && isMobile) {
       setIsOpen(true);
@@ -44,7 +45,8 @@ export function PWAInstallPrompt() {
             Instale o Zencora Noma
           </DialogTitle>
           <DialogDescription className="pt-2">
-            Instale o Zencora Noma no seu dispositivo para ter uma melhor experiência em seu dispositivo.
+            Instale o Zencora Noma no seu dispositivo para ter uma melhor
+            experiência em seu dispositivo.
           </DialogDescription>
         </DialogHeader>
 
@@ -69,7 +71,8 @@ export function PWAInstallPrompt() {
 
           <div className="rounded-lg border bg-muted/50 p-3 text-sm">
             <p className="text-muted-foreground">
-              Para instalar, use o botão de compartilhar no seu navegador e selecione "Adicionar à Tela Inicial" ou "Instalar App".
+              Para instalar, use o botão de compartilhar no seu navegador e
+              selecione "Adicionar à Tela Inicial" ou "Instalar App".
             </p>
           </div>
         </div>
@@ -78,11 +81,9 @@ export function PWAInstallPrompt() {
           <Button variant="outline" onClick={handleClose}>
             Agora não
           </Button>
-          <Button onClick={handleClose}>
-            Entendi!
-          </Button>
+          <Button onClick={handleClose}>Entendi!</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
-} 
+}

@@ -20,4 +20,4 @@ export default function MonthlyReportsPage() {
       <MonthlyReports />
     </Suspense>
   );
-} 
+}

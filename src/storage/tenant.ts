@@ -9,7 +9,7 @@ interface TenantState {
   loadTenant: () => Promise<void>;
 }
 
-export const useSubscriptionStorage = create<TenantState>((set, get) => ({
+export const useTenantStorage = create<TenantState>((set, get) => ({
   tenant: null,
 
   setTenant: async (tenant) => {
@@ -24,7 +24,7 @@ export const useSubscriptionStorage = create<TenantState>((set, get) => ({
   },
 
   loadTenant: async () => {
-          const { tenant } = get();
+    const { tenant } = get();
     if (tenant) return;
 
     const tenantData = await db.getTenantData();
@@ -32,5 +32,5 @@ export const useSubscriptionStorage = create<TenantState>((set, get) => ({
       set({ tenant: tenantData });
       return;
     }
-    }
+  },
 }));

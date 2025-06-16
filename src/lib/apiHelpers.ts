@@ -6,7 +6,6 @@ import type { CustomAxiosConfig } from "./types";
 export const getCoreApiPublic = <T = any>(
   url: string,
   config: CustomAxiosConfig = {},
-  
 ): Promise<T> => {
   return coreApi
     .get<T>(url, { withAuth: false, ...config })
@@ -19,13 +18,13 @@ export const postCoreApiPublic = <T = any>(
   config: CustomAxiosConfig = {},
 ): Promise<T> => {
   return coreApi
-    .post<T>(url, data, { withAuth: false, ...config})
+    .post<T>(url, data, { withAuth: false, ...config })
     .then((res) => res.data);
 };
 
 export const getCoreApi = <T = any>(
   url: string,
-  config: CustomAxiosConfig = {withCredentials: true},
+  config: CustomAxiosConfig = { withCredentials: true },
 ): Promise<T> => {
   return coreApi.get<T>(url, config).then((res) => res.data);
 };
@@ -33,7 +32,7 @@ export const getCoreApi = <T = any>(
 // Helpers genéricos para lidar com a Noma API
 export const getNomaApi = <T = any>(
   url: string,
-  config: CustomAxiosConfig = {withCredentials: true},
+  config: CustomAxiosConfig = { withCredentials: true },
 ): Promise<T> => {
   return nomaApi.get<T>(url, config).then((res) => res.data);
 };
@@ -41,17 +40,21 @@ export const getNomaApi = <T = any>(
 export const postNomaApi = <T = any>(
   url: string,
   data?: any,
-  config: CustomAxiosConfig = {withCredentials: true},
+  config: CustomAxiosConfig = { withCredentials: true },
 ): Promise<T> => {
-  return nomaApi.post<T>(url, data, {withCredentials: true, ...config}).then((res) => res.data);
+  return nomaApi
+    .post<T>(url, data, { withCredentials: true, ...config })
+    .then((res) => res.data);
 };
 
 export const putNomaApi = <T = any>(
   url: string,
   data?: any,
-  config: CustomAxiosConfig = {withCredentials: true},
+  config: CustomAxiosConfig = { withCredentials: true },
 ): Promise<T> => {
-  return nomaApi.put<T>(url, data, {withCredentials: true, ...config}).then((res) => res.data);
+  return nomaApi
+    .put<T>(url, data, { withCredentials: true, ...config })
+    .then((res) => res.data);
 };
 
 export const patchNomaApi = <T = any>(
@@ -59,12 +62,16 @@ export const patchNomaApi = <T = any>(
   data?: any,
   config: CustomAxiosConfig = {},
 ): Promise<T> => {
-  return nomaApi.patch<T>(url, data, {withCredentials: true, ...config}).then((res) => res.data);
+  return nomaApi
+    .patch<T>(url, data, { withCredentials: true, ...config })
+    .then((res) => res.data);
 };
 
 export const delNomaAPi = <T = any>(
   url: string,
   config: CustomAxiosConfig = {},
 ): Promise<T> => {
-  return nomaApi.delete<T>(url, {withCredentials: true, ...config}).then((res) => res.data);
+  return nomaApi
+    .delete<T>(url, { withCredentials: true, ...config })
+    .then((res) => res.data);
 };

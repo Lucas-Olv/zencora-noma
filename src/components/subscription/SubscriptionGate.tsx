@@ -108,29 +108,31 @@ export const SubscriptionGate = ({
       : false);
 
   // Verifica se o status da assinatura permite acesso
-  const allowedByStatus = onlyActive 
+  const allowedByStatus = onlyActive
     ? (isActive && !isExpired) || inGracePeriod // Se onlyActive, verifica se está ativo E não expirado OU em período de graça
-    : (isTrial || (isActive && !isExpired) || inGracePeriod); // Se não onlyActive, verifica se está em trial OU (ativo E não expirado) OU em período de graça
+    : isTrial || (isActive && !isExpired) || inGracePeriod; // Se não onlyActive, verifica se está em trial OU (ativo E não expirado) OU em período de graça
 
   // Verifica se o plano permite acesso
-  const isProPlan = subscription?.plan === "pro" || subscription?.plan === "enterprise";
+  const isProPlan =
+    subscription?.plan === "pro" || subscription?.plan === "enterprise";
   const isEssentialPlan = subscription?.plan === "essential";
 
   // Determina se deve bloquear o acesso
   const shouldBlock =
-    isAuthenticated &&
-    path !== DEFAULT_ALLOWED_ROUTE &&
-    // Se a assinatura é válida (não está bloqueada e tem status permitido), permite acesso por padrão
-    // Se a assinatura é inválida, aplica as regras do Gate
-    (isBlocked || !allowedByStatus) &&
-    // Se tiver allowedRoutes, usa a lógica de allowed
-    ((allowedRoutes?.length && !isRouteAllowed) ||
-      // Se tiver blockedRoutes, usa a lógica de blocked
-      (blockedRoutes?.length && isRouteBlocked) ||
-      // Se não tiver nenhum dos dois, bloqueia por padrão
-      (!allowedRoutes?.length && !blockedRoutes?.length)) ||
+    (isAuthenticated &&
+      path !== DEFAULT_ALLOWED_ROUTE &&
+      // Se a assinatura é válida (não está bloqueada e tem status permitido), permite acesso por padrão
+      // Se a assinatura é inválida, aplica as regras do Gate
+      (isBlocked || !allowedByStatus) &&
+      // Se tiver allowedRoutes, usa a lógica de allowed
+      ((allowedRoutes?.length && !isRouteAllowed) ||
+        // Se tiver blockedRoutes, usa a lógica de blocked
+        (blockedRoutes?.length && isRouteBlocked) ||
+        // Se não tiver nenhum dos dois, bloqueia por padrão
+        (!allowedRoutes?.length && !blockedRoutes?.length))) ||
     // Bloqueia acesso ao painel de produção e configurações para plano essencial
-    (isEssentialPlan && (path.startsWith("/production") || path.startsWith("/settings")));
+    (isEssentialPlan &&
+      (path.startsWith("/production") || path.startsWith("/settings")));
 
   // Verifica se ainda está carregando
   const isLoading =

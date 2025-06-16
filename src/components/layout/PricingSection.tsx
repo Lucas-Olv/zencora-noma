@@ -157,9 +157,13 @@ interface PricingSectionProps {
   useSubscription?: boolean;
 }
 
-export function PricingSection({ useSubscription = false }: PricingSectionProps) {
+export function PricingSection({
+  useSubscription = false,
+}: PricingSectionProps) {
   const sectionRef = useRef<HTMLElement>(null);
-  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">(
+    "monthly",
+  );
   const [isLoading, setIsLoading] = useState<"essential" | "pro" | null>(null);
   const { toast } = useToast();
   const { tenant } = useWorkspaceContext();

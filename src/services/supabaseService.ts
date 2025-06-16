@@ -205,8 +205,16 @@ export const tenantsService = {
   },
 
   // Atualiza um tenant existente
-  updateTenant: async (id: string, data: Partial<Omit<TenantType, "id" | "created_at" | "owner_id">>) => {
-    return await supabase.from("tenants").update(data).eq("id", id).select().single();
+  updateTenant: async (
+    id: string,
+    data: Partial<Omit<TenantType, "id" | "created_at" | "owner_id">>,
+  ) => {
+    return await supabase
+      .from("tenants")
+      .update(data)
+      .eq("id", id)
+      .select()
+      .single();
   },
 };
 
@@ -391,7 +399,8 @@ export const rolesService = {
 export const workspacesService = {
   // Obtém o workspace de um usuário
   getUserWorkspace: async () => {
-    const { data: session, error: sessionError } = await supabase.auth.getSession();
+    const { data: session, error: sessionError } =
+      await supabase.auth.getSession();
     if (sessionError) throw sessionError;
 
     const { data: user, error: userError } = await supabase.auth.getUser();

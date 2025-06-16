@@ -1,11 +1,5 @@
 import Dexie, { Table } from "dexie";
-import {
-  Product,
-  Session,
-  Tenant,
-  Settings,
-  Subscription
-} from "@/lib/types";
+import { Product, Session, Tenant, Settings, Subscription } from "@/lib/types";
 
 interface workspaceData {
   id?: number;
@@ -28,7 +22,7 @@ export class ZencoraNomaDB extends Dexie {
     });
   }
 
-    async init() {
+  async init() {
     if (!this.workspaceData) {
       this.workspaceData = this.table("workspaceDataData");
     }
@@ -52,17 +46,25 @@ export class ZencoraNomaDB extends Dexie {
   }
 
   async getProductData(): Promise<Product | null> {
-    return this.getWorkspaceData().then(workspaceData => workspaceData?.product || null);
+    return this.getWorkspaceData().then(
+      (workspaceData) => workspaceData?.product || null,
+    );
   }
 
   async getSessionData(): Promise<Session | null> {
-    return this.getWorkspaceData().then(workspaceData => workspaceData?.session || null);
+    return this.getWorkspaceData().then(
+      (workspaceData) => workspaceData?.session || null,
+    );
   }
   async getTenantData(): Promise<Tenant | null> {
-    return this.getWorkspaceData().then(workspaceData => workspaceData?.tenant || null);
+    return this.getWorkspaceData().then(
+      (workspaceData) => workspaceData?.tenant || null,
+    );
   }
   async getSubscriptionData(): Promise<Subscription | null> {
-    return this.getWorkspaceData().then(workspaceData => workspaceData?.subscription || null);
+    return this.getWorkspaceData().then(
+      (workspaceData) => workspaceData?.subscription || null,
+    );
   }
 
   async saveWorkspaceDataData(data: workspaceData): Promise<number> {
@@ -157,14 +159,14 @@ export class ZencoraNomaDB extends Dexie {
     }
   }
 
-    async saveSessionData(session: Session): Promise<void> {
+  async saveSessionData(session: Session): Promise<void> {
     const workspaceDataData = await this.getWorkspaceData();
     if (workspaceDataData) {
       workspaceDataData.session = session;
       await this.saveWorkspaceDataData(workspaceDataData);
     }
   }
-  
+
   async saveProductData(product: Product): Promise<void> {
     const workspaceDataData = await this.getWorkspaceData();
     if (workspaceDataData) {

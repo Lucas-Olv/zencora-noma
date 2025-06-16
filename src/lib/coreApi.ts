@@ -39,65 +39,71 @@ coreApi.interceptors.request.use((config) => {
 });
 
 coreApi.interceptors.response.use(
-  response => response,
-  async error => {
+  (response) => response,
+  async (error) => {
     const originalRequest = error.config;
 
-    if (error.response?.status === 401 && !originalRequest.__isRetryRequest && originalRequest.__retryCount? originalRequest.__retryCount <= 2 : true) {
+    if (
+      error.response?.status === 401 &&
+      !originalRequest.__isRetryRequest &&
+      originalRequest.__retryCount
+        ? originalRequest.__retryCount <= 2
+        : true
+    ) {
       console.warn("[API] Sessão expirada. Tentando refresh...");
 
-          if (error.response?.status === 401 && !originalRequest.__isRetryRequest) {
-      originalRequest.__isRetryRequest = true;
-      originalRequest.__retryCount = (originalRequest.__retryCount || 0) + 1;
+      if (error.response?.status === 401 && !originalRequest.__isRetryRequest) {
+        originalRequest.__isRetryRequest = true;
+        originalRequest.__retryCount = (originalRequest.__retryCount || 0) + 1;
 
         if (originalRequest.__retryCount > 2) {
-        console.warn("[API] Tentativas de refresh excedidas. Limpando sessão.");
-        useSessionStore.getState().clearSession();
-        window.location.href = "/login";
-        return Promise.reject(error);
-      }
+          console.warn(
+            "[API] Tentativas de refresh excedidas. Limpando sessão.",
+          );
+          useSessionStore.getState().clearSession();
+          window.location.href = "/login";
+          return Promise.reject(error);
+        }
 
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        })
-          .then(token => {
-            originalRequest.headers["Authorization"] = `Bearer ${token}`;
-            return coreApi(originalRequest);
+        if (isRefreshing) {
+          return new Promise((resolve, reject) => {
+            failedQueue.push({ resolve, reject });
           })
-          .catch(err => Promise.reject(err));
+            .then((token) => {
+              originalRequest.headers["Authorization"] = `Bearer ${token}`;
+              return coreApi(originalRequest);
+            })
+            .catch((err) => Promise.reject(err));
+        }
+
+        originalRequest.__isRetryRequest = true;
+        isRefreshing = true;
+
+        try {
+          const { data } = await coreApi.post("/api/core/v1/refresh");
+          const newAccessToken = data.data.accessToken;
+          useSessionStore.getState().handleTokenRefresh(newAccessToken);
+          console.log(data);
+
+          // Processa fila de requisições falhadas
+          failedQueue.forEach((p) => p.resolve(newAccessToken));
+          failedQueue = [];
+
+          originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
+          return coreApi(originalRequest);
+        } catch (refreshError) {
+          failedQueue.forEach((p) => p.reject(refreshError));
+          failedQueue = [];
+
+          useSessionStore.getState().clearSession();
+          window.location.href = "/login";
+          return Promise.reject(refreshError);
+        } finally {
+          isRefreshing = false;
+        }
       }
 
-      originalRequest.__isRetryRequest = true;
-      isRefreshing = true;
-
-      try {
-        const { data } = await coreApi.post("/api/core/v1/refresh");
-        const newAccessToken= data.data.accessToken;
-        useSessionStore.getState().handleTokenRefresh(newAccessToken);
-        console.log(data);
-
-        // Processa fila de requisições falhadas
-        failedQueue.forEach(p => p.resolve(newAccessToken));
-        failedQueue = [];
-
-        originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
-        return coreApi(originalRequest);
-      } catch (refreshError) {
-        failedQueue.forEach(p => p.reject(refreshError));
-        failedQueue = [];
-
-        useSessionStore.getState().clearSession();
-        window.location.href = "/login";
-        return Promise.reject(refreshError);
-      } finally {
-        isRefreshing = false;
-      }
+      return Promise.reject(error);
     }
-
-    return Promise.reject(error);
-  }}
+  },
 );
-
-
-

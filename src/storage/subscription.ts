@@ -32,5 +32,5 @@ export const useSubscriptionStorage = create<SubscriptionState>((set, get) => ({
       set({ subscription: subscriptionData });
       return;
     }
-    }
+  },
 }));

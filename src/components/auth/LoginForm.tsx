@@ -20,6 +20,7 @@ import { verifyToken } from "@/lib/jwt";
 import { Session } from "@/lib/types";
 import { postCoreApiPublic } from "@/lib/apiHelpers";
 import { useProductStore } from "@/storage/product";
+import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 
 export const LoginForm = () => {
   const { toast } = useToast();
@@ -32,47 +33,82 @@ export const LoginForm = () => {
   const [activeTab, setActiveTab] = useState("login");
   const [showResetPassword, setShowResetPassword] = useState(false);
   const { setSession } = useSessionStore();
+  const { setIsAuthenticated } = useWorkspaceContext();
 
-    const { mutate: register, error: registerError, data: registerData, isPending: isRegisterPending } = useMutation({
-    mutationFn: () => postCoreApiPublic('/api/core/v1/signup', { email, password, name }),
+  const {
+    mutate: register,
+    error: registerError,
+    data: registerData,
+    isPending: isRegisterPending,
+  } = useMutation({
+    mutationFn: () =>
+      postCoreApiPublic("/api/core/v1/signup", { email, password, name }),
     onSuccess: () => {
       toast({
         title: "Conta criada com sucesso",
         description: "Verifique seu email para confirmar sua conta.",
       });
-      setActiveTab('login');
+      setActiveTab("login");
     },
     onError: (error) => {
       toast({
         title: "Erro ao criar conta",
-        description: getErrorMessage(error),  
+        description: getErrorMessage(error),
       });
       console.log(error);
-    }
+    },
   });
-  
-  const { mutate: resetPassword, error: resetPasswordError, data: resetPasswordData, isPending: isResetPasswordPending } = useMutation({
-    mutationFn: () => postCoreApiPublic('/api/core/v1/forgot-password', { email }),
+
+  const {
+    mutate: resetPassword,
+    error: resetPasswordError,
+    data: resetPasswordData,
+    isPending: isResetPasswordPending,
+  } = useMutation({
+    mutationFn: () =>
+      postCoreApiPublic("/api/core/v1/forgot-password", { email }),
     onSuccess: () => {
       toast({
         title: "Solicitação de recuperação enviada",
-        description: "Sua solicitação para recuperação de senha foi enviada com sucesso. Verifique seu e-mail.",
+        description:
+          "Sua solicitação para recuperação de senha foi enviada com sucesso. Verifique seu e-mail.",
       });
-      setActiveTab('login');
+      setActiveTab("login");
       setShowResetPassword(false);
     },
     onError: (error) => {
       toast({
         title: "Erro ao solicitar recuperação de senha",
-        description: "Ocorreu um erro ao solicitar a recuperação da senha, tente novamente.",  
+        description:
+          "Ocorreu um erro ao solicitar a recuperação da senha, tente novamente.",
       });
       console.log(error);
-    }
+    },
   });
 
-  const { mutate: login, isPending: isLoginPending, error: loginError, data: loginData } = useMutation({
-    mutationFn: ({ email, password, productId, sessionSystem }: { email: string; password: string; productId: string; sessionSystem: string }) =>
-      postCoreApiPublic('/api/core/v1/signin', { email, password, productId, sessionSystem }),
+  const {
+    mutate: login,
+    isPending: isLoginPending,
+    error: loginError,
+    data: loginData,
+  } = useMutation({
+    mutationFn: ({
+      email,
+      password,
+      productId,
+      sessionSystem,
+    }: {
+      email: string;
+      password: string;
+      productId: string;
+      sessionSystem: string;
+    }) =>
+      postCoreApiPublic("/api/core/v1/signin", {
+        email,
+        password,
+        productId,
+        sessionSystem,
+      }),
     onSuccess: async (response) => {
       try {
         const payload = await verifyToken(response.data.accessToken);
@@ -82,22 +118,29 @@ export const LoginForm = () => {
             id: payload.sub as string,
             name: payload.name as string,
             email: payload.email as string,
-            sessionId: payload.sessionId as string
+            sessionId: payload.sessionId as string,
           },
           token: response.data.accessToken,
-          productId: payload.productId as string
+          productId: payload.productId as string,
         };
         setSession(session, response.data.accessToken);
-        toast({ title: 'Login realizado com sucesso', description: 'Bem vindo de volta!' });
-        navigate('/account');
+        setIsAuthenticated(true);
+        toast({
+          title: "Login realizado com sucesso",
+          description: "Bem vindo de volta!",
+        });
+        navigate("/account");
       } catch (error) {
-        console.error('Erro ao verificar token:', error);
-        toast({ title: 'Erro ao verificar token', description: 'Por favor, tente novamente.' });
+        console.error("Erro ao verificar token:", error);
+        toast({
+          title: "Erro ao verificar token",
+          description: "Por favor, tente novamente.",
+        });
       }
     },
     onError: (error) => {
-      toast({ title: 'Erro no login', description: getErrorMessage(error) });
-    }
+      toast({ title: "Erro no login", description: getErrorMessage(error) });
+    },
   });
 
   useEffect(() => {
@@ -128,26 +171,31 @@ export const LoginForm = () => {
 
   const handleSignUp = async (e: FormEvent) => {
     e.preventDefault();
-    register()
+    register();
   };
 
   const handleSignIn = async (e: FormEvent) => {
     e.preventDefault();
-    login({ email, password, productId: useProductStore.getState().product.id.toString(), sessionSystem: getPlatform() });
+    login({
+      email,
+      password,
+      productId: useProductStore.getState().product.id.toString(),
+      sessionSystem: getPlatform(),
+    });
   };
 
-     const getPlatform = (): string => {
+  const getPlatform = (): string => {
     const platform = navigator.platform.toLowerCase();
     const userAgent = navigator.userAgent.toLowerCase();
-  
-    if (platform.includes('win')) return 'Windows';
-    if (platform.includes('mac')) return 'macOS';
-    if (platform.includes('linux')) return 'Linux';
-    if (/android/.test(userAgent)) return 'Android';
-    if (/iphone|ipad|ipod/.test(userAgent)) return 'iOS';
-  
-    return 'Unknown';
-  }
+
+    if (platform.includes("win")) return "Windows";
+    if (platform.includes("mac")) return "macOS";
+    if (platform.includes("linux")) return "Linux";
+    if (/android/.test(userAgent)) return "Android";
+    if (/iphone|ipad|ipod/.test(userAgent)) return "iOS";
+
+    return "Unknown";
+  };
 
   const handleResetPassword = async (e: FormEvent) => {
     e.preventDefault();
@@ -360,8 +408,8 @@ export const LoginForm = () => {
                   <Button className="w-full" disabled={isRegisterPending}>
                     {isRegisterPending ? (
                       <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Criando
-                        conta...
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />{" "}
+                        Criando conta...
                       </>
                     ) : (
                       "Criar Conta"

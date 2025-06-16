@@ -443,7 +443,10 @@ const MonthlyReports = () => {
                     const monthYear = format(date, "yyyy-MM");
                     return (
                       <SelectItem key={monthYear} value={monthYear}>
-                        {format(date, "MMMM yyyy", { locale: ptBR }).replace(/^\w/, c => c.toUpperCase())}
+                        {format(date, "MMMM yyyy", { locale: ptBR }).replace(
+                          /^\w/,
+                          (c) => c.toUpperCase(),
+                        )}
                       </SelectItem>
                     );
                   }).filter((_, i, arr) => {

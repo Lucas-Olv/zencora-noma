@@ -147,7 +147,10 @@ export default function RoleSelector() {
 
     // Se já existe um papel selecionado E não estamos vindo da verificação de senha, redireciona para o dashboard
     const state = location.state as { verified?: boolean } | null;
-    if ((currentAppSession?.role_id || currentAppSession?.role === "owner") && !state?.verified) {
+    if (
+      (currentAppSession?.role_id || currentAppSession?.role === "owner") &&
+      !state?.verified
+    ) {
       navigate("/dashboard", { replace: true });
     }
   }, [settings, roles, navigate, currentAppSession, location.state]);
@@ -158,7 +161,10 @@ export default function RoleSelector() {
 
   // Se já existe um papel selecionado E não estamos vindo da verificação de senha, não mostra a tela de seleção
   const state = location.state as { verified?: boolean } | null;
-  if ((currentAppSession?.role_id || currentAppSession?.role === "owner") && !state?.verified) {
+  if (
+    (currentAppSession?.role_id || currentAppSession?.role === "owner") &&
+    !state?.verified
+  ) {
     return null;
   }
 

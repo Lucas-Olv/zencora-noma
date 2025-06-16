@@ -37,7 +37,9 @@ export const useProductStore = create<ProductState>((set, get) => ({
     }
 
     try {
-      const response = await getCoreApiPublic(`/api/core/v1/product/${productCode}`);
+      const response = await getCoreApiPublic(
+        `/api/core/v1/product/${productCode}`,
+      );
 
       if (response?.data) {
         await db.clearProductData();
