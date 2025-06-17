@@ -1,7 +1,6 @@
 import { InfoIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
-import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -10,21 +9,22 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import dayjs from "dayjs";
+import { useSubscriptionStorage } from "@/storage/subscription";
 
 const SubscriptionInfo = () => {
   const [mounted, setMounted] = useState(false);
-  const { subscription } = useSUbscriptionStorage();
+  const { subscription } = useSubscriptionStorage();
 
   // Verifica se a assinatura está próxima de expirar (3 dias)
   const isAboutToExpire =
-    subscription?.expires_at &&
-    dayjs(subscription.expires_at).diff(dayjs(), "day") <= 3 &&
+    subscription?.expiresAt &&
+    dayjs(subscription.expiresAt).diff(dayjs(), "day") <= 3 &&
     subscription.status === "cancelled";
 
   // Verifica se a assinatura está próxima de renovar (3 dias)
   const isAboutToRenew =
-    subscription?.expires_at &&
-    dayjs(subscription.expires_at).diff(dayjs(), "day") <= 3 &&
+    subscription?.expiresAt &&
+    dayjs(subscription.expiresAt).diff(dayjs(), "day") <= 3 &&
     subscription.status === "active";
 
   const headerSubscriptionStatusWarning =
@@ -100,7 +100,4 @@ const SubscriptionInfo = () => {
 };
 
 export default SubscriptionInfo;
-function useSUbscriptionStorage(): { subscription: any; } {
-  throw new Error("Function not implemented.");
-}
 

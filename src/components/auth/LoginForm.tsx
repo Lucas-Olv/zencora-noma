@@ -127,7 +127,7 @@ export const LoginForm = () => {
           title: "Login realizado com sucesso",
           description: "Bem vindo de volta!",
         });
-        navigate("/dashboard");
+        navigate("/");
       } catch (error) {
         console.error("Erro ao verificar token:", error);
         toast({

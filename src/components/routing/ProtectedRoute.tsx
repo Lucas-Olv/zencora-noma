@@ -1,12 +1,19 @@
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
-import { ReactNode } from "react";
-import { Navigate, useLocation } from "react-router-dom";
+import { ReactNode, useEffect } from "react";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useSessionStore } from "@/storage/session";
 
 const ProtectedRoute = ({ children }: { children: ReactNode }) => {
   const location = useLocation();
   const { session } = useSessionStore();
   const { isLoading} = useWorkspaceContext();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (location.pathname === "/login" && session) {
+      navigate("/", { replace: true });
+    }
+  }, [location.pathname, session]);
   
   if (isLoading)
     return (
