@@ -1,5 +1,4 @@
-import { coreApi } from "./coreApi";
-import { nomaApi } from "./nomaApi";
+import { coreApi, nomaApi } from "./api";
 import type { CustomAxiosConfig } from "./types";
 
 // Helpers genéricos para lidar com a Core API

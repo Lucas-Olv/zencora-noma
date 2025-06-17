@@ -1,7 +1,10 @@
 import type { AxiosRequestConfig } from "axios";
 
+// Estende AxiosRequestConfig para adicionar propriedades customizadas
 export interface CustomAxiosConfig extends AxiosRequestConfig {
-  withAuth?: boolean;
+  withAuth?: boolean; // Permite desativar a injeção do token
+  __isRetryRequest?: boolean; // Usado internamente para controlar retries do refresh
+  __retryCount?: number; // Contador de tentativas de retry
 }
 
 export type Subscription = {
