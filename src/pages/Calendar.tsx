@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { supabaseService } from "@/services/supabaseService";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
@@ -11,6 +10,7 @@ import ptBrLocale from "@fullcalendar/core/locales/pt-br";
 import "@/styles/calendar.css";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { cn } from "@/lib/utils";
+import { useTenantStorage } from "@/storage/tenant";
 
 interface Order {
   id: string;
@@ -75,7 +75,8 @@ const getEventColor = (status: string | null, dueDate: string) => {
 const CalendarPage = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { tenant, isLoading } = useWorkspaceContext();
+  const { isLoading } = useWorkspaceContext();
+  const { tenant } = useTenantStorage();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -88,27 +89,27 @@ const CalendarPage = () => {
   }, [tenant, isLoading]);
 
   const fetchOrders = async () => {
-    try {
-      const { data, error } = await supabaseService.orders.getTenantOrders(
-        tenant.id,
-      );
-      if (error) throw error;
+    // try {
+    //   const { data, error } = await supabaseService.orders.getTenantOrders(
+    //     tenant.id,
+    //   );
+    //   if (error) throw error;
 
-      setOrders(
-        (data || []).map((order) => ({
-          ...order,
-          status: order.status as "pending" | "production" | "done",
-        })),
-      );
-    } catch (error: any) {
-      toast({
-        title: "Erro ao carregar encomendas",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
+    //   setOrders(
+    //     (data || []).map((order) => ({
+    //       ...order,
+    //       status: order.status as "pending" | "production" | "done",
+    //     })),
+    //   );
+    // } catch (error: any) {
+    //   toast({
+    //     title: "Erro ao carregar encomendas",
+    //     description: error.message,
+    //     variant: "destructive",
+    //   });
+    // } finally {
+    //   setLoading(false);
+    // }
   };
 
   const events = orders.map((order) => {

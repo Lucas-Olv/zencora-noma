@@ -8,18 +8,34 @@ export type Subscription = {
   id: string;
   status: string;
   plan: string;
-  started_at: string;
-  expires_at: string;
+  startedAtt: string;
+  expiresAt: string;
   product?: { name: string; app_icon: string };
-  grace_period_until?: string;
-  isTrial?: boolean;
+  gracePeriodUntil?: string;
+  isTrial: boolean;
+  cancelAtPeriodEnd: boolean;
+  canceledAt?: string;
+  paymentFailedAt?: string;
+  productId?: string;
+  userId?: string;
 };
 
 export type User = {
   id: string;
   name: string;
   email: string;
-  sessionId: string;
+  eventCredits?: number;
+  workspaceSlug?: string;
+  profilePicture?: string;
+  birthDate?: string;
+  cpf?: string;
+  cnpj?: string;
+  address?: string;
+  facebookId?: string;
+  lastAccessAt?: string;
+  googleId?: string;
+  appleId?: string;
+  sessionId?: string;
 };
 
 export type Session = {
@@ -32,24 +48,94 @@ export type Session = {
 
 export type Tenant = {
   id: string;
-  ownerId: string;
+  name: string;
   productId: string;
-  user_accepted_terms: boolean;
+  ownerId: string;
+  createdAt: string;
+  userAcceptedTerms: boolean;
 };
 
 export type Settings = {
   id: string;
   tenantId: string;
-  settings: string;
-  lock_reports_by_password?: boolean;
-  lock_settings_by_password?: boolean;
+  enableRoles: boolean;
+  lockReportsByPassword: boolean;
+  requirePasswordToSwitchRole: boolean;
+  lockSettingsByPassword: boolean;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type Product = {
   id: string;
+  code: string;
   name: string;
-  type: "service" | "saas" | "mobile";
-  url: string;
-  short_description?: string;
+  createdAt: string;
+  longDescription?: string;
+  type: string;
+  url?: string;
+  shortDescription: string;
+  appIcon?: string;
+};
+
+export type Collaborator = {
+  id: string;
+  name: string;
+  email: string;
+  password: string;
+  tenantId: string;
+  invitedByUserId?: string;
+  status: 'active' | 'pending' | 'revoked';
+  lastLoginAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  canAccessReports: boolean;
+  canAccessCalendar: boolean;
+  canAccessProduction: boolean;
+  canAccessOrders: boolean;
+  canAccessReminders: boolean;
+  canAccessSettings: boolean;
+  canAccessDashboard: boolean;
+  canCreateOrders: boolean;
+  canDeleteOrders: boolean;
+  canEditOrders: boolean;
+};
+
+export type Order = {
+  id: string;
+  clientName: string;
   description?: string;
+  dueDate: string;
+  price: number;
+  status?: string;
+  tenantId?: string;
+  phone?: string;
+  createdAt: string;
+};
+
+export type Reminder = {
+  id: string;
+  tenantId: string;
+  title: string;
+  isDone: boolean;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type Receipt = {
+  id: string;
+  subscriptionId: string;
+  amount: number;
+  currency: string;
+  status: string;
+  paymentMethod: string;
+  paidAt: string;
+  externalReference: string;
+  productId: string;
+  invoiceUrl: string;
+  issuedAt: string;
+  planType: string;
+  userId: string;
+  createdAt: string;
 };

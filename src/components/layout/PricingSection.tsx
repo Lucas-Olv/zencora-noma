@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { useSubscriptionHandler } from "@/hooks/use-subscription-handler";
+import { useTenantStorage } from "@/storage/tenant";
 
 // Price IDs for each plan
 const PRICE_IDS = {
@@ -166,7 +167,7 @@ export function PricingSection({
   );
   const [isLoading, setIsLoading] = useState<"essential" | "pro" | null>(null);
   const { toast } = useToast();
-  const { tenant } = useWorkspaceContext();
+  const { tenant } = useTenantStorage();
   const { handleCheckout } = useSubscriptionHandler();
 
   useEffect(() => {

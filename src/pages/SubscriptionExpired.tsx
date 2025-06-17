@@ -12,29 +12,20 @@ import {
 } from "@/components/ui/card";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { useEffect } from "react";
+import { useSubscriptionStorage } from "@/storage/subscription";
+import dayjs from "dayjs";
 
 export function SubscriptionExpired() {
   const navigate = useNavigate();
-  const {
-    subscription,
-    isTrial,
-    isPaymentFailed,
-    isExpired,
-    isActive,
-    isBlocked,
-  } = useWorkspaceContext();
+ const { subscription } = useSubscriptionStorage();
 
   // Verifica periodicamente o status da assinatura
   useEffect(() => {
-    // Se a assinatura não estiver mais bloqueada, redireciona
-    if (!isBlocked) {
-      navigate("/", { replace: true });
-    }
-  }, [isBlocked, navigate]);
+  }, [ subscription]);
 
   // Determina o estado da assinatura e retorna as informações apropriadas
   const getSubscriptionState = () => {
-    if (isTrial) {
+    if (subscription?.isTrial) {
       return {
         title: "Seu período de teste expirou",
         description:
@@ -45,7 +36,7 @@ export function SubscriptionExpired() {
       };
     }
 
-    if (isPaymentFailed) {
+    if (subscription?.status === "payment_failed") {
       return {
         title: "Erro no pagamento",
         description:
@@ -56,7 +47,7 @@ export function SubscriptionExpired() {
       };
     }
 
-    if (isExpired) {
+    if (dayjs(subscription?.expiresAt).isBefore(dayjs())) {
       return {
         title: "Sua assinatura expirou",
         description:

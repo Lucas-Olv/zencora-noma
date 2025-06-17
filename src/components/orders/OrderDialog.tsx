@@ -11,7 +11,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { supabaseService, OrderType } from "@/services/supabaseService";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -27,14 +26,16 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTenantStorage } from "@/storage/tenant";
+import { Order } from "@/lib/types";
 
 interface OrderDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   mode: "create" | "edit";
   orderId?: string;
-  orderData?: OrderType;
-  onSuccess?: (updatedOrder: OrderType) => void;
+  orderData?: Order;
+  onSuccess?: (updatedOrder: Order) => void;
 }
 
 const formSchema = z.object({
@@ -79,7 +80,7 @@ const OrderDialog = ({
   onSuccess,
 }: OrderDialogProps) => {
   const { toast } = useToast();
-  const { tenant } = useWorkspaceContext();
+  const { tenant } = useTenantStorage();
   const [loading, setLoading] = useState(false);
   const queryClient = useQueryClient();
 
@@ -98,9 +99,9 @@ const OrderDialog = ({
   useEffect(() => {
     if (open) {
       if (mode === "edit" && orderData) {
-        const date = new Date(orderData.due_date);
+        const date = new Date(orderData.dueDate);
         form.reset({
-          client_name: orderData.client_name,
+          client_name: orderData.clientName,
           phone: orderData.phone || "",
           description: orderData.description || "",
           due_date: format(date, "yyyy-MM-dd"),
@@ -153,89 +154,89 @@ const OrderDialog = ({
   };
 
   const onSubmit = async (data: FormValues) => {
-    if (!tenant) return;
+    // if (!tenant) return;
 
-    setLoading(true);
-    try {
-      const [hours, minutes] = data.due_time.split(":");
-      // Criar a data no fuso horário local
-      const dueDate = new Date(data.due_date + "T00:00:00");
-      dueDate.setHours(parseInt(hours), parseInt(minutes));
+    // setLoading(true);
+    // try {
+    //   const [hours, minutes] = data.due_time.split(":");
+    //   // Criar a data no fuso horário local
+    //   const dueDate = new Date(data.due_date + "T00:00:00");
+    //   dueDate.setHours(parseInt(hours), parseInt(minutes));
 
-      const orderData = {
-        client_name: data.client_name,
-        phone: data.phone || null,
-        description: data.description,
-        due_date: dueDate.toISOString(),
-        price: parseFloat(data.price.replace(".", "").replace(",", ".")),
-        tenant_id: tenant.id,
-        status: "pending" as const,
-        ...(mode === "edit" && orderId ? { id: orderId } : {}),
-      };
+    //   const orderData = {
+    //     client_name: data.client_name,
+    //     phone: data.phone || null,
+    //     description: data.description,
+    //     due_date: dueDate.toISOString(),
+    //     price: parseFloat(data.price.replace(".", "").replace(",", ".")),
+    //     tenant_id: tenant.id,
+    //     status: "pending" as const,
+    //     ...(mode === "edit" && orderId ? { id: orderId } : {}),
+    //   };
 
-      if (mode === "create") {
-        const { data: newOrder, error } =
-          await supabaseService.orders.createOrder(orderData);
-        if (error) throw error;
+    //   if (mode === "create") {
+    //     const { data: newOrder, error } =
+    //       await supabaseService.orders.createOrder(orderData);
+    //     if (error) throw error;
 
-        // Atualiza a lista otimisticamente
-        queryClient.setQueryData<OrderType[]>(
-          ["orders", tenant.id],
-          (old = []) => {
-            return [newOrder as OrderType, ...old];
-          },
-        );
+    //     // Atualiza a lista otimisticamente
+    //     queryClient.setQueryData<OrderType[]>(
+    //       ["orders", tenant.id],
+    //       (old = []) => {
+    //         return [newOrder as OrderType, ...old];
+    //       },
+    //     );
 
-        // Invalida a query para forçar uma nova busca
-        await queryClient.invalidateQueries({
-          queryKey: ["orders", tenant.id],
-        });
+    //     // Invalida a query para forçar uma nova busca
+    //     await queryClient.invalidateQueries({
+    //       queryKey: ["orders", tenant.id],
+    //     });
 
-        onSuccess?.(newOrder as OrderType);
+    //     onSuccess?.(newOrder as OrderType);
 
-        toast({
-          title: "Encomenda criada!",
-          description: "A encomenda foi criada com sucesso.",
-        });
-      } else if (mode === "edit" && orderId) {
-        const { data: updatedOrder, error } =
-          await supabaseService.orders.updateOrder(orderId, orderData);
-        if (error) throw error;
+    //     toast({
+    //       title: "Encomenda criada!",
+    //       description: "A encomenda foi criada com sucesso.",
+    //     });
+    //   } else if (mode === "edit" && orderId) {
+    //     const { data: updatedOrder, error } =
+    //       await supabaseService.orders.updateOrder(orderId, orderData);
+    //     if (error) throw error;
 
-        // Atualiza a lista otimisticamente
-        queryClient.setQueryData<OrderType[]>(
-          ["orders", tenant.id],
-          (old = []) => {
-            return old.map((order) =>
-              order.id === orderId ? (updatedOrder as OrderType) : order,
-            );
-          },
-        );
+    //     // Atualiza a lista otimisticamente
+    //     queryClient.setQueryData<OrderType[]>(
+    //       ["orders", tenant.id],
+    //       (old = []) => {
+    //         return old.map((order) =>
+    //           order.id === orderId ? (updatedOrder as OrderType) : order,
+    //         );
+    //       },
+    //     );
 
-        // Invalida a query para forçar uma nova busca
-        await queryClient.invalidateQueries({
-          queryKey: ["orders", tenant.id],
-        });
+    //     // Invalida a query para forçar uma nova busca
+    //     await queryClient.invalidateQueries({
+    //       queryKey: ["orders", tenant.id],
+    //     });
 
-        // Notifica o componente pai sobre a atualização
-        onSuccess?.(updatedOrder as OrderType);
+    //     // Notifica o componente pai sobre a atualização
+    //     onSuccess?.(updatedOrder as OrderType);
 
-        toast({
-          title: "Encomenda atualizada!",
-          description: "A encomenda foi atualizada com sucesso.",
-        });
-      }
+    //     toast({
+    //       title: "Encomenda atualizada!",
+    //       description: "A encomenda foi atualizada com sucesso.",
+    //     });
+    //   }
 
-      onOpenChange(false);
-    } catch (error: any) {
-      toast({
-        title: "Erro ao salvar encomenda",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
+    //   onOpenChange(false);
+    // } catch (error: any) {
+    //   toast({
+    //     title: "Erro ao salvar encomenda",
+    //     description: error.message,
+    //     variant: "destructive",
+    //   });
+    // } finally {
+    //   setLoading(false);
+    // }
   };
 
   return (

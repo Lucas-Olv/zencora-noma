@@ -30,8 +30,6 @@ import { SubscriptionSuccess } from "./pages/SubscriptionSuccess";
 import ProtectedRoute from "@/components/routing/ProtectedRoute";
 import { SubscriptionGate } from "./components/subscription/SubscriptionGate";
 import Reminders from "./pages/Reminders";
-import RoleSelector from "@/components/auth/RoleSelector";
-import PasswordVerification from "@/components/auth/PasswordVerification";
 import {
   useWorkspaceContext,
   WorkspaceProvider,
@@ -40,7 +38,6 @@ import TermsAcceptance from "./pages/TermsAcceptance";
 import { useSessionStore } from "./storage/session";
 import { useTenantStorage } from "./storage/tenant";
 import { useSettingsStorage } from "./storage/settings";
-import { useEffect } from "react";
 const queryClient = new QueryClient();
 
 const BLOCKED_ROUTES = [
@@ -72,7 +69,7 @@ const AppRoutes = () => {
 
   // Se estiver autenticado mas não aceitou os termos, redireciona para a tela de aceitação
   const shouldAcceptTerms =
-    session && tenant && !tenant.user_accepted_terms;
+    session && tenant && !tenant.userAcceptedTerms;
 
   return (
     <Routes>
@@ -161,24 +158,12 @@ const AppRoutes = () => {
               }
             />
             <Route
-              path="verify-password"
-              element={
-                <ProtectedRoute>
-                  {shouldAcceptTerms ? (
-                    <Navigate to="/terms-acceptance" replace />
-                  ) : (
-                    <PasswordVerification />
-                  )}
-                </ProtectedRoute>
-              }
-            />
-            <Route
               path="reports"
               element={
                 <ProtectedRoute>
                   {shouldAcceptTerms ? (
                     <Navigate to="/terms-acceptance" replace />
-                  ) : settings?.lock_reports_by_password &&
+                  ) : settings?.lockReportsByPassword &&
                     !location.state?.verified ? (
                     <Navigate
                       to="/verify-password"
@@ -225,7 +210,7 @@ const AppRoutes = () => {
                 <ProtectedRoute>
                   {shouldAcceptTerms ? (
                     <Navigate to="/terms-acceptance" replace />
-                  ) : settings?.lock_settings_by_password &&
+                  ) : settings?.lockSettingsByPassword &&
                     !location.state?.verified ? (
                     <Navigate
                       to="/verify-password"

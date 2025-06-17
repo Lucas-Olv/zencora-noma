@@ -8,6 +8,9 @@ import {
 } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
+import { useSubscriptionStorage } from "@/storage/subscription";
+import { useSessionStore } from "@/storage/session";
+import dayjs from "dayjs";
 
 interface SubscriptionRoutesContextType {
   blockedRoutes: string[];
@@ -59,6 +62,8 @@ export const SubscriptionGate = ({
   const navigate = useNavigate();
   const location = useLocation();
   const { isLoading } = useWorkspaceContext();
+  const { session } = useSessionStore();
+  const { subscription } = useSubscriptionStorage();
 
   const path = location.pathname;
 
@@ -99,8 +104,8 @@ export const SubscriptionGate = ({
 
   // Verifica se o status da assinatura permite acesso
   const allowedByStatus = onlyActive
-    ? (isActive && !isExpired) || inGracePeriod // Se onlyActive, verifica se está ativo E não expirado OU em período de graça
-    : isTrial || (isActive && !isExpired) || inGracePeriod; // Se não onlyActive, verifica se está em trial OU (ativo E não expirado) OU em período de graça
+    ? (subscription?.status === "active" && dayjs(subscription?.expiresAt).isBefore(dayjs())) || dayjs(subscription?.gracePeriodUntil).isAfter(dayjs()) // Se onlyActive, verifica se está ativo E não expirado OU em período de graça
+    : subscription?.isTrial || (subscription?.status === "active" && dayjs(subscription?.expiresAt).isAfter(dayjs())) || dayjs(subscription?.gracePeriodUntil).isBefore(dayjs()); // Se não onlyActive, verifica se está em trial OU (ativo E não expirado) OU em período de graça
 
   // Verifica se o plano permite acesso
   const isProPlan =
@@ -109,11 +114,11 @@ export const SubscriptionGate = ({
 
   // Determina se deve bloquear o acesso
   const shouldBlock =
-    (isAuthenticated &&
+    (session &&
       path !== DEFAULT_ALLOWED_ROUTE &&
       // Se a assinatura é válida (não está bloqueada e tem status permitido), permite acesso por padrão
       // Se a assinatura é inválida, aplica as regras do Gate
-      (isBlocked || !allowedByStatus) &&
+      (!allowedByStatus) &&
       // Se tiver allowedRoutes, usa a lógica de allowed
       ((allowedRoutes?.length && !isRouteAllowed) ||
         // Se tiver blockedRoutes, usa a lógica de blocked
@@ -136,7 +141,7 @@ export const SubscriptionGate = ({
   }, [isLoading, shouldBlock, redirectTo, navigate, onBlock, path]);
 
   // Se não estiver autenticado, renderiza normalmente
-  if (!isAuthenticated) {
+  if (!session) {
     return <>{children}</>;
   }
 

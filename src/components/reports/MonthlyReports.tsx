@@ -29,8 +29,6 @@ import {
 } from "recharts";
 import { cn, formatDate, getOrderCode, parseDate } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { supabase } from "@/integrations/supabase/client";
-import { Tables } from "@/integrations/supabase/types";
 import {
   format,
   startOfMonth,
@@ -47,7 +45,6 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { Badge } from "@/components/ui/badge";
 import { report } from "process";
-import supabaseService from "@/services/supabaseService";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import {
   Select,
@@ -60,8 +57,8 @@ import { useNavigate } from "react-router-dom";
 import { SubscriptionGate } from "../subscription/SubscriptionGate";
 import ReportOrdersList from "./ReportOrdersList";
 import { LoadingState } from "@/components/ui/loading-state";
-
-type Order = Tables<"orders">;
+import { useTenantStorage } from "@/storage/tenant";
+import { Order } from "@/lib/types";
 
 interface ReportData {
   totalOrders: number;
@@ -108,7 +105,8 @@ const MonthlyReports = () => {
     categoryData: [],
   });
   const isMobile = useIsMobile();
-  const { tenant, isLoading } = useWorkspaceContext();
+  const { isLoading } = useWorkspaceContext();
+  const { tenant } = useTenantStorage();
   const navigate = useNavigate();
 
   const formatCurrency = (value: number) => {
@@ -125,96 +123,96 @@ const MonthlyReports = () => {
   }, [dateRange, isLoading, tenant]);
 
   const fetchOrders = async () => {
-    try {
-      setLoading(true);
-      if (dateRange?.from && dateRange?.to) {
-        // Ajusta as datas para o início e fim do dia
-        const startDate = new Date(dateRange.from);
-        startDate.setHours(0, 0, 0, 0);
+    // try {
+    //   setLoading(true);
+    //   if (dateRange?.from && dateRange?.to) {
+    //     // Ajusta as datas para o início e fim do dia
+    //     const startDate = new Date(dateRange.from);
+    //     startDate.setHours(0, 0, 0, 0);
 
-        const endDate = new Date(dateRange.to);
-        endDate.setHours(23, 59, 59, 999);
+    //     const endDate = new Date(dateRange.to);
+    //     endDate.setHours(23, 59, 59, 999);
 
-        const { data, error } = await supabaseService.orders.getTenantOrders(
-          tenant.id,
-        );
-        if (error) throw error;
+    //     const { data, error } = await supabaseService.orders.getTenantOrders(
+    //       tenant.id,
+    //     );
+    //     if (error) throw error;
 
-        // Filtra as encomendas no lado do cliente para garantir precisão
-        const filteredOrders =
-          data
-            ?.filter((order) => {
-              const orderDate = parseDate(order.due_date);
-              if (!orderDate) return false;
+    //     // Filtra as encomendas no lado do cliente para garantir precisão
+    //     const filteredOrders =
+    //       data
+    //         ?.filter((order) => {
+    //           const orderDate = parseDate(order.due_date);
+    //           if (!orderDate) return false;
 
-              // Verifica se a data está dentro do intervalo
-              return orderDate >= startDate && orderDate <= endDate;
-            })
-            .sort((a, b) => {
-              // Ordena por data de entrega em ordem crescente
-              const dateA = parseDate(a.due_date);
-              const dateB = parseDate(b.due_date);
-              if (!dateA || !dateB) return 0;
-              return dateA.getTime() - dateB.getTime();
-            }) || [];
+    //           // Verifica se a data está dentro do intervalo
+    //           return orderDate >= startDate && orderDate <= endDate;
+    //         })
+    //         .sort((a, b) => {
+    //           // Ordena por data de entrega em ordem crescente
+    //           const dateA = parseDate(a.due_date);
+    //           const dateB = parseDate(b.due_date);
+    //           if (!dateA || !dateB) return 0;
+    //           return dateA.getTime() - dateB.getTime();
+    //         }) || [];
 
-        setOrders(filteredOrders);
+    //     setOrders(filteredOrders);
 
-        // Process data for reports
-        const processedData: ReportData = {
-          totalOrders: filteredOrders.length,
-          totalRevenue: filteredOrders.reduce(
-            (sum, order) => sum + (order.price || 0),
-            0,
-          ),
-          completedOrders: filteredOrders.filter(
-            (order) => order.status === "done",
-          ).length,
-          pendingOrders: filteredOrders.filter(
-            (order) => order.status !== "done",
-          ).length,
-          dailyRevenue: [],
-          categoryData: [],
-        };
+    //     // Process data for reports
+    //     const processedData: ReportData = {
+    //       totalOrders: filteredOrders.length,
+    //       totalRevenue: filteredOrders.reduce(
+    //         (sum, order) => sum + (order.price || 0),
+    //         0,
+    //       ),
+    //       completedOrders: filteredOrders.filter(
+    //         (order) => order.status === "done",
+    //       ).length,
+    //       pendingOrders: filteredOrders.filter(
+    //         (order) => order.status !== "done",
+    //       ).length,
+    //       dailyRevenue: [],
+    //       categoryData: [],
+    //     };
 
-        // Process daily revenue
-        if (dateRange?.from && dateRange?.to) {
-          const days = eachDayOfInterval({
-            start: dateRange.from,
-            end: dateRange.to,
-          });
-          processedData.dailyRevenue = days.map((day) => {
-            const dayOrders = filteredOrders.filter((order) => {
-              const orderDate = parseDate(order.due_date);
-              if (!orderDate) return false;
-              return isSameDay(orderDate, day);
-            });
-            return {
-              day: format(day, "dd/MM"),
-              Total: dayOrders.reduce(
-                (sum, order) => sum + (order.price || 0),
-                0,
-              ),
-              Encomendas: dayOrders.length,
-            };
-          });
-        }
+    //     // Process daily revenue
+    //     if (dateRange?.from && dateRange?.to) {
+    //       const days = eachDayOfInterval({
+    //         start: dateRange.from,
+    //         end: dateRange.to,
+    //       });
+    //       processedData.dailyRevenue = days.map((day) => {
+    //         const dayOrders = filteredOrders.filter((order) => {
+    //           const orderDate = parseDate(order.due_date);
+    //           if (!orderDate) return false;
+    //           return isSameDay(orderDate, day);
+    //         });
+    //         return {
+    //           day: format(day, "dd/MM"),
+    //           Total: dayOrders.reduce(
+    //             (sum, order) => sum + (order.price || 0),
+    //             0,
+    //           ),
+    //           Encomendas: dayOrders.length,
+    //         };
+    //       });
+    //     }
 
-        // Process category data (placeholder - you might want to add categories to your orders)
-        processedData.categoryData = [
-          { name: "Bolos", value: Math.floor(Math.random() * 30) + 10 },
-          { name: "Doces", value: Math.floor(Math.random() * 20) + 5 },
-          { name: "Salgados", value: Math.floor(Math.random() * 15) + 5 },
-          { name: "Kits", value: Math.floor(Math.random() * 10) + 2 },
-        ];
+    //     // Process category data (placeholder - you might want to add categories to your orders)
+    //     processedData.categoryData = [
+    //       { name: "Bolos", value: Math.floor(Math.random() * 30) + 10 },
+    //       { name: "Doces", value: Math.floor(Math.random() * 20) + 5 },
+    //       { name: "Salgados", value: Math.floor(Math.random() * 15) + 5 },
+    //       { name: "Kits", value: Math.floor(Math.random() * 10) + 2 },
+    //     ];
 
-        setReportData(processedData);
-      }
-    } catch (error) {
-      console.error("Error fetching orders:", error);
-    } finally {
-      setLoading(false);
-    }
+    //     setReportData(processedData);
+    //   }
+    // } catch (error) {
+    //   console.error("Error fetching orders:", error);
+    // } finally {
+    //   setLoading(false);
+    // }
   };
 
   const completionRate =
@@ -330,7 +328,7 @@ const MonthlyReports = () => {
       startY: (doc as any).lastAutoTable.finalY + 20,
       head: [["Cliente", "Descrição", "Valor", "Data", "Status"]],
       body: orders.map((order) => {
-        const isOverdue = new Date(order.due_date) < new Date();
+        const isOverdue = new Date(order.dueDate) < new Date();
         const status =
           isOverdue &&
           (order.status === "pending" || order.status === "production")
@@ -342,10 +340,10 @@ const MonthlyReports = () => {
                 : "Concluído";
 
         return [
-          order.client_name,
+          order.clientName,
           order.description || "Sem descrição",
           formatCurrency(order.price),
-          formatDate(order.due_date),
+          formatDate(order.dueDate),
           status,
         ];
       }),

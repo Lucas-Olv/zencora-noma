@@ -34,20 +34,14 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/components/ui/use-toast";
-import { supabaseService, OrderType } from "@/services/supabaseService";
 import OrderDialog from "@/components/orders/OrderDialog";
 import { SubscriptionGate } from "@/components/subscription/SubscriptionGate";
 import { SettingsGate } from "@/components/settings/SettingsGate";
-// Interface para a ordem com dados do colaborador
-interface OrderWithCollaborator extends OrderType {
-  collaborator?: {
-    name: string | null;
-  } | null;
-  status: "done" | "pending" | "production";
-}
+import { Order } from "@/lib/types";
+
 
 const getStatusDisplay = (
-  status: "done" | "pending" | "production" | null,
+  status: string | null,
   dueDate?: string | null,
 ) => {
   switch (status) {
@@ -126,112 +120,112 @@ const OrderDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [order, setOrder] = useState<OrderWithCollaborator | null>(null);
+  const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const handleOrderUpdate = (updatedOrder: OrderType) => {
+  const handleOrderUpdate = (updatedOrder: Order) => {
     setOrder(updatedOrder);
   };
 
-  useEffect(() => {
-    document.title = "Detalhes da Encomenda | Zencora Noma";
+  // useEffect(() => {
+  //   document.title = "Detalhes da Encomenda | Zencora Noma";
 
-    const fetchOrderDetails = async () => {
-      if (!id) return;
+  //   const fetchOrderDetails = async () => {
+  //     if (!id) return;
 
-      try {
-        const { data, error } = await supabaseService.orders.getOrderById(id);
+  //     try {
+  //       const { data, error } = await supabaseService.orders.getOrderById(id);
 
-        if (error) throw error;
-        if (!data) {
-          toast({
-            title: "Encomenda não encontrada",
-            description: "A encomenda solicitada não existe ou foi removida.",
-            variant: "destructive",
-          });
-          navigate("/orders");
-          return;
-        }
+  //       if (error) throw error;
+  //       if (!data) {
+  //         toast({
+  //           title: "Encomenda não encontrada",
+  //           description: "A encomenda solicitada não existe ou foi removida.",
+  //           variant: "destructive",
+  //         });
+  //         navigate("/orders");
+  //         return;
+  //       }
 
-        // Garante que o status seja um dos valores permitidos
-        const orderData = {
-          ...data,
-          status: (data.status || "pending") as
-            | "pending"
-            | "production"
-            | "done",
-        };
-        setOrder(orderData);
-      } catch (error: any) {
-        toast({
-          title: "Erro ao carregar encomenda",
-          description: error.message,
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
+  //       // Garante que o status seja um dos valores permitidos
+  //       const orderData = {
+  //         ...data,
+  //         status: (data.status || "pending") as
+  //           | "pending"
+  //           | "production"
+  //           | "done",
+  //       };
+  //       setOrder(orderData);
+  //     } catch (error: any) {
+  //       toast({
+  //         title: "Erro ao carregar encomenda",
+  //         description: error.message,
+  //         variant: "destructive",
+  //       });
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
 
-    fetchOrderDetails();
-  }, [id, toast, navigate]);
+  //   fetchOrderDetails();
+  // }, [id, toast, navigate]);
 
   const updateOrderStatus = async (
     newStatus: "pending" | "production" | "done",
   ) => {
-    if (!id || !order) return;
+    // if (!id || !order) return;
 
-    try {
-      const { error } = await supabaseService.orders.updateOrderStatus(
-        id,
-        newStatus,
-      );
+    // try {
+    //   const { error } = await supabaseService.orders.updateOrderStatus(
+    //     id,
+    //     newStatus,
+    //   );
 
-      if (error) throw error;
+    //   if (error) throw error;
 
-      setOrder((prev) => (prev ? { ...prev, status: newStatus } : null));
+    //   setOrder((prev) => (prev ? { ...prev, status: newStatus } : null));
 
-      const statusLabels = {
-        pending: "pendente",
-        production: "Produção",
-        done: "concluída",
-      };
+    //   const statusLabels = {
+    //     pending: "pendente",
+    //     production: "Produção",
+    //     done: "concluída",
+    //   };
 
-      toast({
-        title: `Encomenda ${statusLabels[newStatus]}`,
-        description: `Status da encomenda atualizado com sucesso.`,
-      });
-    } catch (error: any) {
-      toast({
-        title: "Erro ao atualizar status",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+    //   toast({
+    //     title: `Encomenda ${statusLabels[newStatus]}`,
+    //     description: `Status da encomenda atualizado com sucesso.`,
+    //   });
+    // } catch (error: any) {
+    //   toast({
+    //     title: "Erro ao atualizar status",
+    //     description: error.message,
+    //     variant: "destructive",
+    //   });
+    // }
   };
 
   const handleDelete = async () => {
-    if (!id) return;
+    // if (!id) return;
 
-    try {
-      const { error } = await supabaseService.orders.deleteOrder(id);
+    // try {
+    //   const { error } = await supabaseService.orders.deleteOrder(id);
 
-      if (error) throw error;
+    //   if (error) throw error;
 
-      toast({
-        title: "Encomenda excluída",
-        description: "A encomenda foi removida com sucesso.",
-      });
+    //   toast({
+    //     title: "Encomenda excluída",
+    //     description: "A encomenda foi removida com sucesso.",
+    //   });
 
-      navigate("/orders");
-    } catch (error: any) {
-      toast({
-        title: "Erro ao excluir encomenda",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+    //   navigate("/orders");
+    // } catch (error: any) {
+    //   toast({
+    //     title: "Erro ao excluir encomenda",
+    //     description: error.message,
+    //     variant: "destructive",
+    //   });
+    // }
   };
 
   if (loading) {
@@ -263,7 +257,7 @@ const OrderDetail = () => {
     );
   }
 
-  const statusDisplay = getStatusDisplay(order.status, order.due_date);
+  const statusDisplay = getStatusDisplay(order.status, order.dueDate);
 
   return (
     <div className="space-y-6">
@@ -286,7 +280,7 @@ const OrderDetail = () => {
       <Card>
         <CardHeader className="flex flex-row items-start justify-between">
           <CardTitle className="text-xl truncate max-w-[60dvw]">
-            {order.client_name}
+            {order.clientName}
           </CardTitle>
           <Badge variant="outline" className={statusDisplay.className}>
             {statusDisplay.label}
@@ -309,7 +303,7 @@ const OrderDetail = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Data de Entrega</p>
-                <p className="font-medium">{formatDate(order.due_date)}</p>
+                <p className="font-medium">{formatDate(order.dueDate)}</p>
               </div>
             </div>
 
@@ -332,7 +326,7 @@ const OrderDetail = () => {
               <div>
                 <p className="text-sm text-muted-foreground">Criada em</p>
                 <p className="font-medium">
-                  {formatDate(order.created_at, "dd/MM/yyyy")}
+                  {formatDate(order.createdAt, "dd/MM/yyyy")}
                 </p>
               </div>
             </div>
@@ -410,7 +404,7 @@ const OrderDetail = () => {
                       <AlertDialogDescription className="line-clamp-3 max-w-[80dvw] md:max-w-[18dvw]">
                         Esta ação não poderá ser desfeita. Isso excluirá
                         permanentemente a encomenda do cliente{" "}
-                        {order?.client_name}.
+                        {order?.clientName}.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

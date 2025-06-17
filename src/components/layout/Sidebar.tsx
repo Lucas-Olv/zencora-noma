@@ -16,7 +16,6 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
-import { supabaseService } from "@/services/supabaseService";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,7 +41,6 @@ import { SettingsGate } from "@/components/settings/SettingsGate";
 import { Loader2 } from "lucide-react";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { db } from "@/lib/db";
-import { supabase } from "@/integrations/supabase/client";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -254,61 +252,61 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
     subscription?.plan !== "enterprise";
 
   const handleProfileClick = async () => {
-    try {
-      const { data } = await supabase.auth.getSession();
+    // try {
+    //   const { data } = await supabase.auth.getSession();
 
-      if (!data?.session) {
-        toast({
-          title: "Erro ao acessar perfil",
-          description: "Você precisa estar logado para acessar seu perfil.",
-          variant: "destructive",
-        });
-        return;
-      }
+    //   if (!data?.session) {
+    //     toast({
+    //       title: "Erro ao acessar perfil",
+    //       description: "Você precisa estar logado para acessar seu perfil.",
+    //       variant: "destructive",
+    //     });
+    //     return;
+    //   }
 
-      const websiteUrl = import.meta.env.VITE_ZENCORA_ACCOUNT_WEBSITE;
-      if (!websiteUrl) {
-        toast({
-          title: "Erro ao acessar perfil",
-          description: "URL do site de perfil não configurada.",
-          variant: "destructive",
-        });
-        return;
-      }
+    //   const websiteUrl = import.meta.env.VITE_ZENCORA_ACCOUNT_WEBSITE;
+    //   if (!websiteUrl) {
+    //     toast({
+    //       title: "Erro ao acessar perfil",
+    //       description: "URL do site de perfil não configurada.",
+    //       variant: "destructive",
+    //     });
+    //     return;
+    //   }
 
-      const accessToken = data.session.access_token;
-      const refreshToken = data.session.refresh_token;
+    //   const accessToken = data.session.access_token;
+    //   const refreshToken = data.session.refresh_token;
 
-      const redirectUrl = `${websiteUrl}account?access_token=${accessToken}&refresh_token=${refreshToken}`;
-      window.location.href = redirectUrl;
-    } catch (error: any) {
-      toast({
-        title: "Erro ao acessar perfil",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+    //   const redirectUrl = `${websiteUrl}account?access_token=${accessToken}&refresh_token=${refreshToken}`;
+    //   window.location.href = redirectUrl;
+    // } catch (error: any) {
+    //   toast({
+    //     title: "Erro ao acessar perfil",
+    //     description: error.message,
+    //     variant: "destructive",
+    //   });
+    // }
   };
 
   const handleLogout = async () => {
-    try {
-      await db.clearWorkspaceData();
-      await supabase.auth.signOut();
+    // try {
+    //   await db.clearWorkspaceData();
+    //   await supabase.auth.signOut();
 
-      toast({
-        title: "Logout realizado com sucesso",
-        description: "Você foi desconectado com sucesso.",
-      });
+    //   toast({
+    //     title: "Logout realizado com sucesso",
+    //     description: "Você foi desconectado com sucesso.",
+    //   });
 
-      // Redireciona para a landing page
-      window.location.href = "/";
-    } catch (error: any) {
-      toast({
-        title: "Erro ao fazer logout",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+    //   // Redireciona para a landing page
+    //   window.location.href = "/";
+    // } catch (error: any) {
+    //   toast({
+    //     title: "Erro ao fazer logout",
+    //     description: error.message,
+    //     variant: "destructive",
+    //   });
+    // }
   };
 
   const handleNavigation = (href: string) => {

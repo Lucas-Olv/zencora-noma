@@ -8,8 +8,6 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { LoadingState } from "@/components/ui/loading-state";
-import { Tables } from "@/integrations/supabase/types";
-import { remindersService } from "@/services/supabaseService";
 import { useRef, useEffect, useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -20,8 +18,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
-
-type Reminder = Tables<"reminders">;
+import { Reminder } from "@/lib/types";
 
 interface RecentRemindersProps {
   reminders: Reminder[];
@@ -42,7 +39,7 @@ function RecentReminders({
   useEffect(() => {
     const sortedReminders = initialReminders.sort(
       (a, b) =>
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
     const slicedReminders = sortedReminders.slice(0, 5);
     setReminders(slicedReminders);
@@ -77,34 +74,34 @@ function RecentReminders({
   };
 
   const handleToggleDone = async (reminder: Reminder) => {
-    try {
-      const { data, error } = await remindersService.updateReminder(
-        reminder.id,
-        {
-          is_done: !reminder.is_done,
-          tenant_id: reminder.tenant_id,
-          title: reminder.title,
-          content: reminder.content,
-        },
-      );
+    // try {
+    //   const { data, error } = await remindersService.updateReminder(
+    //     reminder.id,
+    //     {
+    //       is_done: !reminder.is_done,
+    //       tenant_id: reminder.tenant_id,
+    //       title: reminder.title,
+    //       content: reminder.content,
+    //     },
+    //   );
 
-      if (error) throw error;
+    //   if (error) throw error;
 
-      if (data) {
-        setReminders((prev) =>
-          prev.map((r) => (r.id === reminder.id ? data : r)),
-        );
-      }
-      toast({
-        title: "Lembrete atualizado com sucesso!",
-      });
-    } catch (error) {
-      toast({
-        title: "Erro ao atualizar lembrete",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+    //   if (data) {
+    //     setReminders((prev) =>
+    //       prev.map((r) => (r.id === reminder.id ? data : r)),
+    //     );
+    //   }
+    //   toast({
+    //     title: "Lembrete atualizado com sucesso!",
+    //   });
+    // } catch (error) {
+    //   toast({
+    //     title: "Erro ao atualizar lembrete",
+    //     description: error.message,
+    //     variant: "destructive",
+    //   });
+    // }
   };
 
   const handleOpenDetails = (reminder: Reminder) => {
@@ -132,11 +129,11 @@ function RecentReminders({
                 className="flex items-center gap-2 p-2 border rounded-lg hover:bg-accent/50 transition-colors"
               >
                 <Checkbox
-                  checked={reminder.is_done}
+                  checked={reminder.isDone}
                   onCheckedChange={() => handleToggleDone(reminder)}
                 />
                 <span
-                  className={`flex-1 ${reminder.is_done ? "line-through text-muted-foreground" : ""}`}
+                  className={`flex-1 ${reminder.isDone ? "line-through text-muted-foreground" : ""}`}
                 >
                   {reminder.title}
                 </span>

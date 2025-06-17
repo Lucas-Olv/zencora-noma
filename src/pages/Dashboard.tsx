@@ -3,14 +3,12 @@ import StatsCard from "@/components/dashboard/StatsCard";
 import PerformanceMetrics from "@/components/dashboard/PerformanceMetrics";
 import DeliveryCalendar from "@/components/dashboard/DeliveryCalendar";
 import { Calendar, ClipboardList, FileText, Users } from "lucide-react";
-import { Tables } from "@/integrations/supabase/types";
 import { parseDate } from "@/lib/utils";
-import { remindersService, supabaseService } from "@/services/supabaseService";
-import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import RecentReminders from "@/components/dashboard/RecentReminders";
 import { PWAInstallPrompt } from "@/components/pwa/PWAInstallPrompt";
-type Order = Tables<"orders">;
-type Reminder = Tables<"reminders">;
+import { useTenantStorage } from "@/storage/tenant";
+import { Order } from "@/lib/types";
+import { Reminder } from "@/lib/types";
 
 interface DashboardStats {
   activeOrders: number;
@@ -29,7 +27,7 @@ const formatCurrency = (value: number) => {
 };
 
 const Dashboard = () => {
-  const { tenant, isLoading } = useWorkspaceContext();
+  const { tenant } = useTenantStorage();
   const [orders, setOrders] = useState<Order[]>([]);
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [stats, setStats] = useState<DashboardStats>({
@@ -46,89 +44,87 @@ const Dashboard = () => {
     document.title = "Dashboard | Zencora Noma";
     fetchStats();
     fetchReminders();
-  }, [tenant, isLoading]);
+  }, [tenant]);
 
   const fetchStats = async () => {
-    try {
-      if (isLoading) return;
-      if (!tenant) {
-        throw new Error("Tenant não encontrado");
-      }
+    // try {
+    //   if (!tenant) {
+    //     throw new Error("Tenant não encontrado");
+    //   }
 
-      const today = new Date();
-      const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-      const startOfWeek = new Date(today);
-      startOfWeek.setDate(today.getDate() - today.getDay());
-      const endOfWeek = new Date(startOfWeek);
-      endOfWeek.setDate(startOfWeek.getDate() + 6);
+    //   const today = new Date();
+    //   const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    //   const startOfWeek = new Date(today);
+    //   startOfWeek.setDate(today.getDate() - today.getDay());
+    //   const endOfWeek = new Date(startOfWeek);
+    //   endOfWeek.setDate(startOfWeek.getDate() + 6);
 
-      const { data: orders, error } =
-        await supabaseService.orders.getTenantOrders(tenant.id);
+    //   const { data: orders, error } =
+    //     await supabaseService.orders.getTenantOrders(tenant.id);
 
-      if (error) throw error;
+    //   if (error) throw error;
 
-      const activeOrders =
-        orders?.filter(
-          (order) => order.status !== "done" && order.status !== "canceled",
-        ).length || 0;
+    //   const activeOrders =
+    //     orders?.filter(
+    //       (order) => order.status !== "done" && order.status !== "canceled",
+    //     ).length || 0;
 
-      const inProduction =
-        orders?.filter((order) => order.status === "production").length || 0;
+    //   const inProduction =
+    //     orders?.filter((order) => order.status === "production").length || 0;
 
-      const scheduled =
-        orders?.filter((order) => {
-          const dueDate = parseDate(order.due_date);
-          return dueDate && dueDate > today;
-        }).length || 0;
+    //   const scheduled =
+    //     orders?.filter((order) => {
+    //       const dueDate = parseDate(order.due_date);
+    //       return dueDate && dueDate > today;
+    //     }).length || 0;
 
-      const todayDeliveries =
-        orders?.filter((order) => {
-          const dueDate = parseDate(order.due_date);
-          return dueDate && dueDate.toDateString() === today.toDateString();
-        }).length || 0;
+    //   const todayDeliveries =
+    //     orders?.filter((order) => {
+    //       const dueDate = parseDate(order.due_date);
+    //       return dueDate && dueDate.toDateString() === today.toDateString();
+    //     }).length || 0;
 
-      const monthlyRevenue =
-        orders?.reduce((sum, order) => sum + (order.price || 0), 0) || 0;
+    //   const monthlyRevenue =
+    //     orders?.reduce((sum, order) => sum + (order.price || 0), 0) || 0;
 
-      const weeklyRevenue =
-        orders
-          ?.filter((order) => {
-            const orderDate = parseDate(order.created_at);
-            return (
-              orderDate && orderDate >= startOfWeek && orderDate <= endOfWeek
-            );
-          })
-          .reduce((sum, order) => sum + (order.price || 0), 0) || 0;
+    //   const weeklyRevenue =
+    //     orders
+    //       ?.filter((order) => {
+    //         const orderDate = parseDate(order.created_at);
+    //         return (
+    //           orderDate && orderDate >= startOfWeek && orderDate <= endOfWeek
+    //         );
+    //       })
+    //       .reduce((sum, order) => sum + (order.price || 0), 0) || 0;
 
-      setOrders(orders);
-      setStats({
-        activeOrders,
-        inProduction,
-        scheduled,
-        monthlyRevenue,
-        weeklyRevenue,
-        todayDeliveries,
-      });
-    } catch (error) {
-      console.error("Error fetching stats:", error);
-    } finally {
-      setLoading(false);
-    }
+    //   setOrders(orders);
+    //   setStats({
+    //     activeOrders,
+    //     inProduction,
+    //     scheduled,
+    //     monthlyRevenue,
+    //     weeklyRevenue,
+    //     todayDeliveries,
+    //   });
+    // } catch (error) {
+    //   console.error("Error fetching stats:", error);
+    // } finally {
+    //   setLoading(false);
+    // }
   };
 
   const fetchReminders = async () => {
-    if (isLoading) return;
-    if (!tenant) {
-      throw new Error("Tenant não encontrado");
-    }
+    // if (!tenant) {
+    //   throw new Error("Tenant não encontrado");
+    // }
 
-    const { data, error } = await remindersService.getTenantReminders(
-      tenant.id,
-    );
+    // const { data, error } = await remindersService.getTenantReminders(
+    //   tenant.id,
+    // );
 
-    if (error) throw error;
+    // if (error) throw error;
 
-    setReminders(data.filter((reminder) => reminder.is_done === false));
+    // setReminders(data.filter((reminder) => reminder.is_done === false));
   };
 
   return (

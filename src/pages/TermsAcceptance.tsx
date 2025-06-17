@@ -1,49 +1,49 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import { useToast } from "@/components/ui/use-toast";
-import { supabaseService } from "@/services/supabaseService";
-import { db } from "@/lib/db";
+import { useTenantStorage } from "@/storage/tenant";
+import { useMutation } from "@tanstack/react-query";
+import { putNomaApi } from "@/lib/apiHelpers";
 
 const TermsAcceptance = () => {
   const [accepted, setAccepted] = useState(false);
-  const { tenant, setTenant } = useWorkspaceContext();
+  const { tenant } = useTenantStorage();
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleAccept = async () => {
-    if (!tenant) return;
-
-    try {
-      const { data, error } = await supabaseService.tenants.updateTenant(
-        tenant.id,
-        {
-          user_accepted_terms: true,
-        },
-      );
-
-      if (error) throw error;
-
-      // Atualiza o tenant no IndexedDB
-      await db.updateTenantData(data);
-
-      setTenant(data);
+    const {
+      mutate: acceptTerms,
+      error: acceptTermsError,
+      data: acceptTermsData,
+      isPending: isAcceptTermsPending,
+    } = useMutation({
+      mutationFn: () =>
+        putNomaApi("/api/noma/v1/tenants/accept-terms", { tenant: tenant?.id, userAcceptedTerms: accepted }),
+      onSuccess: () => {
+        useTenantStorage.getState().setTenant(tenant);
       toast({
         title: "Termos aceitos",
         description: "Obrigado por aceitar os termos de uso.",
       });
-      navigate("/dashboard");
-    } catch (error: any) {
-      toast({
-        title: "Erro ao salvar",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+        navigate("/dashboard");
+      },
+      onError: (error) => {
+        toast({
+          title: "Erro ao aceitar termos",
+          description:
+            "Ocorreu um erro ao os termos de uso, tente novamente.",
+        });
+        console.log(error);
+      },
+    });
+
+  const handleAccept = async () => {
+    if (!tenant) return;
+    acceptTerms();
   };
 
   return (

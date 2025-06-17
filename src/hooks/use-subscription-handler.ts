@@ -1,5 +1,7 @@
 import { useToast } from "@/components/ui/use-toast";
-import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
+import { useSubscriptionStorage } from "@/storage/subscription";
+import { useSessionStore } from "@/storage/session";
+import { useProductStore } from "@/storage/product";
 
 // Price IDs for each plan
 const PRICE_IDS = {
@@ -15,7 +17,9 @@ const PRICE_IDS = {
 
 export function useSubscriptionHandler() {
   const { toast } = useToast();
-  const { product, subscription, session } = useWorkspaceContext();
+  const { session } = useSessionStore();
+  const { product } = useProductStore();
+  const { subscription } = useSubscriptionStorage();
 
   const handleCheckout = async (
     planType: "essential" | "pro",
@@ -27,7 +31,7 @@ export function useSubscriptionHandler() {
       }
 
       const priceId = PRICE_IDS[planType][billingCycle];
-      const userToken = session?.access_token;
+      const userToken = session?.token;
       const subscriptionId = subscription?.id;
 
       const response = await fetch(

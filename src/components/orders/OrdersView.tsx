@@ -31,18 +31,19 @@ import {
   getStatusDisplay,
   cn,
 } from "@/lib/utils";
-import { supabaseService, OrderType } from "@/services/supabaseService";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import OrderDialog from "./OrderDialog";
 import { SubscriptionGate } from "../subscription/SubscriptionGate";
+import { useTenantStorage } from "@/storage/tenant";
+import { Order } from "@/lib/types";
 
 const OrdersView = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [orders, setOrders] = useState<OrderType[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedOrder, setSelectedOrder] = useState<OrderType | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
   const [dialogOrderId, setDialogOrderId] = useState<string | undefined>();
@@ -61,13 +62,14 @@ const OrdersView = () => {
       }
     `,
   });
-  const { tenant, isLoading } = useWorkspaceContext();
+  const { isLoading } = useWorkspaceContext();
+  const { tenant } = useTenantStorage();
 
-  const OrderLabel = ({ order }: { order: OrderType }) => {
-    const isOverdue = new Date(order.due_date) < new Date();
+  const OrderLabel = ({ order }: { order: Order }) => {
+    const isOverdue = new Date(order.dueDate) < new Date();
     const status =
       isOverdue && order.status === "pending" ? "overdue" : order.status;
-    const statusDisplay = getStatusDisplay(status, order.due_date);
+    const statusDisplay = getStatusDisplay(status, order.dueDate);
 
     return (
       <div className="w-[100mm] h-[150mm] bg-white text-black p-6">
@@ -85,8 +87,8 @@ const OrdersView = () => {
           {/* Informações principais */}
           <div className="flex-1 flex flex-col gap-4 text-zinc-800">
             <div className="grid grid-cols-2 gap-4">
-              <LabelItem title="Cliente" content={order.client_name} />
-              <LabelItem title="Entrega" content={formatDate(order.due_date)} />
+              <LabelItem title="Cliente" content={order.clientName} />
+              <LabelItem title="Entrega" content={formatDate(order.dueDate)} />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -138,57 +140,57 @@ const OrdersView = () => {
   }, [isLoading, tenant]);
 
   const fetchOrders = async () => {
-    try {
-      if (isLoading) return;
-      if (!tenant) {
-        throw new Error("Tenant não encontrado");
-      }
+    // try {
+    //   if (isLoading) return;
+    //   if (!tenant) {
+    //     throw new Error("Tenant não encontrado");
+    //   }
 
-      const { data, error } = await supabaseService.orders.getTenantOrders(
-        tenant.id,
-      );
-      if (error) throw error;
+    //   const { data, error } = await supabaseService.orders.getTenantOrders(
+    //     tenant.id,
+    //   );
+    //   if (error) throw error;
 
-      setOrders(data as OrderType[]);
-    } catch (error: any) {
-      toast({
-        title: "Erro ao carregar encomendas",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
+    //   setOrders(data as OrderType[]);
+    // } catch (error: any) {
+    //   toast({
+    //     title: "Erro ao carregar encomendas",
+    //     description: error.message,
+    //     variant: "destructive",
+    //   });
+    // } finally {
+    //   setLoading(false);
+    // }
   };
 
   const handleStatusChange = async (
     id: string,
     targetStatus: "pending" | "production" | "done",
   ) => {
-    try {
-      const { error } = await supabaseService.orders.updateOrderStatus(
-        id,
-        targetStatus,
-      );
-      if (error) throw error;
+    // try {
+    //   const { error } = await supabaseService.orders.updateOrderStatus(
+    //     id,
+    //     targetStatus,
+    //   );
+    //   if (error) throw error;
 
-      setOrders(
-        orders.map((order) =>
-          order.id === id ? { ...order, status: targetStatus } : order,
-        ),
-      );
+    //   setOrders(
+    //     orders.map((order) =>
+    //       order.id === id ? { ...order, status: targetStatus } : order,
+    //     ),
+    //   );
 
-      toast({
-        title: "Status atualizado!",
-        description: `A encomenda foi marcada como ${targetStatus === "pending" ? "pendente" : targetStatus === "production" ? "Produção" : "concluída"}.`,
-      });
-    } catch (error: any) {
-      toast({
-        title: "Erro ao atualizar status",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+    //   toast({
+    //     title: "Status atualizado!",
+    //     description: `A encomenda foi marcada como ${targetStatus === "pending" ? "pendente" : targetStatus === "production" ? "Produção" : "concluída"}.`,
+    //   });
+    // } catch (error: any) {
+    //   toast({
+    //     title: "Erro ao atualizar status",
+    //     description: error.message,
+    //     variant: "destructive",
+    //   });
+    // }
   };
 
   const handleNewOrder = () => {
@@ -197,19 +199,19 @@ const OrdersView = () => {
     setDialogOpen(true);
   };
 
-  const handleEditOrder = (order: OrderType) => {
+  const handleEditOrder = (order: Order) => {
     setDialogMode("edit");
     setDialogOrderId(order.id);
     setSelectedOrder(order);
     setDialogOpen(true);
   };
 
-  const handleListUpdate = (updatedOrder: OrderType) => {
+  const handleListUpdate = (updatedOrder: Order) => {
     if (dialogMode === "create") {
-      let newOrders = [updatedOrder as OrderType, ...orders];
+      let newOrders = [updatedOrder as Order, ...orders];
       newOrders.sort(
         (a, b) =>
-          new Date(a.due_date).getTime() - new Date(b.due_date).getTime(),
+          new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime(),
       );
       setOrders(newOrders);
     } else {
@@ -231,7 +233,7 @@ const OrdersView = () => {
             getOrderCode(order.id)
               .toLowerCase()
               .includes(searchTerm.toLowerCase()) ||
-            order.client_name
+            order.clientName
               .toLowerCase()
               .includes(searchTerm.toLowerCase()) ||
             (order.description &&
@@ -331,7 +333,7 @@ const OrdersView = () => {
                   </TableHeader>
                   <TableBody>
                     {filteredOrders.map((order) => {
-                      const isOverdue = new Date(order.due_date) < new Date();
+                      const isOverdue = new Date(order.dueDate) < new Date();
                       const status =
                         isOverdue && order.status === "pending"
                           ? "overdue"
@@ -342,9 +344,9 @@ const OrdersView = () => {
                             {getOrderCode(order.id)}
                           </TableCell>
                           <TableCell className="font-medium truncate max-w-[20dvw]">
-                            {order.client_name}
+                            {order.clientName}
                           </TableCell>
-                          <TableCell>{formatDate(order.due_date)}</TableCell>
+                          <TableCell>{formatDate(order.dueDate)}</TableCell>
                           <TableCell>
                             R$ {order.price.toFixed(2).replace(".", ",")}
                           </TableCell>
@@ -460,7 +462,7 @@ const OrdersView = () => {
               {/* Mobile Card View */}
               <div className="md:hidden space-y-4">
                 {filteredOrders.map((order) => {
-                  const isOverdue = new Date(order.due_date) < new Date();
+                  const isOverdue = new Date(order.dueDate) < new Date();
                   const status =
                     isOverdue && order.status === "pending"
                       ? "overdue"
@@ -476,11 +478,11 @@ const OrdersView = () => {
                                   {getOrderCode(order.id)}
                                 </p>
                                 <h3 className="font-medium truncate max-w-[40dvw]">
-                                  {order.client_name}
+                                  {order.dueDate}
                                 </h3>
                               </div>
                               <p className="text-sm text-muted-foreground">
-                                {formatDate(order.due_date)}
+                                {formatDate(order.dueDate)}
                               </p>
                             </div>
                             <Badge

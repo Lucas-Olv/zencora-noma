@@ -13,13 +13,7 @@ import dayjs from "dayjs";
 
 const SubscriptionInfo = () => {
   const [mounted, setMounted] = useState(false);
-  const {
-    isBlocked: isSubscriptionBlocked,
-    isTrial,
-    isPaymentFailed,
-    isExpired,
-    subscription,
-  } = useWorkspaceContext();
+  const { subscription } = useSUbscriptionStorage();
 
   // Verifica se a assinatura está próxima de expirar (3 dias)
   const isAboutToExpire =
@@ -34,15 +28,15 @@ const SubscriptionInfo = () => {
     subscription.status === "active";
 
   const headerSubscriptionStatusWarning =
-    isTrial && isExpired
+    subscription?.isTrial && dayjs(subscription?.expiresAt).isBefore(dayjs())
       ? "Seu período de teste expirou"
-      : isSubscriptionBlocked
+      : subscription.status !== "active" && dayjs(subscription?.expiresAt).isAfter(dayjs()) && dayjs(subscription?.gracePeriodUntil).isAfter(dayjs())
         ? "Sua assinatura expirou"
-        : isPaymentFailed
+        : subscription.status === "payment_failed"
           ? "Ocorreu um erro no pagamento, por favor, verifique seus meios de pagamento"
-          : isExpired
+          : dayjs(subscription?.expiresAt).isAfter(dayjs()) 
             ? "Sua assinatura expirou"
-            : isTrial
+            : subscription?.isTrial
               ? "Você está em período de teste"
               : isAboutToExpire
                 ? "Sua assinatura irá expirar em breve"
@@ -53,15 +47,15 @@ const SubscriptionInfo = () => {
                     : "";
 
   const headerSubscriptionStatusWarningColor =
-    isTrial && isExpired
+    subscription?.isTrial && dayjs(subscription?.expiresAt).isBefore(dayjs())
       ? "text-red-500"
-      : isSubscriptionBlocked
+      : subscription.status !== "active" && dayjs(subscription?.expiresAt).isAfter(dayjs()) && dayjs(subscription?.gracePeriodUntil).isAfter(dayjs())
         ? "text-red-500"
-        : isPaymentFailed
+        : subscription.status === "payment_failed"
           ? "text-red-500"
-          : isExpired
+          : dayjs(subscription?.expiresAt).isAfter(dayjs()) 
             ? "text-red-500"
-            : isTrial
+            : subscription?.isTrial
               ? "text-yellow-500"
               : isAboutToExpire
                 ? "text-red-500"
@@ -106,3 +100,7 @@ const SubscriptionInfo = () => {
 };
 
 export default SubscriptionInfo;
+function useSUbscriptionStorage(): { subscription: any; } {
+  throw new Error("Function not implemented.");
+}
+
