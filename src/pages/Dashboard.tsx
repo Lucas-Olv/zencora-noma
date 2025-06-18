@@ -9,6 +9,8 @@ import { PWAInstallPrompt } from "@/components/pwa/PWAInstallPrompt";
 import { useTenantStorage } from "@/storage/tenant";
 import { Order } from "@/lib/types";
 import { Reminder } from "@/lib/types";
+import { useQuery } from "@tanstack/react-query";
+import { getNomaApi } from "@/lib/apiHelpers";
 
 interface DashboardStats {
   activeOrders: number;
@@ -38,94 +40,77 @@ const Dashboard = () => {
     weeklyRevenue: 0,
     todayDeliveries: 0,
   });
-  const [loading, setLoading] = useState(true);
+   const {data: ordersData, isLoading: isOrdersLoading, isError: isOrdersError } = useQuery({
+    queryKey: ["orders"],
+    queryFn: () => getNomaApi(`/api/noma/v1/orders/${tenant?.id}`),
+  })
+
+   const {data: remindersData, isLoading: isRemindersLoading, isError: isRemindersError } = useQuery({
+    queryKey: ["reminders"],
+    queryFn: () => getNomaApi(`/api/noma/v1/reminders/${tenant?.id}`),
+  })
 
   useEffect(() => {
     document.title = "Dashboard | Zencora Noma";
-    fetchStats();
-    fetchReminders();
+
+    if (ordersData) {
+                const today = new Date();
+      const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+      const startOfWeek = new Date(today);
+      startOfWeek.setDate(today.getDate() - today.getDay());
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
+      const orders = ordersData.data;
+      console.log("Orders fetched:", orders);
+      const activeOrders =
+        orders.filter(
+          (order: Order) => order.status !== "done" && order.status !== "canceled",
+        ).length || 0;
+
+      const inProduction =
+        orders.filter((order: Order) => order.status === "production").length || 0;
+
+      const scheduled =
+        orders.filter((order: Order) => {
+          const dueDate = parseDate(order.dueDate);
+          return dueDate && dueDate > today;
+        }).length || 0;
+
+      const todayDeliveries =
+        orders.filter((order: Order) => {
+          const dueDate = parseDate(order.dueDate);
+          return dueDate && dueDate.toDateString() === today.toDateString();
+        }).length || 0;
+
+      const monthlyRevenue =
+        orders.reduce((sum: number, order: Order) => sum + (order.price || 0), 0) || 0;
+
+      const weeklyRevenue =
+        orders.filter((order: Order) => {
+            const orderDate = parseDate(order.createdAt);
+            return (
+              orderDate && orderDate >= startOfWeek && orderDate <= endOfWeek
+            );
+          })
+          .reduce((sum: number, order: Order) => sum + (order.price || 0), 0) || 0;
+
+      setOrders(orders);
+      setStats({
+        activeOrders,
+        inProduction,
+        scheduled,
+        monthlyRevenue,
+        weeklyRevenue,
+        todayDeliveries,
+      });
+    }
+
+    if(remindersData) {
+      const reminders = remindersData.data.filter((reminder: Reminder) => !reminder.isDone);
+      setReminders(reminders);
+    }
+
   }, [tenant]);
-
-  const fetchStats = async () => {
-    // try {
-    //   if (!tenant) {
-    //     throw new Error("Tenant não encontrado");
-    //   }
-
-    //   const today = new Date();
-    //   const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    //   const startOfWeek = new Date(today);
-    //   startOfWeek.setDate(today.getDate() - today.getDay());
-    //   const endOfWeek = new Date(startOfWeek);
-    //   endOfWeek.setDate(startOfWeek.getDate() + 6);
-
-    //   const { data: orders, error } =
-    //     await supabaseService.orders.getTenantOrders(tenant.id);
-
-    //   if (error) throw error;
-
-    //   const activeOrders =
-    //     orders?.filter(
-    //       (order) => order.status !== "done" && order.status !== "canceled",
-    //     ).length || 0;
-
-    //   const inProduction =
-    //     orders?.filter((order) => order.status === "production").length || 0;
-
-    //   const scheduled =
-    //     orders?.filter((order) => {
-    //       const dueDate = parseDate(order.due_date);
-    //       return dueDate && dueDate > today;
-    //     }).length || 0;
-
-    //   const todayDeliveries =
-    //     orders?.filter((order) => {
-    //       const dueDate = parseDate(order.due_date);
-    //       return dueDate && dueDate.toDateString() === today.toDateString();
-    //     }).length || 0;
-
-    //   const monthlyRevenue =
-    //     orders?.reduce((sum, order) => sum + (order.price || 0), 0) || 0;
-
-    //   const weeklyRevenue =
-    //     orders
-    //       ?.filter((order) => {
-    //         const orderDate = parseDate(order.created_at);
-    //         return (
-    //           orderDate && orderDate >= startOfWeek && orderDate <= endOfWeek
-    //         );
-    //       })
-    //       .reduce((sum, order) => sum + (order.price || 0), 0) || 0;
-
-    //   setOrders(orders);
-    //   setStats({
-    //     activeOrders,
-    //     inProduction,
-    //     scheduled,
-    //     monthlyRevenue,
-    //     weeklyRevenue,
-    //     todayDeliveries,
-    //   });
-    // } catch (error) {
-    //   console.error("Error fetching stats:", error);
-    // } finally {
-    //   setLoading(false);
-    // }
-  };
-
-  const fetchReminders = async () => {
-    // if (!tenant) {
-    //   throw new Error("Tenant não encontrado");
-    // }
-
-    // const { data, error } = await remindersService.getTenantReminders(
-    //   tenant.id,
-    // );
-
-    // if (error) throw error;
-
-    // setReminders(data.filter((reminder) => reminder.is_done === false));
-  };
 
   return (
     <>
@@ -141,9 +126,9 @@ const Dashboard = () => {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <StatsCard
             title="Encomendas Ativas"
-            value={loading ? "-" : stats.activeOrders.toString()}
+            value={isOrdersLoading ? "-" : stats.activeOrders.toString()}
             description={
-              loading
+              isOrdersLoading
                 ? "Carregando..."
                 : `${stats.todayDeliveries} para entrega hoje`
             }
@@ -151,21 +136,21 @@ const Dashboard = () => {
           />
           <StatsCard
             title="Produção"
-            value={loading ? "-" : stats.inProduction.toString()}
-            description={loading ? "Carregando..." : "Produção"}
+            value={isOrdersLoading ? "-" : stats.inProduction.toString()}
+            description={isOrdersLoading ? "Carregando..." : "Produção"}
             icon={<Users className="h-5 w-5 text-secondary" />}
           />
           <StatsCard
             title="Programadas"
-            value={loading ? "-" : stats.scheduled.toString()}
-            description={loading ? "Carregando..." : "Para os próximos dias"}
+            value={isOrdersLoading ? "-" : stats.scheduled.toString()}
+            description={isOrdersLoading ? "Carregando..." : "Para os próximos dias"}
             icon={<Calendar className="h-5 w-5 text-complementary" />}
           />
           <StatsCard
             title="Faturamento (Mês)"
-            value={loading ? "-" : formatCurrency(stats.monthlyRevenue)}
+            value={isOrdersLoading ? "-" : formatCurrency(stats.monthlyRevenue)}
             description={
-              loading
+              isOrdersLoading
                 ? "Carregando..."
                 : `${formatCurrency(stats.weeklyRevenue)} esta semana`
             }
@@ -175,11 +160,11 @@ const Dashboard = () => {
 
         <div className="grid gap-6 grid-cols-1 lg:grid-cols-4">
           <div className="lg:col-span-3">
-            <PerformanceMetrics orders={orders} loading={loading} />
+            <PerformanceMetrics orders={orders} loading={isOrdersLoading} />
           </div>
           <div className="lg:col-span-1 flex flex-col gap-6">
-            <RecentReminders reminders={reminders} loading={loading} />
-            <DeliveryCalendar orders={orders} loading={loading} />
+            <RecentReminders reminders={reminders} loading={isRemindersLoading} />
+            <DeliveryCalendar orders={orders} loading={isOrdersLoading} />
           </div>
         </div>
       </div>
