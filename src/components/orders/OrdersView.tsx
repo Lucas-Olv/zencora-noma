@@ -36,18 +36,23 @@ import OrderDialog from "./OrderDialog";
 import { SubscriptionGate } from "../subscription/SubscriptionGate";
 import { useTenantStorage } from "@/storage/tenant";
 import { Order } from "@/lib/types";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { getNomaApi } from "@/lib/apiHelpers";
 
 const OrdersView = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
   const [dialogOrderId, setDialogOrderId] = useState<string | undefined>();
   const printRef = useRef<HTMLDivElement>(null);
+     const {data: ordersData, isLoading: isOrdersLoading, isError: isOrdersError, refetch } = useQuery({
+      queryKey: ["orders"],
+      queryFn: () => getNomaApi(`/api/noma/v1/orders/`, {params: { tenantId: tenant?.id }}),
+    })
   const handlePrint = usePrint(printRef, {
     pageStyle: `
       @page {
@@ -62,7 +67,6 @@ const OrdersView = () => {
       }
     `,
   });
-  const { isLoading } = useWorkspaceContext();
   const { tenant } = useTenantStorage();
 
   const OrderLabel = ({ order }: { order: Order }) => {
@@ -94,7 +98,7 @@ const OrdersView = () => {
             <div className="grid grid-cols-2 gap-4">
               <LabelItem
                 title="Valor"
-                content={`R$ ${order.price.toFixed(2).replace(".", ",")}`}
+                content={`R$ ${order.price.replace(".", ",")}`}
               />
               <LabelItem title="Status" content={statusDisplay.label} />
             </div>
@@ -134,34 +138,11 @@ const OrdersView = () => {
   );
 
   useEffect(() => {
-    if (!isLoading && tenant) {
-      fetchOrders();
+    if(ordersData) {
+      const fetchedOrders = ordersData.data as Order[];
+      setOrders(fetchedOrders);
     }
-  }, [isLoading, tenant]);
-
-  const fetchOrders = async () => {
-    // try {
-    //   if (isLoading) return;
-    //   if (!tenant) {
-    //     throw new Error("Tenant não encontrado");
-    //   }
-
-    //   const { data, error } = await supabaseService.orders.getTenantOrders(
-    //     tenant.id,
-    //   );
-    //   if (error) throw error;
-
-    //   setOrders(data as OrderType[]);
-    // } catch (error: any) {
-    //   toast({
-    //     title: "Erro ao carregar encomendas",
-    //     description: error.message,
-    //     variant: "destructive",
-    //   });
-    // } finally {
-    //   setLoading(false);
-    // }
-  };
+  }, [ordersData]);
 
   const handleStatusChange = async (
     id: string,
@@ -206,23 +187,8 @@ const OrdersView = () => {
     setDialogOpen(true);
   };
 
-  const handleListUpdate = (updatedOrder: Order) => {
-    if (dialogMode === "create") {
-      let newOrders = [updatedOrder as Order, ...orders];
-      newOrders.sort(
-        (a, b) =>
-          new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime(),
-      );
-      setOrders(newOrders);
-    } else {
-      setOrders(
-        orders.map((order) =>
-          order.id === updatedOrder.id
-            ? { ...order, ...updatedOrder, id: order.id }
-            : order,
-        ),
-      );
-    }
+  const handleListUpdate = async (updatedOrder: Order) => {
+    refetch();
   };
 
   const filteredOrders =
@@ -285,7 +251,7 @@ const OrdersView = () => {
           </div>
         </CardHeader>
         <CardContent>
-          {loading ? (
+          {isOrdersLoading ? (
             <div className="flex justify-center py-8">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
@@ -348,7 +314,7 @@ const OrdersView = () => {
                           </TableCell>
                           <TableCell>{formatDate(order.dueDate)}</TableCell>
                           <TableCell>
-                            R$ {order.price.toFixed(2).replace(".", ",")}
+                            R$ {order.price.replace(".", ",")}
                           </TableCell>
                           <TableCell>
                             <Badge

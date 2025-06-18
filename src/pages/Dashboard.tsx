@@ -42,7 +42,7 @@ const Dashboard = () => {
   });
    const {data: ordersData, isLoading: isOrdersLoading, isError: isOrdersError } = useQuery({
     queryKey: ["orders"],
-    queryFn: () => getNomaApi(`/api/noma/v1/orders/${tenant?.id}`),
+    queryFn: () => getNomaApi(`/api/noma/v1/orders/`, {params: { tenantId: tenant?.id }}),
   })
 
    const {data: remindersData, isLoading: isRemindersLoading, isError: isRemindersError } = useQuery({
@@ -54,7 +54,7 @@ const Dashboard = () => {
     document.title = "Dashboard | Zencora Noma";
 
     if (ordersData) {
-                const today = new Date();
+      const today = new Date();
       const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
       const startOfWeek = new Date(today);
       startOfWeek.setDate(today.getDate() - today.getDay());
@@ -83,7 +83,7 @@ const Dashboard = () => {
         }).length || 0;
 
       const monthlyRevenue =
-        orders.reduce((sum: number, order: Order) => sum + (order.price || 0), 0) || 0;
+        orders.reduce((sum: number, order: Order) => sum + (parseFloat(order.price) || 0), 0) || 0;
 
       const weeklyRevenue =
         orders.filter((order: Order) => {
@@ -92,7 +92,7 @@ const Dashboard = () => {
               orderDate && orderDate >= startOfWeek && orderDate <= endOfWeek
             );
           })
-          .reduce((sum: number, order: Order) => sum + (order.price || 0), 0) || 0;
+          .reduce((sum: number, order: Order) => sum + (parseFloat(order.price) || 0), 0) || 0;
 
       setOrders(orders);
       setStats({
@@ -110,7 +110,7 @@ const Dashboard = () => {
       setReminders(reminders);
     }
 
-  }, [tenant]);
+  }, [ordersData, remindersData]);
 
   return (
     <>

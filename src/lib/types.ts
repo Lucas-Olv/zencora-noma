@@ -107,13 +107,15 @@ export type Collaborator = {
 export type Order = {
   id: string;
   clientName: string;
-  description?: string;
+  description: string;
   dueDate: string;
-  price: number;
-  status?: string;
-  tenantId?: string;
-  phone?: string;
-  createdAt: string;
+  price: string;
+  status: string;
+  tenantId: string;
+  clientPhone?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  completedAt?: string;
 };
 
 export type Reminder = {
