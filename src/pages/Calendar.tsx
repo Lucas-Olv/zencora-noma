@@ -11,14 +11,9 @@ import "@/styles/calendar.css";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { cn } from "@/lib/utils";
 import { useTenantStorage } from "@/storage/tenant";
-
-interface Order {
-  id: string;
-  client_name: string;
-  due_date: string;
-  price: number;
-  status: "pending" | "production" | "done";
-}
+import { getNomaApi } from "@/lib/apiHelpers";
+import { useQuery } from "@tanstack/react-query";
+import { Order } from "@/lib/types";
 
 const getStatusClasses = (status: string | null, dueDate: string) => {
   const isOverdue = new Date(dueDate) < new Date();
@@ -78,52 +73,43 @@ const CalendarPage = () => {
   const { isLoading } = useWorkspaceContext();
   const { tenant } = useTenantStorage();
   const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
+
+  const {
+    data: ordersData,
+    isLoading: isOrdersLoading,
+    isError: isOrdersError,
+    refetch,
+  } = useQuery({
+    queryKey: ["calendarOrders", tenant?.id],
+    queryFn: () =>
+      getNomaApi(`/api/noma/v1/orders/tenant`, {
+        params: { tenantId: tenant?.id },
+      }),
+  });
 
   useEffect(() => {
     document.title = "Calendário | Zencora Noma";
-    if (!isLoading) {
-      fetchOrders();
+    if (ordersData && !isOrdersLoading) {
+      const fetchedOrders = ordersData.data.map((order: Order) => ({
+        ...order,
+        status: order.status as "pending" | "production" | "done",
+      }));
+      setOrders(fetchedOrders);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tenant, isLoading]);
+  }, [ordersData, isOrdersLoading]);
 
-  const fetchOrders = async () => {
-    // try {
-    //   const { data, error } = await supabaseService.orders.getTenantOrders(
-    //     tenant.id,
-    //   );
-    //   if (error) throw error;
-
-    //   setOrders(
-    //     (data || []).map((order) => ({
-    //       ...order,
-    //       status: order.status as "pending" | "production" | "done",
-    //     })),
-    //   );
-    // } catch (error: any) {
-    //   toast({
-    //     title: "Erro ao carregar encomendas",
-    //     description: error.message,
-    //     variant: "destructive",
-    //   });
-    // } finally {
-    //   setLoading(false);
-    // }
-  };
-
-  const events = orders.map((order) => {
-    const colors = getEventColor(order.status, order.due_date);
+  const events = orders.map((order: Order) => {
+    const colors = getEventColor(order.status, order.dueDate);
     return {
       id: order.id,
-      title: order.client_name,
-      start: order.due_date,
+      title: order.clientName,
+      start: order.dueDate,
       backgroundColor: colors.backgroundColor,
       borderColor: colors.borderColor,
       extendedProps: {
         price: order.price,
         status: order.status,
-        dueDate: order.due_date,
+        dueDate: order.dueDate,
       },
     };
   });
@@ -206,10 +192,7 @@ const CalendarPage = () => {
                       {eventInfo.event.title}
                     </div>
                     <div className="text-xs">
-                      R${" "}
-                      {eventInfo.event.extendedProps.price
-                        .toFixed(2)
-                        .replace(".", ",")}
+                      R$ {eventInfo.event.extendedProps.price.replace(".", ",")}
                     </div>
                   </div>
                 );

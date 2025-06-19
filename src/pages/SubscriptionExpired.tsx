@@ -17,11 +17,10 @@ import dayjs from "dayjs";
 
 export function SubscriptionExpired() {
   const navigate = useNavigate();
- const { subscription } = useSubscriptionStorage();
+  const { subscription } = useSubscriptionStorage();
 
   // Verifica periodicamente o status da assinatura
-  useEffect(() => {
-  }, [ subscription]);
+  useEffect(() => {}, [subscription]);
 
   // Determina o estado da assinatura e retorna as informações apropriadas
   const getSubscriptionState = () => {

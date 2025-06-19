@@ -39,6 +39,6 @@ export const useSubscriptionStorage = create<SubscriptionState>()(
     }),
     {
       name: "subscription-storage",
-    }
-  )
+    },
+  ),
 );

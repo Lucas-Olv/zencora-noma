@@ -40,15 +40,29 @@ const Dashboard = () => {
     weeklyRevenue: 0,
     todayDeliveries: 0,
   });
-   const {data: ordersData, isLoading: isOrdersLoading, isError: isOrdersError } = useQuery({
-    queryKey: ["orders"],
-    queryFn: () => getNomaApi(`/api/noma/v1/orders/`, {params: { tenantId: tenant?.id }}),
-  })
+  const {
+    data: ordersData,
+    isLoading: isOrdersLoading,
+    isError: isOrdersError,
+  } = useQuery({
+    queryKey: ["dashboardOrders"],
+    queryFn: () =>
+      getNomaApi(`/api/noma/v1/orders/tenant`, {
+        params: { tenantId: tenant?.id },
+      }),
+  });
 
-   const {data: remindersData, isLoading: isRemindersLoading, isError: isRemindersError } = useQuery({
-    queryKey: ["reminders"],
-    queryFn: () => getNomaApi(`/api/noma/v1/reminders/${tenant?.id}`),
-  })
+  const {
+    data: remindersData,
+    isLoading: isRemindersLoading,
+    isError: isRemindersError,
+  } = useQuery({
+    queryKey: ["dashboardReminders"],
+    queryFn: () =>
+      getNomaApi("/api/noma/v1/reminders/tenant", {
+        params: { tenantId: tenant?.id },
+      }),
+  });
 
   useEffect(() => {
     document.title = "Dashboard | Zencora Noma";
@@ -64,11 +78,13 @@ const Dashboard = () => {
       console.log("Orders fetched:", orders);
       const activeOrders =
         orders.filter(
-          (order: Order) => order.status !== "done" && order.status !== "canceled",
+          (order: Order) =>
+            order.status !== "done" && order.status !== "canceled",
         ).length || 0;
 
       const inProduction =
-        orders.filter((order: Order) => order.status === "production").length || 0;
+        orders.filter((order: Order) => order.status === "production").length ||
+        0;
 
       const scheduled =
         orders.filter((order: Order) => {
@@ -83,16 +99,23 @@ const Dashboard = () => {
         }).length || 0;
 
       const monthlyRevenue =
-        orders.reduce((sum: number, order: Order) => sum + (parseFloat(order.price) || 0), 0) || 0;
+        orders.reduce(
+          (sum: number, order: Order) => sum + (parseFloat(order.price) || 0),
+          0,
+        ) || 0;
 
       const weeklyRevenue =
-        orders.filter((order: Order) => {
+        orders
+          .filter((order: Order) => {
             const orderDate = parseDate(order.createdAt);
             return (
               orderDate && orderDate >= startOfWeek && orderDate <= endOfWeek
             );
           })
-          .reduce((sum: number, order: Order) => sum + (parseFloat(order.price) || 0), 0) || 0;
+          .reduce(
+            (sum: number, order: Order) => sum + (parseFloat(order.price) || 0),
+            0,
+          ) || 0;
 
       setOrders(orders);
       setStats({
@@ -105,11 +128,12 @@ const Dashboard = () => {
       });
     }
 
-    if(remindersData) {
-      const reminders = remindersData.data.filter((reminder: Reminder) => !reminder.isDone);
+    if (remindersData) {
+      const reminders = remindersData.data.filter(
+        (reminder: Reminder) => !reminder.isDone,
+      );
       setReminders(reminders);
     }
-
   }, [ordersData, remindersData]);
 
   return (
@@ -143,7 +167,9 @@ const Dashboard = () => {
           <StatsCard
             title="Programadas"
             value={isOrdersLoading ? "-" : stats.scheduled.toString()}
-            description={isOrdersLoading ? "Carregando..." : "Para os próximos dias"}
+            description={
+              isOrdersLoading ? "Carregando..." : "Para os próximos dias"
+            }
             icon={<Calendar className="h-5 w-5 text-complementary" />}
           />
           <StatsCard
@@ -163,7 +189,10 @@ const Dashboard = () => {
             <PerformanceMetrics orders={orders} loading={isOrdersLoading} />
           </div>
           <div className="lg:col-span-1 flex flex-col gap-6">
-            <RecentReminders reminders={reminders} loading={isRemindersLoading} />
+            <RecentReminders
+              reminders={reminders}
+              loading={isRemindersLoading}
+            />
             <DeliveryCalendar orders={orders} loading={isOrdersLoading} />
           </div>
         </div>

@@ -466,7 +466,7 @@ export function ProductionView() {
             <div className="grid grid-cols-2 gap-4">
               <LabelItem
                 title="Valor"
-                content={`R$ ${order.price.toFixed(2).replace(".", ",")}`}
+                content={`R$ ${order.price.replace(".", ",")}`}
               />
               <LabelItem title="Status" content={statusDisplay.label} />
             </div>

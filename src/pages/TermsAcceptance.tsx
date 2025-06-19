@@ -15,31 +15,33 @@ const TermsAcceptance = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-    const {
-      mutate: acceptTerms,
-      error: acceptTermsError,
-      data: acceptTermsData,
-      isPending: isAcceptTermsPending,
-    } = useMutation({
-      mutationFn: () =>
-        putNomaApi("/api/noma/v1/tenants/accept-terms", { tenant: tenant?.id, userAcceptedTerms: accepted }),
-      onSuccess: () => {
-        useTenantStorage.getState().setTenant(tenant);
+  const {
+    mutate: acceptTerms,
+    error: acceptTermsError,
+    data: acceptTermsData,
+    isPending: isAcceptTermsPending,
+  } = useMutation({
+    mutationFn: () =>
+      putNomaApi("/api/noma/v1/tenants/accept-terms", {
+        tenant: tenant?.id,
+        userAcceptedTerms: accepted,
+      }),
+    onSuccess: () => {
+      useTenantStorage.getState().setTenant(tenant);
       toast({
         title: "Termos aceitos",
         description: "Obrigado por aceitar os termos de uso.",
       });
-        navigate("/dashboard");
-      },
-      onError: (error) => {
-        toast({
-          title: "Erro ao aceitar termos",
-          description:
-            "Ocorreu um erro ao os termos de uso, tente novamente.",
-        });
-        console.log(error);
-      },
-    });
+      navigate("/dashboard");
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao aceitar termos",
+        description: "Ocorreu um erro ao os termos de uso, tente novamente.",
+      });
+      console.log(error);
+    },
+  });
 
   const handleAccept = async () => {
     if (!tenant) return;

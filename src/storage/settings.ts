@@ -39,6 +39,6 @@ export const useSettingsStorage = create<SettingsState>()(
     }),
     {
       name: "settings-storage",
-    }
-  )
+    },
+  ),
 );

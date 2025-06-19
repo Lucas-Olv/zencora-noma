@@ -29,6 +29,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTenantStorage } from "@/storage/tenant";
 
 import { Reminder } from "@/lib/types";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { delNomaAPi, getNomaApi } from "@/lib/apiHelpers";
 const RemindersView = () => {
   const { toast } = useToast();
   const { tenant } = useTenantStorage();
@@ -41,26 +43,46 @@ const RemindersView = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [editedContent, setEditedContent] = useState("");
 
+     const {data: remindersData, isLoading: isRemindersLoading, isError: isRemindersError } = useQuery({
+      queryKey: ["Reminders"],
+      queryFn: () => getNomaApi("/api/noma/v1/reminders/tenant", {params: { tenantId: tenant?.id }}),
+    })
+
+              const {
+                mutate: deleteReminder,
+                data: deleteReminderData,
+                error: isDeleteReminderError,
+                isPending: isDeleteReminderPending,
+              } = useMutation({
+                mutationFn: ({
+                            reminderId,
+                    }: {
+                            reminderId: string;
+                    }) =>
+                  delNomaAPi(`/api/noma/v1/orders/delete`, { params: { tenantId: tenant?.id, reminderId: reminderId} }),
+                onSuccess: () => {
+                  toast({
+                    title: "Lembrete excluído com sucesso!",
+                    description:
+                      "O lembrete foi excluÍda com sucesso!",
+                  });
+                },
+                onError: (error) => {
+            toast({
+              title: "Erro ao excluir lembrete",
+              description: "ocorreu um erro ao excluir o lembrete. Por favor, tente novamente mais tarde.",
+              variant: "destructive",
+            });
+                  console.log(error);
+                },
+              });
+    
   useEffect(() => {
-    fetchReminders();
-  }, []);
-
-  const fetchReminders = async () => {
-    // try {
-    //   const { data, error } = await remindersService.getTenantReminders(
-    //     tenant?.id,
-    //   );
-
-    //   if (error) throw error;
-    //   setReminders(data || []);
-    // } catch (error) {
-    //   toast({
-    //     title: "Erro ao carregar lembretes",
-    //     description: error.message,
-    //     variant: "destructive",
-    //   });
-    // }
-  };
+    if (remindersData) {
+      setReminders(remindersData.data);
+    }
+    document.title = "Lembretes | Zencora Noma";
+  }, [remindersData, isRemindersLoading, isRemindersError]);
 
   const handleCreateReminder = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -166,28 +188,11 @@ const RemindersView = () => {
   };
 
   const handleDelete = async () => {
-    // if (!selectedReminder) return;
-
-    // try {
-    //   const { error } = await remindersService.deleteReminder(
-    //     selectedReminder.id,
-    //   );
-    //   if (error) throw error;
-
-    //   setReminders((prev) => prev.filter((r) => r.id !== selectedReminder.id));
-    //   setIsDeleteDialogOpen(false);
-    //   setSelectedReminder(null);
-    //   toast({
-    //     title: "Lembrete excluído com sucesso!",
-    //   });
-    // } catch (error) {
-    //   console.error("Error deleting reminder:", error);
-    //   toast({
-    //     title: "Erro ao excluir lembrete",
-    //     description: error.message,
-    //     variant: "destructive",
-    //   });
-    // }
+    if (!selectedReminder) return;
+    deleteReminder({ reminderId: selectedReminder.id });
+      setReminders((prev) => prev.filter((r) => r.id !== selectedReminder.id));
+      setIsDeleteDialogOpen(false);
+      setSelectedReminder(null);
   };
 
   const pendingReminders = reminders.filter((r) => !r.isDone);

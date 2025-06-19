@@ -39,6 +39,6 @@ export const useTenantStorage = create<TenantState>()(
     }),
     {
       name: "tenant-storage",
-    }
-  )
+    },
+  ),
 );

@@ -38,12 +38,11 @@ import OrderDialog from "@/components/orders/OrderDialog";
 import { SubscriptionGate } from "@/components/subscription/SubscriptionGate";
 import { SettingsGate } from "@/components/settings/SettingsGate";
 import { Order } from "@/lib/types";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { delNomaAPi, getNomaApi, putNomaApi } from "@/lib/apiHelpers";
+import { useTenantStorage } from "@/storage/tenant";
 
-
-const getStatusDisplay = (
-  status: string | null,
-  dueDate?: string | null,
-) => {
+const getStatusDisplay = (status: string | null, dueDate?: string | null) => {
   switch (status) {
     case "pending":
       // Verifica se está atrasado
@@ -121,114 +120,93 @@ const OrderDetail = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [order, setOrder] = useState<Order | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { tenant } = useTenantStorage();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const {
+    data: orderData,
+    isLoading: isOrderLoading,
+    isError: isOrderError,
+    refetch,
+  } = useQuery({
+    queryKey: ["order", id],
+    queryFn: () =>
+      getNomaApi(`/api/noma/v1/orders`, {
+        params: { tenantId: tenant?.id, orderId: id },
+      }),
+  });
 
-  const handleOrderUpdate = (updatedOrder: Order) => {
-    setOrder(updatedOrder);
+  useEffect(() => {
+    document.title = "Detalhes da Encomenda | Zencora Noma";
+    if (orderData) {
+      setOrder(orderData.data);
+    }
+  }, [orderData, isOrderLoading, isOrderError]);
+
+  const {
+    mutate: updateOrderStatus,
+    error: updateOrderStatusError,
+    isPending: isUpdateOrderStatus,
+    error: isUpdateOrderStatusError,
+  } = useMutation({
+    mutationFn: ({ status }: { status: string }) =>
+      putNomaApi(
+        `/api/noma/v1/orders/update`,
+        { tenantId: tenant?.id, orderData: { status } },
+        {
+          params: { orderId: id },
+        },
+      ),
+    onSuccess: () => {
+      toast({
+        title: "Encomenda atualizada com sucesso",
+        description: "O status da encomenda foi atualizado com sucesso!",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao atualizar encomenda",
+        description:
+          "ocorreu um erro ao atualizar o status da encomenda. Por favor, tente novamente mais tarde.",
+        variant: "destructive",
+      });
+      console.log(error);
+    },
+  });
+
+  const {
+    mutate: deleteOrder,
+    error: deleteOrderError,
+    isPending: isDeleteOrder,
+    error: isDeleteOrderError,
+  } = useMutation({
+    mutationFn: () =>
+      delNomaAPi(`/api/noma/v1/orders/delete`, {
+        params: { tenantId: tenant?.id, orderId: id },
+      }),
+    onSuccess: () => {
+      toast({
+        title: "Encomenda excluída com sucesso",
+        description: "A encomenda foi excluÍda com sucesso!",
+      });
+
+      navigate("/orders");
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao excluir encomenda",
+        description:
+          "ocorreu um erro ao excluir a encomenda. Por favor, tente novamente mais tarde.",
+        variant: "destructive",
+      });
+      console.log(error);
+    },
+  });
+
+  const handleOrderUpdate = () => {
+    refetch();
   };
 
-  // useEffect(() => {
-  //   document.title = "Detalhes da Encomenda | Zencora Noma";
-
-  //   const fetchOrderDetails = async () => {
-  //     if (!id) return;
-
-  //     try {
-  //       const { data, error } = await supabaseService.orders.getOrderById(id);
-
-  //       if (error) throw error;
-  //       if (!data) {
-  //         toast({
-  //           title: "Encomenda não encontrada",
-  //           description: "A encomenda solicitada não existe ou foi removida.",
-  //           variant: "destructive",
-  //         });
-  //         navigate("/orders");
-  //         return;
-  //       }
-
-  //       // Garante que o status seja um dos valores permitidos
-  //       const orderData = {
-  //         ...data,
-  //         status: (data.status || "pending") as
-  //           | "pending"
-  //           | "production"
-  //           | "done",
-  //       };
-  //       setOrder(orderData);
-  //     } catch (error: any) {
-  //       toast({
-  //         title: "Erro ao carregar encomenda",
-  //         description: error.message,
-  //         variant: "destructive",
-  //       });
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-  //   fetchOrderDetails();
-  // }, [id, toast, navigate]);
-
-  const updateOrderStatus = async (
-    newStatus: "pending" | "production" | "done",
-  ) => {
-    // if (!id || !order) return;
-
-    // try {
-    //   const { error } = await supabaseService.orders.updateOrderStatus(
-    //     id,
-    //     newStatus,
-    //   );
-
-    //   if (error) throw error;
-
-    //   setOrder((prev) => (prev ? { ...prev, status: newStatus } : null));
-
-    //   const statusLabels = {
-    //     pending: "pendente",
-    //     production: "Produção",
-    //     done: "concluída",
-    //   };
-
-    //   toast({
-    //     title: `Encomenda ${statusLabels[newStatus]}`,
-    //     description: `Status da encomenda atualizado com sucesso.`,
-    //   });
-    // } catch (error: any) {
-    //   toast({
-    //     title: "Erro ao atualizar status",
-    //     description: error.message,
-    //     variant: "destructive",
-    //   });
-    // }
-  };
-
-  const handleDelete = async () => {
-    // if (!id) return;
-
-    // try {
-    //   const { error } = await supabaseService.orders.deleteOrder(id);
-
-    //   if (error) throw error;
-
-    //   toast({
-    //     title: "Encomenda excluída",
-    //     description: "A encomenda foi removida com sucesso.",
-    //   });
-
-    //   navigate("/orders");
-    // } catch (error: any) {
-    //   toast({
-    //     title: "Erro ao excluir encomenda",
-    //     description: error.message,
-    //     variant: "destructive",
-    //   });
-    // }
-  };
-
-  if (loading) {
+  if (isOrderLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60dvh]">
         <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
@@ -314,7 +292,7 @@ const OrderDetail = () => {
               <div>
                 <p className="text-sm text-muted-foreground">Valor</p>
                 <p className="font-medium">
-                  R$ {order.price.toFixed(2).replace(".", ",")}
+                  R$ {order.price.replace(".", ",")}
                 </p>
               </div>
             </div>
@@ -343,7 +321,7 @@ const OrderDetail = () => {
                     <Button
                       variant="outline"
                       className="w-full"
-                      onClick={() => updateOrderStatus("pending")}
+                      onClick={() => updateOrderStatus({ status: "pending" })}
                     >
                       <Clock className="h-4 w-4 row-span-full mr-2" />
                       Marcar como Pendente
@@ -353,7 +331,9 @@ const OrderDetail = () => {
                     <Button
                       variant="outline"
                       className="w-full"
-                      onClick={() => updateOrderStatus("production")}
+                      onClick={() =>
+                        updateOrderStatus({ status: "production" })
+                      }
                     >
                       <Package className="h-4 w-4 row-span-full mr-2" />
                       Marcar como Produção
@@ -363,7 +343,7 @@ const OrderDetail = () => {
                     <Button
                       variant="outline"
                       className="w-full"
-                      onClick={() => updateOrderStatus("done")}
+                      onClick={() => updateOrderStatus({ status: "done" })}
                     >
                       <CheckCircle className="h-4 w-4 row-span-full mr-2" />
                       Marcar como Concluída
@@ -411,7 +391,7 @@ const OrderDetail = () => {
                       <AlertDialogCancel>Cancelar</AlertDialogCancel>
                       <AlertDialogAction
                         className="bg-red-600 hover:bg-red-700"
-                        onClick={handleDelete}
+                        onClick={() => deleteOrder()}
                       >
                         Excluir
                       </AlertDialogAction>

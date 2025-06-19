@@ -88,7 +88,7 @@ export type Collaborator = {
   password: string;
   tenantId: string;
   invitedByUserId?: string;
-  status: 'active' | 'pending' | 'revoked';
+  status: "active" | "pending" | "revoked";
   lastLoginAt?: string;
   createdAt: string;
   updatedAt: string;

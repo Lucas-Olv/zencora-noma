@@ -51,7 +51,7 @@ const OrdersView = () => {
   const printRef = useRef<HTMLDivElement>(null);
      const {data: ordersData, isLoading: isOrdersLoading, isError: isOrdersError, refetch } = useQuery({
       queryKey: ["orders"],
-      queryFn: () => getNomaApi(`/api/noma/v1/orders/`, {params: { tenantId: tenant?.id }}),
+      queryFn: () => getNomaApi(`/api/noma/v1/orders/tenant`, {params: { tenantId: tenant?.id }}),
     })
   const handlePrint = usePrint(printRef, {
     pageStyle: `
@@ -138,11 +138,12 @@ const OrdersView = () => {
   );
 
   useEffect(() => {
+    document.title = "Encomendas | Zencora Noma";
     if(ordersData) {
       const fetchedOrders = ordersData.data as Order[];
       setOrders(fetchedOrders);
     }
-  }, [ordersData]);
+  }, [ordersData, isOrdersLoading]);
 
   const handleStatusChange = async (
     id: string,
