@@ -30,11 +30,13 @@ const SubscriptionInfo = () => {
   const headerSubscriptionStatusWarning =
     subscription?.isTrial && dayjs(subscription?.expiresAt).isBefore(dayjs())
       ? "Seu período de teste expirou"
-      : subscription.status !== "active" && dayjs(subscription?.expiresAt).isAfter(dayjs()) && dayjs(subscription?.gracePeriodUntil).isAfter(dayjs())
+      : subscription.status !== "active" &&
+          dayjs(subscription?.expiresAt).isAfter(dayjs()) &&
+          dayjs(subscription?.gracePeriodUntil).isAfter(dayjs())
         ? "Sua assinatura expirou"
         : subscription.status === "payment_failed"
           ? "Ocorreu um erro no pagamento, por favor, verifique seus meios de pagamento"
-          : dayjs(subscription?.expiresAt).isAfter(dayjs()) 
+          : dayjs(subscription?.expiresAt).isAfter(dayjs())
             ? "Sua assinatura expirou"
             : subscription?.isTrial
               ? "Você está em período de teste"
@@ -49,11 +51,13 @@ const SubscriptionInfo = () => {
   const headerSubscriptionStatusWarningColor =
     subscription?.isTrial && dayjs(subscription?.expiresAt).isBefore(dayjs())
       ? "text-red-500"
-      : subscription.status !== "active" && dayjs(subscription?.expiresAt).isAfter(dayjs()) && dayjs(subscription?.gracePeriodUntil).isAfter(dayjs())
+      : subscription.status !== "active" &&
+          dayjs(subscription?.expiresAt).isAfter(dayjs()) &&
+          dayjs(subscription?.gracePeriodUntil).isAfter(dayjs())
         ? "text-red-500"
         : subscription.status === "payment_failed"
           ? "text-red-500"
-          : dayjs(subscription?.expiresAt).isAfter(dayjs()) 
+          : dayjs(subscription?.expiresAt).isAfter(dayjs())
             ? "text-red-500"
             : subscription?.isTrial
               ? "text-yellow-500"
@@ -100,4 +104,3 @@ const SubscriptionInfo = () => {
 };
 
 export default SubscriptionInfo;
-

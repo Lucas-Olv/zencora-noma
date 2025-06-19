@@ -89,7 +89,7 @@ function ConnectionStatus({
 export function ProductionView() {
   const { toast } = useToast();
   const { isLoading } = useWorkspaceContext();
-  const {tenant } = useTenantStorage();
+  const { tenant } = useTenantStorage();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [isConnected, setIsConnected] = useState<boolean | undefined>(
@@ -188,8 +188,7 @@ export function ProductionView() {
     };
   }, [isLoading, tenant]);
 
-  const handleReconnect = async () => {
-  };
+  const handleReconnect = async () => {};
 
   const fetchOrders = async () => {
     // try {
@@ -230,8 +229,7 @@ export function ProductionView() {
   const completedOrders = orders
     .filter((order) => order.status === "done")
     .sort(
-      (a, b) =>
-        parseDate(a.dueDate).getTime() - parseDate(b.dueDate).getTime(),
+      (a, b) => parseDate(a.dueDate).getTime() - parseDate(b.dueDate).getTime(),
     );
 
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -509,22 +507,18 @@ export function ProductionView() {
     // try {
     //   const order = orders.find((o) => o.id === id);
     //   if (!order) return;
-
     //   const newStatus = status === "pending" ? "production" : "done";
-
     //   const { error } = await supabaseService.orders.updateOrderStatus(
     //     id,
     //     newStatus,
     //   );
     //   if (error) throw error;
-
     //   // Atualiza o estado local
     //   setOrders(
     //     orders.map((order) =>
     //       order.id === id ? { ...order, status: newStatus } : order,
     //     ),
     //   );
-
     //   toast({
     //     title: "Status atualizado",
     //     description: "O status da encomenda foi atualizado com sucesso.",

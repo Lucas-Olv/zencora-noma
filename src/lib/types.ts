@@ -122,10 +122,10 @@ export type Reminder = {
   id: string;
   tenantId: string;
   title: string;
-  isDone: boolean;
-  content: string;
-  createdAt: string;
-  updatedAt: string;
+  isDone?: boolean;
+  content?: string;
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 export type Receipt = {

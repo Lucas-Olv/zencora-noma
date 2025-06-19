@@ -20,9 +20,8 @@ export const SettingsGate = ({
   fallback = <Loader2 className="animate-spin" />,
   requireFeature,
 }: Props) => {
-
   const { settings } = useSettingsStorage();
-  
+
   // Bloqueia se uma feature específica está desativada (como lock_reports_with_password)
   if (requireFeature && !settings?.[requireFeature]) return null;
 

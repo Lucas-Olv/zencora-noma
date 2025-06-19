@@ -94,73 +94,84 @@ const OrderDialog = ({
       dueTime: "12:00",
       price: "",
     },
-  });  
-        const {
-          mutate: createOrder,
-          error: createOrderError,
-          data: createOrderData,
-          isPending: isCreatingOrder,
-          error: isCreatingOrderError,
-        } = useMutation({
-          mutationFn: ({
-            orderData,
+  });
+  const {
+    mutate: createOrder,
+    error: createOrderError,
+    data: createOrderData,
+    isPending: isCreatingOrder,
+    error: isCreatingOrderError,
+  } = useMutation({
+    mutationFn: ({
+      orderData,
     }: {
-            orderData: Omit<Order, "id" | "createdAt" | "updatedAt" | "tenantId">;
+      orderData: Omit<Order, "id" | "createdAt" | "updatedAt" | "tenantId">;
     }) =>
-            postNomaApi("/api/noma/v1/orders/create", { orderData }, { params: { tenantId: tenant?.id }}),
-          onSuccess: () => {
-            onSuccess?.(orderData);
-            onOpenChange(false);
-            toast({
-              title: "Encomenda criada com sucesso",
-              description:
-                "Sua encomenda foi criada com sucesso! Você pode visualizá-la na lista de encomendas.",
-            });
-  
-          },
-          onError: (error) => {
+      postNomaApi(
+        "/api/noma/v1/orders/create",
+        { orderData },
+        { params: { tenantId: tenant?.id } },
+      ),
+    onSuccess: () => {
+      onSuccess?.(orderData);
+      onOpenChange(false);
+      toast({
+        title: "Encomenda criada com sucesso",
+        description:
+          "Sua encomenda foi criada com sucesso! Você pode visualizá-la na lista de encomendas.",
+      });
+    },
+    onError: (error) => {
       toast({
         title: "Erro ao criar encomenda",
-        description: "ocorreu um erro ao criar a encomenda. Por favor, tente novamente mais tarde.",
+        description:
+          "ocorreu um erro ao criar a encomenda. Por favor, tente novamente mais tarde.",
         variant: "destructive",
       });
-            console.log(error);
-          },
-        });
+      console.log(error);
+    },
+  });
 
-        const {
-          mutate: updateOrder,
-          error: updateOrderError,
-          data: updateOrderData,
-          isPending: isUpdatingOrder,
-          error: isUpdatingOrderError,
-        } = useMutation({
-          mutationFn: ({
-            orderData,
+  const {
+    mutate: updateOrder,
+    error: updateOrderError,
+    data: updateOrderData,
+    isPending: isUpdatingOrder,
+    error: isUpdatingOrderError,
+  } = useMutation({
+    mutationFn: ({
+      orderData,
     }: {
-            orderData: Omit<Order, "createdAt" | "updatedAt" | "tenantId" | "id"> & { id: string };
+      orderData: Omit<Order, "createdAt" | "updatedAt" | "tenantId" | "id"> & {
+        id: string;
+      };
     }) =>
-            putNomaApi(`/api/noma/v1/orders/update`, { tenantId: tenant?.id, orderData }, {
-              params: { orderId: orderData.id }}),
-          onSuccess: () => {
-             onSuccess?.(orderData);
-             onOpenChange(false);
-            toast({
-              title: "Encomenda criada com sucesso",
-              description:
-                "Sua encomenda foi criada com sucesso! Você pode visualizá-la na lista de encomendas.",
-            });
-  
-          },
-          onError: (error) => {
+      putNomaApi(
+        `/api/noma/v1/orders/update`,
+        { tenantId: tenant?.id, orderData },
+        {
+          params: { orderId: orderData.id },
+        },
+      ),
+    onSuccess: () => {
+      onSuccess?.(orderData);
+      onOpenChange(false);
+      toast({
+        title: "Encomenda criada com sucesso",
+        description:
+          "Sua encomenda foi criada com sucesso! Você pode visualizá-la na lista de encomendas.",
+      });
+    },
+    onError: (error) => {
       toast({
         title: "Erro ao criar encomenda",
-        description: "ocorreu um erro ao criar a encomenda. Por favor, tente novamente mais tarde.",
+        description:
+          "ocorreu um erro ao criar a encomenda. Por favor, tente novamente mais tarde.",
         variant: "destructive",
       });
-            console.log(error);
-          },
-        });
+      console.log(error);
+    },
+  });
 
   useEffect(() => {
     if (open) {
@@ -221,27 +232,25 @@ const OrderDialog = ({
 
   const onSubmit = async (data: FormValues) => {
     if (!tenant) return;
-      const [hours, minutes] = data.dueTime.split(":");
-      const dueDate = new Date(data.dueDate + "T00:00:00");
-      dueDate.setHours(parseInt(hours), parseInt(minutes));
+    const [hours, minutes] = data.dueTime.split(":");
+    const dueDate = new Date(data.dueDate + "T00:00:00");
+    dueDate.setHours(parseInt(hours), parseInt(minutes));
 
-      const orderData = {
-        clientName: data.clientName,
-        clientPhone: data.clientPhone || null,
-        description: data.description,
-        dueDate: dueDate.toISOString(),
-        price: data.price.replace(".", "").replace(",", "."),
-        status: "pending" as const,
-        id: mode === "edit" && orderId ? orderId : undefined,
-      };
+    const orderData = {
+      clientName: data.clientName,
+      clientPhone: data.clientPhone || null,
+      description: data.description,
+      dueDate: dueDate.toISOString(),
+      price: data.price.replace(".", "").replace(",", "."),
+      status: "pending" as const,
+      id: mode === "edit" && orderId ? orderId : undefined,
+    };
 
-
-
-      if (mode === "create") {
-        createOrder({orderData});
-      } else {
-        updateOrder({orderData});
-      }
+    if (mode === "create") {
+      createOrder({ orderData });
+    } else {
+      updateOrder({ orderData });
+    }
   };
 
   return (

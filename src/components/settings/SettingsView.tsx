@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 
@@ -14,23 +13,19 @@ export default function SettingsView() {
   const { settings } = useSettingsStorage();
   const { toast } = useToast();
 
-
   const handleUpdateSettings = async (
     field: keyof Settings,
     value: boolean,
   ) => {
     // try {
     //   if (!settings || !tenant?.id) return;
-
     //   const updatedSettings = {
     //     ...settings,
     //     [field]: value,
     //     tenant_id: tenant.id,
     //   };
-
     //   await updateSettings(updatedSettings);
     //   await db.updateSettingsData(updatedSettings);
-
     //   toast({
     //     title: "Configurações atualizadas",
     //     description: "As configurações foram atualizadas com sucesso.",

@@ -6,7 +6,7 @@ import { useSessionStore } from "@/storage/session";
 const ProtectedRoute = ({ children }: { children: ReactNode }) => {
   const location = useLocation();
   const { session } = useSessionStore();
-  const { isLoading} = useWorkspaceContext();
+  const { isLoading } = useWorkspaceContext();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -14,7 +14,7 @@ const ProtectedRoute = ({ children }: { children: ReactNode }) => {
       navigate("/", { replace: true });
     }
   }, [location.pathname, session]);
-  
+
   if (isLoading)
     return (
       <div className="flex items-center justify-center h-screen">

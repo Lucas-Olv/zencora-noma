@@ -84,9 +84,7 @@ function RecentReminders({
     //       content: reminder.content,
     //     },
     //   );
-
     //   if (error) throw error;
-
     //   if (data) {
     //     setReminders((prev) =>
     //       prev.map((r) => (r.id === reminder.id ? data : r)),

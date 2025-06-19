@@ -254,7 +254,6 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
   const handleProfileClick = async () => {
     // try {
     //   const { data } = await supabase.auth.getSession();
-
     //   if (!data?.session) {
     //     toast({
     //       title: "Erro ao acessar perfil",
@@ -263,7 +262,6 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
     //     });
     //     return;
     //   }
-
     //   const websiteUrl = import.meta.env.VITE_ZENCORA_ACCOUNT_WEBSITE;
     //   if (!websiteUrl) {
     //     toast({
@@ -273,10 +271,8 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
     //     });
     //     return;
     //   }
-
     //   const accessToken = data.session.access_token;
     //   const refreshToken = data.session.refresh_token;
-
     //   const redirectUrl = `${websiteUrl}account?access_token=${accessToken}&refresh_token=${refreshToken}`;
     //   window.location.href = redirectUrl;
     // } catch (error: any) {
@@ -292,12 +288,10 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
     // try {
     //   await db.clearWorkspaceData();
     //   await supabase.auth.signOut();
-
     //   toast({
     //     title: "Logout realizado com sucesso",
     //     description: "Você foi desconectado com sucesso.",
     //   });
-
     //   // Redireciona para a landing page
     //   window.location.href = "/";
     // } catch (error: any) {

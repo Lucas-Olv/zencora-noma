@@ -10,7 +10,7 @@ import {
 import { LoadingState } from "@/components/ui/loading-state";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
-import { Order } from "@/lib/types"; 
+import { Order } from "@/lib/types";
 
 interface ReportOrdersListProps {
   orders: Order[];

@@ -49,10 +49,18 @@ const OrdersView = () => {
   const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
   const [dialogOrderId, setDialogOrderId] = useState<string | undefined>();
   const printRef = useRef<HTMLDivElement>(null);
-     const {data: ordersData, isLoading: isOrdersLoading, isError: isOrdersError, refetch } = useQuery({
-      queryKey: ["orders"],
-      queryFn: () => getNomaApi(`/api/noma/v1/orders/tenant`, {params: { tenantId: tenant?.id }}),
-    })
+  const {
+    data: ordersData,
+    isLoading: isOrdersLoading,
+    isError: isOrdersError,
+    refetch,
+  } = useQuery({
+    queryKey: ["orders"],
+    queryFn: () =>
+      getNomaApi(`/api/noma/v1/orders/tenant`, {
+        params: { tenantId: tenant?.id },
+      }),
+  });
   const handlePrint = usePrint(printRef, {
     pageStyle: `
       @page {
@@ -139,7 +147,7 @@ const OrdersView = () => {
 
   useEffect(() => {
     document.title = "Encomendas | Zencora Noma";
-    if(ordersData) {
+    if (ordersData) {
       const fetchedOrders = ordersData.data as Order[];
       setOrders(fetchedOrders);
     }
@@ -155,13 +163,11 @@ const OrdersView = () => {
     //     targetStatus,
     //   );
     //   if (error) throw error;
-
     //   setOrders(
     //     orders.map((order) =>
     //       order.id === id ? { ...order, status: targetStatus } : order,
     //     ),
     //   );
-
     //   toast({
     //     title: "Status atualizado!",
     //     description: `A encomenda foi marcada como ${targetStatus === "pending" ? "pendente" : targetStatus === "production" ? "Produção" : "concluída"}.`,
@@ -200,9 +206,7 @@ const OrdersView = () => {
             getOrderCode(order.id)
               .toLowerCase()
               .includes(searchTerm.toLowerCase()) ||
-            order.clientName
-              .toLowerCase()
-              .includes(searchTerm.toLowerCase()) ||
+            order.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
             (order.description &&
               order.description
                 .toLowerCase()

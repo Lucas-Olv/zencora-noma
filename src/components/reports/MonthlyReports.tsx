@@ -116,14 +116,26 @@ const MonthlyReports = () => {
     });
   };
 
-       const {data: ordersData, isLoading: isOrdersLoading, isError: isOrdersError, refetch } = useQuery({
-      queryKey: ["orders", dateRange?.from, dateRange?.to, tenant?.id],
-      queryFn: () => getNomaApi(`/api/noma/v1/orders/tenant`, {params: { tenantId: tenant?.id, periodStart: dateRange?.from?.toISOString(), periodEnd: dateRange?.to?.toISOString() }}),
-    })
+  const {
+    data: ordersData,
+    isLoading: isOrdersLoading,
+    isError: isOrdersError,
+    refetch,
+  } = useQuery({
+    queryKey: ["orders", dateRange?.from, dateRange?.to, tenant?.id],
+    queryFn: () =>
+      getNomaApi(`/api/noma/v1/orders/tenant`, {
+        params: {
+          tenantId: tenant?.id,
+          periodStart: dateRange?.from?.toISOString(),
+          periodEnd: dateRange?.to?.toISOString(),
+        },
+      }),
+  });
 
   useEffect(() => {
-    if(ordersData){
-            if (dateRange?.from && dateRange?.to) {
+    if (ordersData) {
+      if (dateRange?.from && dateRange?.to) {
         // Ajusta as datas para o início e fim do dia
         const startDate = new Date(dateRange.from);
         startDate.setHours(0, 0, 0, 0);
@@ -183,7 +195,8 @@ const MonthlyReports = () => {
             return {
               day: format(day, "dd/MM"),
               Total: dayOrders.reduce(
-                (sum: number, order: Order) => sum + (parseFloat(order.price) || 0),
+                (sum: number, order: Order) =>
+                  sum + (parseFloat(order.price) || 0),
                 0,
               ),
               Encomendas: dayOrders.length,

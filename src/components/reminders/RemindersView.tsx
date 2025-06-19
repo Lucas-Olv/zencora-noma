@@ -30,7 +30,7 @@ import { useTenantStorage } from "@/storage/tenant";
 
 import { Reminder } from "@/lib/types";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { delNomaAPi, getNomaApi } from "@/lib/apiHelpers";
+import { delNomaAPi, getNomaApi, postNomaApi } from "@/lib/apiHelpers";
 const RemindersView = () => {
   const { toast } = useToast();
   const { tenant } = useTenantStorage();
@@ -43,40 +43,136 @@ const RemindersView = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [editedContent, setEditedContent] = useState("");
 
-     const {data: remindersData, isLoading: isRemindersLoading, isError: isRemindersError } = useQuery({
-      queryKey: ["Reminders"],
-      queryFn: () => getNomaApi("/api/noma/v1/reminders/tenant", {params: { tenantId: tenant?.id }}),
-    })
+  const {
+    data: remindersData,
+    isLoading: isRemindersLoading,
+    isError: isRemindersError,
+  } = useQuery({
+    queryKey: ["Reminders"],
+    queryFn: () =>
+      getNomaApi("/api/noma/v1/reminders/tenant", {
+        params: { tenantId: tenant?.id },
+      }),
+  });
 
-              const {
-                mutate: deleteReminder,
-                data: deleteReminderData,
-                error: isDeleteReminderError,
-                isPending: isDeleteReminderPending,
-              } = useMutation({
-                mutationFn: ({
-                            reminderId,
-                    }: {
-                            reminderId: string;
-                    }) =>
-                  delNomaAPi(`/api/noma/v1/orders/delete`, { params: { tenantId: tenant?.id, reminderId: reminderId} }),
-                onSuccess: () => {
-                  toast({
-                    title: "Lembrete excluído com sucesso!",
-                    description:
-                      "O lembrete foi excluÍda com sucesso!",
-                  });
-                },
-                onError: (error) => {
-            toast({
-              title: "Erro ao excluir lembrete",
-              description: "ocorreu um erro ao excluir o lembrete. Por favor, tente novamente mais tarde.",
-              variant: "destructive",
-            });
-                  console.log(error);
-                },
-              });
-    
+  const {
+    mutate: deleteReminder,
+    data: deleteReminderData,
+    error: isDeleteReminderError,
+    isPending: isDeleteReminderPending,
+  } = useMutation({
+    mutationFn: ({ reminderId }: { reminderId: string }) =>
+      delNomaAPi(`/api/noma/v1/orders/delete`, {
+        params: { tenantId: tenant?.id, reminderId: reminderId },
+      }),
+    onSuccess: () => {
+      toast({
+        title: "Lembrete excluído com sucesso!",
+        description: "O lembrete foi excluÍda com sucesso!",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao excluir lembrete",
+        description:
+          "Ocorreu um erro ao excluir o lembrete. Por favor, tente novamente mais tarde.",
+        variant: "destructive",
+      });
+      console.log(error);
+    },
+  });
+
+  const {
+    mutate: createReminder,
+    data: createReminderData,
+    error: isCreateReminderError,
+    isPending: isCreateReminderPending,
+  } = useMutation({
+    mutationFn: ({ reminderData }: { reminderData: Reminder }) =>
+      postNomaApi(
+        `/api/noma/v1/reminders/create`,
+        { reminderData },
+        { params: { tenantId: tenant?.id } },
+      ),
+    onSuccess: () => {
+      toast({
+        title: "Lembrete criado com sucesso!",
+        description: "O lembrete foi criado com sucesso!",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao criar lembrete",
+        description:
+          "Ocorreu um erro ao criar o lembrete. Por favor, tente novamente mais tarde.",
+        variant: "destructive",
+      });
+      console.log(error);
+    },
+  });
+
+  const {
+    mutate: updateReminder,
+    data: updateReminderData,
+    error: isUpdateReminderError,
+    isPending: isUpdateReminderPending,
+  } = useMutation({
+    mutationFn: ({ reminderData }: { reminderData: Reminder }) =>
+      postNomaApi(
+        `/api/noma/v1/reminders/update`,
+        { reminderData },
+        { params: { tenantId: tenant?.id } },
+      ),
+    onSuccess: () => {
+      toast({
+        title: "Lembrete atualizado com sucesso!",
+        description: "O lembrete foi atualizado com sucesso!",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao atualizar lembrete",
+        description:
+          "Ocorreu um erro ao atualizar o lembrete. Por favor, tente novamente mais tarde.",
+        variant: "destructive",
+      });
+      console.log(error);
+    },
+  });
+
+  const {
+    mutate: updateReminderStatus,
+    data: updateReminderStatusData,
+    error: isUpdateReminderStatusError,
+    isPending: isUpdateReminderStatusPending,
+  } = useMutation({
+    mutationFn: ({
+      reminderData,
+    }: {
+      reminderData: Omit<Reminder, "Content" | "title" | "createdAt">;
+    }) =>
+      postNomaApi(
+        `/api/noma/v1/reminders/update`,
+        { reminderData },
+        { params: { tenantId: tenant?.id } },
+      ),
+    onSuccess: () => {
+      toast({
+        title: "Status do lembrete atualizado com sucesso!",
+        description: "O status do lembrete foi atualizado com sucesso!",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao atualizar status do lembrete",
+        description:
+          "Ocorreu um erro ao atualizar o status do lembrete. Por favor, tente novamente mais tarde.",
+        variant: "destructive",
+      });
+      console.log(error);
+    },
+  });
+
   useEffect(() => {
     if (remindersData) {
       setReminders(remindersData.data);
@@ -86,64 +182,37 @@ const RemindersView = () => {
 
   const handleCreateReminder = async (e: React.FormEvent) => {
     e.preventDefault();
-    // if (!newReminderTitle.trim()) return;
+    if (!newReminderTitle.trim()) return;
 
-    // try {
-    //   const { data, error } = await remindersService.createReminder({
-    //     title: newReminderTitle,
-    //     content: "",
-    //     is_done: false,
-    //     tenant_id: tenant?.id,
-    //   });
-    //   if (error) throw error;
+    createReminder({
+      reminderData: {
+        title: newReminderTitle,
+        tenantId: tenant?.id,
+        id: null,
+        content: "",
+        isDone: false,
+      },
+    });
 
-    //   if (data) {
-    //     setReminders((prev) => [data, ...prev]);
-    //     setNewReminderTitle("");
-    //     toast({
-    //       title: "Lembrete criado com sucesso!",
-    //     });
-    //   }
-    // } catch (error) {
-    //   console.error("Error creating reminder:", error);
-    //   toast({
-    //     title: "Erro ao criar lembrete",
-    //     description: error.message,
-    //     variant: "destructive",
-    //   });
-    // }
+    setReminders((prev) => [createReminderData, ...prev]);
+    setNewReminderTitle("");
   };
 
   const handleToggleDone = async (reminder: Reminder) => {
-    // try {
-    //   const { data, error } = await remindersService.updateReminder(
-    //     reminder.id,
-    //     {
-    //       is_done: !reminder.is_done,
-    //       tenant_id: reminder.tenant_id,
-    //       title: reminder.title,
-    //       content: reminder.content,
-    //     },
-    //   );
+    if (!reminder.id) return;
+    updateReminderStatus({
+      reminderData: {
+        id: reminder.id,
+        tenantId: reminder.tenantId,
+        isDone: !reminder.isDone,
+      },
+    });
 
-    //   if (error) throw error;
-
-    //   if (data) {
-    //     setReminders((prev) =>
-    //       prev.map((r) => (r.id === reminder.id ? data : r)),
-    //     );
-    //   }
-    //   toast({
-    //     title: "Lembrete atualizado com sucesso!",
-    //   });
-    // } catch (error) {
-    //   console.error("Error updating reminder:", error);
-    //   toast({
-    //     title: "Erro ao atualizar lembrete",
-    //     description: error.message,
-    //     variant: "destructive",
-    //   });
-    // }
+    if (updateReminderStatusData) {
+      setReminders((prev) =>
+        prev.map((r) => (r.id === reminder.id ? updateReminderStatusData : r)),
+      );
+    }
   };
 
   const handleOpenDetails = (reminder: Reminder) => {
@@ -153,46 +222,34 @@ const RemindersView = () => {
   };
 
   const handleSaveDetails = async () => {
-    // if (!selectedReminder) return;
+    if (!selectedReminder) return;
 
-    // try {
-    //   const { data, error } = await remindersService.updateReminder(
-    //     selectedReminder.id,
-    //     {
-    //       content: editedContent,
-    //       tenant_id: selectedReminder.tenantId,
-    //       title: selectedReminder.title,
-    //       is_done: selectedReminder.isDone,
-    //     },
-    //   );
+    updateReminder({
+      reminderData: {
+        id: selectedReminder.id,
+        tenantId: selectedReminder.tenantId,
+        title: selectedReminder.title,
+        content: editedContent,
+        isDone: selectedReminder.isDone,
+      },
+    });
 
-    //   if (error) throw error;
-
-    //   if (data) {
-    //     setReminders((prev) =>
-    //       prev.map((r) => (r.id === selectedReminder.id ? data : r)),
-    //     );
-    //     setIsDialogOpen(false);
-    //     toast({
-    //       title: "Lembrete atualizado com sucesso!",
-    //     });
-    //   }
-    // } catch (error) {
-    //   console.error("Error updating reminder:", error);
-    //   toast({
-    //     title: "Erro ao atualizar lembrete",
-    //     description: error.message,
-    //     variant: "destructive",
-    //   });
-    // }
+    if (updateReminderData) {
+      setReminders((prev) =>
+        prev.map((r) =>
+          r.id === selectedReminder.id ? updateReminderData : r,
+        ),
+      );
+      setIsDialogOpen(false);
+    }
   };
 
   const handleDelete = async () => {
     if (!selectedReminder) return;
     deleteReminder({ reminderId: selectedReminder.id });
-      setReminders((prev) => prev.filter((r) => r.id !== selectedReminder.id));
-      setIsDeleteDialogOpen(false);
-      setSelectedReminder(null);
+    setReminders((prev) => prev.filter((r) => r.id !== selectedReminder.id));
+    setIsDeleteDialogOpen(false);
+    setSelectedReminder(null);
   };
 
   const pendingReminders = reminders.filter((r) => !r.isDone);

@@ -51,8 +51,7 @@ const BLOCKED_ROUTES = [
 ];
 
 const AppRoutes = () => {
-  const { isLoading } =
-    useWorkspaceContext();
+  const { isLoading } = useWorkspaceContext();
 
   const { session } = useSessionStore();
   const { tenant } = useTenantStorage();
@@ -68,10 +67,9 @@ const AppRoutes = () => {
   }
 
   // Se estiver autenticado mas não aceitou os termos, redireciona para a tela de aceitação
-  const shouldAcceptTerms =
-    session && tenant && tenant.userAcceptedTerms;
+  const shouldAcceptTerms = session && tenant && tenant.userAcceptedTerms;
 
-    console.log("shouldAcceptTerms", shouldAcceptTerms);
+  console.log("shouldAcceptTerms", shouldAcceptTerms);
 
   return (
     <Routes>
@@ -82,7 +80,9 @@ const AppRoutes = () => {
           session ? (
             shouldAcceptTerms ? (
               <Navigate to="/terms-acceptance" />
-            ) : <Navigate to="/dashboard" />
+            ) : (
+              <Navigate to="/dashboard" />
+            )
           ) : (
             <Landing />
           )
@@ -129,7 +129,7 @@ const AppRoutes = () => {
                 <ProtectedRoute>
                   {shouldAcceptTerms ? (
                     <Navigate to="/terms-acceptance" replace />
-                  ) :  (
+                  ) : (
                     <Orders />
                   )}
                 </ProtectedRoute>
@@ -141,7 +141,7 @@ const AppRoutes = () => {
                 <ProtectedRoute>
                   {shouldAcceptTerms ? (
                     <Navigate to="/terms-acceptance" replace />
-                  ) :(
+                  ) : (
                     <OrderDetail />
                   )}
                 </ProtectedRoute>
@@ -243,7 +243,7 @@ const AppRoutes = () => {
                 <ProtectedRoute>
                   {shouldAcceptTerms ? (
                     <Navigate to="/terms-acceptance" replace />
-                  ): (
+                  ) : (
                     <SubscriptionSuccess />
                   )}
                 </ProtectedRoute>
