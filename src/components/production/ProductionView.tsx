@@ -37,6 +37,8 @@ import { SubscriptionGate } from "../subscription/SubscriptionGate";
 import { SettingsGate } from "../settings/SettingsGate";
 import { useTenantStorage } from "@/storage/tenant";
 import { Order } from "@/lib/types";
+import { useQuery } from "@tanstack/react-query";
+import { getNomaApi } from "@/lib/apiHelpers";
 
 function ConnectionStatus({
   isConnected,
@@ -91,12 +93,24 @@ export function ProductionView() {
   const { isLoading } = useWorkspaceContext();
   const { tenant } = useTenantStorage();
   const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
   const [isConnected, setIsConnected] = useState<boolean | undefined>(
     undefined,
   );
   const channelRef = useRef<any>(null);
   const navigate = useNavigate();
+
+    const {
+      data: ordersData,
+      isLoading: isOrdersLoading,
+      isError: isOrdersError,
+      refetch,
+    } = useQuery({
+      queryKey: ["productionOrders", tenant?.id],
+      queryFn: () =>
+        getNomaApi(`/api/noma/v1/orders/tenant`, {
+          params: { tenantId: tenant?.id },
+        }),
+    });
 
   // const setupRealtimeSubscription = async () => {
   //   if (!tenant) return;
@@ -177,41 +191,24 @@ export function ProductionView() {
   // };
 
   useEffect(() => {
-    if (!isLoading && tenant) {
-      fetchOrders();
-    }
 
-    return () => {
-      if (channelRef.current) {
-        channelRef.current.unsubscribe();
+      if(ordersData) {
+        setOrders(ordersData.data);
+      setOrders(
+        (ordersData.data || []).map((order: Order) => ({
+          ...order,
+          status: order.status as "pending" | "production" | "done",
+        })),
+      );
       }
-    };
+    // return () => {
+    //   if (channelRef.current) {
+    //     channelRef.current.unsubscribe();
+    //   }
+    // };
   }, [isLoading, tenant]);
 
   const handleReconnect = async () => {};
-
-  const fetchOrders = async () => {
-    // try {
-    //   const { data, error } = await supabaseService.orders.getTenantOrders(
-    //     tenant.id,
-    //   );
-    //   if (error) throw error;
-    //   setOrders(
-    //     (data || []).map((order) => ({
-    //       ...order,
-    //       status: order.status as "pending" | "production" | "done",
-    //     })),
-    //   );
-    // } catch (error: any) {
-    //   toast({
-    //     title: "Erro ao carregar encomendas",
-    //     description: error.message,
-    //     variant: "destructive",
-    //   });
-    // } finally {
-    //   setLoading(false);
-    // }
-  };
 
   const pendingOrders = orders
     .filter(
@@ -533,7 +530,7 @@ export function ProductionView() {
     // }
   };
 
-  if (loading) {
+  if (isOrdersLoading) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-200px)]">
         <div className="flex flex-col items-center gap-2">
@@ -583,7 +580,7 @@ export function ProductionView() {
 
             <TabsContent value="pending">
               <LoadingState
-                loading={loading}
+                loading={isOrdersLoading}
                 empty={!pendingOrders.length}
                 emptyText="Nenhuma encomenda pendente"
                 emptyIcon={
@@ -604,7 +601,7 @@ export function ProductionView() {
 
             <TabsContent value="completed">
               <LoadingState
-                loading={loading}
+                loading={isOrdersLoading}
                 empty={!completedOrders.length}
                 emptyText="Nenhuma encomenda concluída"
                 emptyIcon={

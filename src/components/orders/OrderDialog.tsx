@@ -113,7 +113,7 @@ const OrderDialog = ({
         { params: { tenantId: tenant?.id } },
       ),
     onSuccess: () => {
-      onSuccess?.(orderData);
+      onSuccess?.(createOrderData);
       onOpenChange(false);
       toast({
         title: "Encomenda criada com sucesso",
@@ -154,7 +154,7 @@ const OrderDialog = ({
         },
       ),
     onSuccess: () => {
-      onSuccess?.(orderData);
+      onSuccess?.(updateOrderData);
       onOpenChange(false);
       toast({
         title: "Encomenda criada com sucesso",
