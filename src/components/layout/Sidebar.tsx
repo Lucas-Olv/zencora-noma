@@ -39,7 +39,9 @@ import {
 } from "@/components/ui/tooltip";
 import { SettingsGate } from "@/components/settings/SettingsGate";
 import { Loader2 } from "lucide-react";
-import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
+import { useSessionStore } from "@/storage/session";
+import { useSubscriptionStorage } from "@/storage/subscription";
+import { useSettingsStorage } from "@/storage/settings";
 import { db } from "@/lib/db";
 
 interface SidebarProps {
@@ -88,32 +90,20 @@ const mainNavItems: NavItem[] = [
   },
 ];
 
-const bottomNavItems: NavItem[] = [
-  {
-    title: "Configurações",
-    href: "/settings",
-    icon: Settings,
-    proOnly: true,
-  },
-];
+const bottomNavItems: NavItem[] = [];
 
 interface NavButtonProps {
   item: NavItem;
   isActive: boolean;
   onClick: () => void;
+  isTrial: boolean;
+  subscription: any;
+  isBlocked: boolean;
+  settings: any;
 }
 
-const NavButton = ({ item, isActive, onClick }: NavButtonProps) => {
+const NavButton = ({ item, isActive, onClick, isTrial, subscription, isBlocked, settings }: NavButtonProps) => {
   const { blockedRoutes, allowedRoutes } = useSubscriptionRoutes();
-  const {
-    settings,
-    isBlocked,
-    isTrial,
-    isActive: subscriptionActive,
-    subscription,
-  } = useWorkspaceContext();
-  const isRouteBlocked = blockedRoutes.includes(item.href);
-  const isRouteAllowed = allowedRoutes.includes(item.href);
 
   // Verifica se o usuário tem acesso ao item baseado no plano
   const hasPlanAccess =
@@ -130,6 +120,7 @@ const NavButton = ({ item, isActive, onClick }: NavButtonProps) => {
   // Só mostra o cadeado se:
   // 1. A rota estiver bloqueada E a assinatura estiver bloqueada
   // 2. A rota não estiver na lista de permitidas E a assinatura estiver bloqueada
+  const isRouteBlocked = blockedRoutes.includes(item.href);
   const shouldShowLock =
     (isBlocked && isRouteBlocked) || // Mostra cadeado se estiver bloqueado e a rota estiver na lista de bloqueadas
     (item.proOnly && !hasPlanAccess); // Mostra cadeado se for item Pro e não tiver acesso ao plano
@@ -138,9 +129,9 @@ const NavButton = ({ item, isActive, onClick }: NavButtonProps) => {
   const requiresPassword = (() => {
     switch (item.href) {
       case "/reports":
-        return settings?.lock_reports_by_password;
+        return settings?.lockReportsByPassword;
       case "/settings":
-        return settings?.lock_settings_by_password;
+        return settings?.lockSettingsByPassword;
       default:
         return false;
     }
@@ -218,16 +209,18 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const {
-    settings,
-    appSession,
-    isLoading,
-    isBlocked,
-    isTrial,
-    isActive: subscriptionActive,
-    subscription,
-    roles,
-  } = useWorkspaceContext();
+
+  // Zustand stores
+  const { session } = useSessionStore();
+  const { subscription } = useSubscriptionStorage();
+  const { settings } = useSettingsStorage();
+
+  // Derivações
+  const appSession = session;
+  const isLoading = false; // zustand é síncrono, pode-se adicionar loading se necessário
+  const isTrial = !!subscription?.isTrial;
+  const subscriptionActive = subscription?.status === "active";
+  const isBlocked = subscription?.status !== "active" && !isTrial;
 
   // Se o app não estiver pronto, mostra um loader
   if (isLoading) {
@@ -244,7 +237,7 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
   }
 
   // Lógica para mostrar o cadeado nas configurações
-  const isSettingsLocked = settings?.lock_settings_by_password;
+  const isSettingsLocked = settings?.lockSettingsByPassword;
   const isSettingsBlocked =
     !isTrial &&
     !subscriptionActive &&
@@ -314,7 +307,7 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
 
   const handleRoleSwitch = () => {
     // Se a configuração de senha para trocar de papel estiver ativa, redireciona para verificação
-    if (settings?.require_password_to_switch_role) {
+    if (settings?.requirePasswordToSwitchRole) {
       navigate("/verify-password", {
         state: {
           redirect: "/select-role",
@@ -367,6 +360,10 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
               item={item}
               isActive={location.pathname === item.href}
               onClick={() => handleNavigation(item.href)}
+              isTrial={isTrial}
+              subscription={subscription}
+              isBlocked={isBlocked}
+              settings={settings}
             />
           ))}
         </div>
@@ -376,55 +373,34 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
           {(!subscription?.plan ||
             subscription?.plan === "pro" ||
             subscription?.plan === "enterprise" ||
-            isTrial) &&
-            (appSession?.role === "owner" ||
-              (appSession?.role_id &&
-                roles.find((r) => r.id === appSession.role_id)
-                  ?.can_access_settings)) && (
-              <Button
-                variant="ghost"
-                className="w-full flex gap-3 justify-start h-10"
-                onClick={() => handleNavigation("/settings")}
-              >
-                <Settings className="h-4 w-4" />
-                Configurações
-                {(isSettingsLocked || isSettingsBlocked || isBlocked) && (
-                  <Lock className="h-4 w-4 ml-auto" />
-                )}
-              </Button>
-            )}
-
-          {/* Perfil ou Trocar Papel */}
-          {settings?.enable_roles ? (
-            appSession?.role === "owner" ? (
-              <Button
-                variant="ghost"
-                className="w-full flex gap-3 justify-start h-10"
-                onClick={handleProfileClick}
-              >
-                <User className="h-4 w-4" />
-                Meu Perfil
-              </Button>
-            ) : (
-              <Button
-                variant="ghost"
-                className="w-full flex gap-3 justify-start h-10"
-                onClick={handleRoleSwitch}
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Trocar Papel
-              </Button>
-            )
-          ) : (
+            isTrial) && (
             <Button
               variant="ghost"
-              className="w-full flex gap-3 justify-start h-10"
-              onClick={handleProfileClick}
+              className={cn(
+                "w-full flex gap-3 justify-start h-10",
+                location.pathname === "/settings"
+                  ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                  : ""
+              )}
+              onClick={() => handleNavigation("/settings")}
             >
-              <User className="h-4 w-4" />
-              Meu Perfil
+              <Settings className="h-4 w-4" />
+              Configurações
+              {(isSettingsLocked || isSettingsBlocked || isBlocked) && (
+                <Lock className="h-4 w-4 ml-auto" />
+              )}
             </Button>
           )}
+
+          {/* Perfil ou Trocar Papel */}
+          <Button
+            variant="ghost"
+            className="w-full flex gap-3 justify-start h-10"
+            onClick={handleProfileClick}
+          >
+            <User className="h-4 w-4" />
+            Meu Perfil
+          </Button>
 
           {/* Sair - Sempre visível */}
           <AlertDialog>
