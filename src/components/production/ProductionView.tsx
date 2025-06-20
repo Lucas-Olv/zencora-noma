@@ -99,18 +99,18 @@ export function ProductionView() {
   const channelRef = useRef<any>(null);
   const navigate = useNavigate();
 
-    const {
-      data: ordersData,
-      isLoading: isOrdersLoading,
-      isError: isOrdersError,
-      refetch,
-    } = useQuery({
-      queryKey: ["productionOrders", tenant?.id],
-      queryFn: () =>
-        getNomaApi(`/api/noma/v1/orders/tenant`, {
-          params: { tenantId: tenant?.id },
-        }),
-    });
+  const {
+    data: ordersData,
+    isLoading: isOrdersLoading,
+    isError: isOrdersError,
+    refetch,
+  } = useQuery({
+    queryKey: ["productionOrders", tenant?.id],
+    queryFn: () =>
+      getNomaApi(`/api/noma/v1/orders/tenant`, {
+        params: { tenantId: tenant?.id },
+      }),
+  });
 
   // const setupRealtimeSubscription = async () => {
   //   if (!tenant) return;
@@ -191,16 +191,15 @@ export function ProductionView() {
   // };
 
   useEffect(() => {
-
-      if(ordersData) {
-        setOrders(ordersData.data);
+    if (ordersData) {
+      setOrders(ordersData.data);
       setOrders(
         (ordersData.data || []).map((order: Order) => ({
           ...order,
           status: order.status as "pending" | "production" | "done",
         })),
       );
-      }
+    }
     // return () => {
     //   if (channelRef.current) {
     //     channelRef.current.unsubscribe();
