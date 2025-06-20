@@ -30,7 +30,12 @@ import { useTenantStorage } from "@/storage/tenant";
 
 import { Reminder } from "@/lib/types";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { delNomaAPi, getNomaApi, postNomaApi } from "@/lib/apiHelpers";
+import {
+  delNomaAPi,
+  getNomaApi,
+  postNomaApi,
+  putNomaApi,
+} from "@/lib/apiHelpers";
 const RemindersView = () => {
   const { toast } = useToast();
   const { tenant } = useTenantStorage();
@@ -47,6 +52,7 @@ const RemindersView = () => {
     data: remindersData,
     isLoading: isRemindersLoading,
     isError: isRemindersError,
+    refetch: refetchReminders,
   } = useQuery({
     queryKey: ["Reminders"],
     queryFn: () =>
@@ -62,10 +68,11 @@ const RemindersView = () => {
     isPending: isDeleteReminderPending,
   } = useMutation({
     mutationFn: ({ reminderId }: { reminderId: string }) =>
-      delNomaAPi(`/api/noma/v1/orders/delete`, {
+      delNomaAPi(`/api/noma/v1/reminders/delete`, {
         params: { tenantId: tenant?.id, reminderId: reminderId },
       }),
     onSuccess: () => {
+      refetchReminders();
       toast({
         title: "Lembrete excluído com sucesso!",
         description: "O lembrete foi excluÍda com sucesso!",
@@ -95,6 +102,7 @@ const RemindersView = () => {
         { params: { tenantId: tenant?.id } },
       ),
     onSuccess: () => {
+      refetchReminders();
       toast({
         title: "Lembrete criado com sucesso!",
         description: "O lembrete foi criado com sucesso!",
@@ -118,12 +126,13 @@ const RemindersView = () => {
     isPending: isUpdateReminderPending,
   } = useMutation({
     mutationFn: ({ reminderData }: { reminderData: Reminder }) =>
-      postNomaApi(
+      putNomaApi(
         `/api/noma/v1/reminders/update`,
         { reminderData },
-        { params: { tenantId: tenant?.id } },
+        { params: { tenantId: tenant?.id, reminderId: reminderData.id } },
       ),
     onSuccess: () => {
+      refetchReminders();
       toast({
         title: "Lembrete atualizado com sucesso!",
         description: "O lembrete foi atualizado com sucesso!",
@@ -149,14 +158,15 @@ const RemindersView = () => {
     mutationFn: ({
       reminderData,
     }: {
-      reminderData: Omit<Reminder, "Content" | "title" | "createdAt">;
+      reminderData: Omit<Reminder, "content" | "title" | "createdAt">;
     }) =>
-      postNomaApi(
+      putNomaApi(
         `/api/noma/v1/reminders/update`,
         { reminderData },
-        { params: { tenantId: tenant?.id } },
+        { params: { tenantId: tenant?.id, reminderId: reminderData.id } },
       ),
     onSuccess: () => {
+      refetchReminders();
       toast({
         title: "Status do lembrete atualizado com sucesso!",
         description: "O status do lembrete foi atualizado com sucesso!",
@@ -194,7 +204,6 @@ const RemindersView = () => {
       },
     });
 
-    setReminders((prev) => [createReminderData, ...prev]);
     setNewReminderTitle("");
   };
 
@@ -205,14 +214,9 @@ const RemindersView = () => {
         id: reminder.id,
         tenantId: reminder.tenantId,
         isDone: !reminder.isDone,
+        updatedAt: new Date().toISOString(),
       },
     });
-
-    if (updateReminderStatusData) {
-      setReminders((prev) =>
-        prev.map((r) => (r.id === reminder.id ? updateReminderStatusData : r)),
-      );
-    }
   };
 
   const handleOpenDetails = (reminder: Reminder) => {
@@ -223,7 +227,6 @@ const RemindersView = () => {
 
   const handleSaveDetails = async () => {
     if (!selectedReminder) return;
-
     updateReminder({
       reminderData: {
         id: selectedReminder.id,
@@ -234,20 +237,13 @@ const RemindersView = () => {
       },
     });
 
-    if (updateReminderData) {
-      setReminders((prev) =>
-        prev.map((r) =>
-          r.id === selectedReminder.id ? updateReminderData : r,
-        ),
-      );
-      setIsDialogOpen(false);
-    }
+    setIsDialogOpen(false);
+    setSelectedReminder(null);
   };
 
   const handleDelete = async () => {
     if (!selectedReminder) return;
     deleteReminder({ reminderId: selectedReminder.id });
-    setReminders((prev) => prev.filter((r) => r.id !== selectedReminder.id));
     setIsDeleteDialogOpen(false);
     setSelectedReminder(null);
   };

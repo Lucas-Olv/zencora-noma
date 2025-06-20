@@ -19,6 +19,9 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
 import { Reminder } from "@/lib/types";
+import { useMutation } from "@tanstack/react-query";
+import { putNomaApi } from "@/lib/apiHelpers";
+import { useTenantStorage } from "@/storage/tenant";
 
 interface RecentRemindersProps {
   reminders: Reminder[];
@@ -33,8 +36,42 @@ function RecentReminders({
   const [selectedReminder, setSelectedReminder] = useState<Reminder | null>(
     null,
   );
+  const { tenant } = useTenantStorage();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [reminders, setReminders] = useState<Reminder[]>(initialReminders);
+
+  const {
+    mutate: updateReminderStatus,
+    data: updateReminderStatusData,
+    error: isUpdateReminderStatusError,
+    isPending: isUpdateReminderStatusPending,
+  } = useMutation({
+    mutationFn: ({
+      reminderData,
+    }: {
+      reminderData: Omit<Reminder, "content" | "title" | "createdAt">;
+    }) =>
+      putNomaApi(
+        `/api/noma/v1/reminders/update`,
+        { reminderData },
+        { params: { tenantId: tenant?.id, reminderId: reminderData.id } },
+      ),
+    onSuccess: () => {
+      toast({
+        title: "Status do lembrete atualizado com sucesso!",
+        description: "O status do lembrete foi atualizado com sucesso!",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao atualizar status do lembrete",
+        description:
+          "Ocorreu um erro ao atualizar o status do lembrete. Por favor, tente novamente mais tarde.",
+        variant: "destructive",
+      });
+      console.log(error);
+    },
+  });
 
   useEffect(() => {
     const sortedReminders = initialReminders.sort(
@@ -74,32 +111,12 @@ function RecentReminders({
   };
 
   const handleToggleDone = async (reminder: Reminder) => {
-    // try {
-    //   const { data, error } = await remindersService.updateReminder(
-    //     reminder.id,
-    //     {
-    //       is_done: !reminder.is_done,
-    //       tenant_id: reminder.tenant_id,
-    //       title: reminder.title,
-    //       content: reminder.content,
-    //     },
-    //   );
-    //   if (error) throw error;
-    //   if (data) {
-    //     setReminders((prev) =>
-    //       prev.map((r) => (r.id === reminder.id ? data : r)),
-    //     );
-    //   }
-    //   toast({
-    //     title: "Lembrete atualizado com sucesso!",
-    //   });
-    // } catch (error) {
-    //   toast({
-    //     title: "Erro ao atualizar lembrete",
-    //     description: error.message,
-    //     variant: "destructive",
-    //   });
-    // }
+    updateReminderStatus({
+      reminderData: {
+        ...reminder,
+        isDone: !reminder.isDone,
+      },
+    });
   };
 
   const handleOpenDetails = (reminder: Reminder) => {
