@@ -397,7 +397,7 @@ const RemindersView = () => {
             open={isDeleteDialogOpen}
             onOpenChange={setIsDeleteDialogOpen}
           >
-            <AlertDialogContent className="w-[calc(100%-2rem)] max-w-[400px] mx-auto rounded-xl">
+            <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle>Excluir lembrete?</AlertDialogTitle>
                 <AlertDialogDescription>

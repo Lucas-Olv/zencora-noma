@@ -42,7 +42,6 @@ import { Loader2 } from "lucide-react";
 import { useSessionStore } from "@/storage/session";
 import { useSubscriptionStorage } from "@/storage/subscription";
 import { useSettingsStorage } from "@/storage/settings";
-import { db } from "@/lib/db";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -413,7 +412,7 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
                 Sair
               </Button>
             </AlertDialogTrigger>
-            <AlertDialogContent className="w-[calc(100%-2rem)] max-w-[400px] mx-auto rounded-xl">
+            <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle>Confirmar saída</AlertDialogTitle>
                 <AlertDialogDescription>

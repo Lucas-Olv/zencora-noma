@@ -31,7 +31,6 @@ import {
   getStatusDisplay,
   cn,
 } from "@/lib/utils";
-import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import OrderDialog from "./OrderDialog";
 import { SubscriptionGate } from "../subscription/SubscriptionGate";
 import { useTenantStorage } from "@/storage/tenant";

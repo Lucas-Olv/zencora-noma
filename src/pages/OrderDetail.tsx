@@ -378,7 +378,7 @@ const OrderDetail = () => {
                       Excluir
                     </Button>
                   </AlertDialogTrigger>
-                  <AlertDialogContent className="w-[calc(100%-2rem)] max-w-[400px] mx-auto rounded-xl">
+                  <AlertDialogContent>
                     <AlertDialogHeader>
                       <AlertDialogTitle>Excluir encomenda?</AlertDialogTitle>
                       <AlertDialogDescription className="line-clamp-3 max-w-[80dvw] md:max-w-[18dvw]">
