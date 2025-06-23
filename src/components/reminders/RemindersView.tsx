@@ -33,8 +33,8 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   delNomaAPi,
   getNomaApi,
+  patchNomaApi,
   postNomaApi,
-  putNomaApi,
 } from "@/lib/apiHelpers";
 const RemindersView = () => {
   const { toast } = useToast();
@@ -126,7 +126,7 @@ const RemindersView = () => {
     isPending: isUpdateReminderPending,
   } = useMutation({
     mutationFn: ({ reminderData }: { reminderData: Reminder }) =>
-      putNomaApi(
+      patchNomaApi(
         `/api/noma/v1/reminders/update`,
         { reminderData },
         { params: { tenantId: tenant?.id, reminderId: reminderData.id } },
@@ -160,7 +160,7 @@ const RemindersView = () => {
     }: {
       reminderData: Omit<Reminder, "content" | "title" | "createdAt">;
     }) =>
-      putNomaApi(
+      patchNomaApi(
         `/api/noma/v1/reminders/update`,
         { reminderData },
         { params: { tenantId: tenant?.id, reminderId: reminderData.id } },

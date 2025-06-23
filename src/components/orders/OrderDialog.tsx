@@ -28,7 +28,7 @@ import {
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTenantStorage } from "@/storage/tenant";
 import { Order } from "@/lib/types";
-import { postNomaApi, putNomaApi } from "@/lib/apiHelpers";
+import { patchNomaApi, postNomaApi } from "@/lib/apiHelpers";
 
 interface OrderDialogProps {
   open: boolean;
@@ -146,7 +146,7 @@ const OrderDialog = ({
         id: string;
       };
     }) =>
-      putNomaApi(
+      patchNomaApi(
         `/api/noma/v1/orders/update`,
         { tenantId: tenant?.id, orderData },
         {

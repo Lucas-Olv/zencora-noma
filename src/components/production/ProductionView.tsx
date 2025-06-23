@@ -38,8 +38,8 @@ import { SubscriptionGate } from "../subscription/SubscriptionGate";
 import { SettingsGate } from "../settings/SettingsGate";
 import { useTenantStorage } from "@/storage/tenant";
 import { Order } from "@/lib/types";
-import { useQuery } from "@tanstack/react-query";
-import { getNomaApi } from "@/lib/apiHelpers";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { getNomaApi, patchNomaApi } from "@/lib/apiHelpers";
 import { useSessionStore } from "@/storage/session";
 
 function ConnectionStatus({
@@ -114,9 +114,46 @@ export function ProductionView() {
       }),
   });
 
+    const {
+      mutate: updateOrder,
+      error: updateOrderError,
+      data: updateOrderData,
+      isPending: isUpdatingOrder,
+      error: isUpdatingOrderError,
+    } = useMutation({
+      mutationFn: ({
+        orderId, orderStatus
+      }: {
+        orderId: string;
+        orderStatus: string;
+      }) =>
+        patchNomaApi(
+          `/api/noma/v1/orders/update`,
+          { tenantId: tenant?.id, orderData: { id: orderId, status: orderStatus } },
+          {
+            params: { orderId: orderId },
+          },
+        ),
+      onSuccess: () => {
+        toast({
+          title: "Encomenda criada com sucesso",
+          description:
+            "Sua encomenda foi criada com sucesso! Você pode visualizá-la na lista de encomendas.",
+        });
+      },
+      onError: (error) => {
+        toast({
+          title: "Erro ao criar encomenda",
+          description:
+            "ocorreu um erro ao criar a encomenda. Por favor, tente novamente mais tarde.",
+          variant: "destructive",
+        });
+        console.log(error);
+      },
+    });
+
   useEffect(() => {
     if (ordersData) {
-      setOrders(ordersData.data);
       setOrders(
         (ordersData.data || []).map((order: Order) => ({
           ...order,
@@ -126,54 +163,61 @@ export function ProductionView() {
     }
   }, [ordersData]);
 
-    useEffect(() => {
-    if (!session.token || !tenant.id) return;
+  // Realtime socket.io
+  useEffect(() => {
+    if (!session.token || !tenant?.id) return;
 
+    console.log("[SocketIO] Tentando conectar...");
     // Desconecta se já existir um socket
     if (socketRef.current) {
       socketRef.current.disconnect();
     }
 
     const socket = io(import.meta.env.VITE_ZENCORA_NOMA_API_URL, {
-      auth: { token: session.token },
+      auth: { token: session.token, tenantId: tenant.id },
       transports: ["websocket"],
     });
 
     socketRef.current = socket;
 
-    // ✅ Eventos de conexão
+    // Eventos de conexão
     socket.on("connect", () => {
-      const wasConnected = isConnected;
+      console.log("[SocketIO] Conectado!");
       setIsConnected(true);
-
-      if (!wasConnected) {
-        toast({
-          title: "Conexão estabelecida",
-          description: "Recebendo atualizações em tempo real",
-        });
-      }
+      toast({
+        title: "Conexão estabelecida",
+        description: "Recebendo atualizações em tempo real",
+      });
     });
 
-    socket.on("disconnect", () => {
-      const wasConnected = isConnected;
+    socket.on("disconnect", (reason) => {
+      console.log("[SocketIO] Desconectado! Motivo:", reason);
       setIsConnected(false);
-
-      if (wasConnected) {
-        toast({
-          title: "Conexão perdida",
-          description:
-            "Não é possível receber atualizações em tempo real",
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Conexão perdida",
+        description: "Não é possível receber atualizações em tempo real",
+        variant: "destructive",
+      });
     });
 
-    // 🎯 Listeners de pedidos
+    socket.on("connect_error", (err) => {
+      console.error("[SocketIO] Erro de conexão:", err);
+      setIsConnected(false);
+      toast({
+        title: "Erro ao conectar",
+        description: err.message || "Não foi possível conectar ao servidor.",
+        variant: "destructive",
+      });
+    });
+
+    // Listeners de pedidos
     socket.on("order_created", (order) => {
+      console.log("[SocketIO] Pedido criado:", order);
       setOrders((current) => [...current, order]);
     });
 
     socket.on("order_updated", (order) => {
+      console.log("[SocketIO] Pedido atualizado:", order);
       setOrders((current) => {
         const updated = [...current];
         const index = updated.findIndex((o) => o.id === order.id);
@@ -183,15 +227,26 @@ export function ProductionView() {
     });
 
     socket.on("order_deleted", ({ id }) => {
+      console.log("[SocketIO] Pedido deletado:", id);
       setOrders((current) => current.filter((o) => o.id !== id));
     });
 
     return () => {
+      console.log("[SocketIO] Desconectando socket...");
       socket.disconnect();
     };
-  }, [session.token, tenant.id, isConnected]);
+  }, [session.token, tenant.id]);
 
-  const handleReconnect = async () => {};
+  // Handler para reconectar
+  const handleReconnect = () => {
+    if (socketRef.current) {
+      console.log("[SocketIO] Forçando reconexão...");
+      socketRef.current.connect();
+    } else {
+      // Se não houver socket, tenta criar um novo disparando o useEffect
+      setIsConnected(undefined);
+    }
+  };
 
   const pendingOrders = orders
     .filter(
@@ -484,33 +539,10 @@ export function ProductionView() {
   );
 
   const handleChangeOrderStatus = async (id: string, status: string) => {
-    // try {
-    //   const order = orders.find((o) => o.id === id);
-    //   if (!order) return;
-    //   const newStatus = status === "pending" ? "production" : "done";
-    //   const { error } = await supabaseService.orders.updateOrderStatus(
-    //     id,
-    //     newStatus,
-    //   );
-    //   if (error) throw error;
-    //   // Atualiza o estado local
-    //   setOrders(
-    //     orders.map((order) =>
-    //       order.id === id ? { ...order, status: newStatus } : order,
-    //     ),
-    //   );
-    //   toast({
-    //     title: "Status atualizado",
-    //     description: "O status da encomenda foi atualizado com sucesso.",
-    //   });
-    // } catch (error: any) {
-    //   console.error("Error updating order status:", error);
-    //   toast({
-    //     title: "Erro ao atualizar status",
-    //     description: error.message,
-    //     variant: "destructive",
-    //   });
-    // }
+    updateOrder({
+      orderId: id,
+      orderStatus: status === "pending" ? "production" : "done",
+    });
   };
 
   if (isOrdersLoading) {

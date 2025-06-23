@@ -20,7 +20,7 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { Reminder } from "@/lib/types";
 import { useMutation } from "@tanstack/react-query";
-import { putNomaApi } from "@/lib/apiHelpers";
+import { patchNomaApi } from "@/lib/apiHelpers";
 import { useTenantStorage } from "@/storage/tenant";
 
 interface RecentRemindersProps {
@@ -51,7 +51,7 @@ function RecentReminders({
     }: {
       reminderData: Omit<Reminder, "content" | "title" | "createdAt">;
     }) =>
-      putNomaApi(
+      patchNomaApi(
         `/api/noma/v1/reminders/update`,
         { reminderData },
         { params: { tenantId: tenant?.id, reminderId: reminderData.id } },

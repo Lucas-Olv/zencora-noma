@@ -39,7 +39,7 @@ import { SubscriptionGate } from "@/components/subscription/SubscriptionGate";
 import { SettingsGate } from "@/components/settings/SettingsGate";
 import { Order } from "@/lib/types";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { delNomaAPi, getNomaApi, putNomaApi } from "@/lib/apiHelpers";
+import { delNomaAPi, getNomaApi, patchNomaApi } from "@/lib/apiHelpers";
 import { useTenantStorage } from "@/storage/tenant";
 
 const getStatusDisplay = (status: string | null, dueDate?: string | null) => {
@@ -149,7 +149,7 @@ const OrderDetail = () => {
     error: isUpdateOrderStatusError,
   } = useMutation({
     mutationFn: ({ status }: { status: string }) =>
-      putNomaApi(
+      patchNomaApi(
         `/api/noma/v1/orders/update`,
         { tenantId: tenant?.id, orderData: { status } },
         {

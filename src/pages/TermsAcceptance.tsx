@@ -7,7 +7,7 @@ import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import { useToast } from "@/components/ui/use-toast";
 import { useTenantStorage } from "@/storage/tenant";
 import { useMutation } from "@tanstack/react-query";
-import { putNomaApi } from "@/lib/apiHelpers";
+import { patchNomaApi } from "@/lib/apiHelpers";
 
 const TermsAcceptance = () => {
   const [accepted, setAccepted] = useState(false);
@@ -22,7 +22,7 @@ const TermsAcceptance = () => {
     isPending: isAcceptTermsPending,
   } = useMutation({
     mutationFn: () =>
-      putNomaApi("/api/noma/v1/tenants/accept-terms", {
+      patchNomaApi("/api/noma/v1/tenants/accept-terms", {
         tenant: tenant?.id,
         userAcceptedTerms: accepted,
       }),
