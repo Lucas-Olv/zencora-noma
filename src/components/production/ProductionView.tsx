@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { io, Socket } from "socket.io-client";
 import {
   Card,
   CardContent,
@@ -39,6 +40,7 @@ import { useTenantStorage } from "@/storage/tenant";
 import { Order } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
 import { getNomaApi } from "@/lib/apiHelpers";
+import { useSessionStore } from "@/storage/session";
 
 function ConnectionStatus({
   isConnected,
@@ -90,13 +92,13 @@ function ConnectionStatus({
 
 export function ProductionView() {
   const { toast } = useToast();
-  const { isLoading } = useWorkspaceContext();
   const { tenant } = useTenantStorage();
+  const { session } = useSessionStore();
   const [orders, setOrders] = useState<Order[]>([]);
   const [isConnected, setIsConnected] = useState<boolean | undefined>(
     undefined,
   );
-  const channelRef = useRef<any>(null);
+  const socketRef = useRef<Socket | null>(null);
   const navigate = useNavigate();
 
   const {
@@ -112,84 +114,6 @@ export function ProductionView() {
       }),
   });
 
-  // const setupRealtimeSubscription = async () => {
-  //   if (!tenant) return;
-
-  //   // Cleanup existing subscription if any
-  //   if (channelRef.current) {
-  //     channelRef.current.unsubscribe();
-  //   }
-
-  //   // Reset connection state
-  //   setIsConnected(undefined);
-
-  //   try {
-  //     // Set auth for Realtime
-  //     await supabase.realtime.setAuth();
-
-  //     // Create new subscription
-  //     const channel = supabase
-  //       .channel(`orders:${tenant.id}`, {
-  //         config: { private: true },
-  //       })
-  //       .on("broadcast", { event: "INSERT" }, (payload) => {
-  //         if (payload.payload?.record) {
-  //           setOrders((currentOrders) => [
-  //             ...currentOrders,
-  //             payload.payload.record,
-  //           ]);
-  //         }
-  //       })
-  //       .on("broadcast", { event: "UPDATE" }, (payload) => {
-  //         if (payload.payload?.record) {
-  //           setOrders((currentOrders) => {
-  //             const updatedOrders = [...currentOrders];
-  //             const orderIndex = updatedOrders.findIndex(
-  //               (o) => o.id === payload.payload.record.id,
-  //             );
-  //             if (orderIndex >= 0) {
-  //               updatedOrders[orderIndex] = payload.payload.record;
-  //             }
-  //             return updatedOrders;
-  //           });
-  //         }
-  //       })
-  //       .on("broadcast", { event: "DELETE" }, (payload) => {
-  //         if (payload.payload?.old_record?.id) {
-  //           setOrders((currentOrders) =>
-  //             currentOrders.filter(
-  //               (order) => order.id !== payload.payload.old_record.id,
-  //             ),
-  //           );
-  //         }
-  //       })
-  //       .subscribe((status) => {
-  //         const wasConnected = isConnected;
-  //         setIsConnected(status === "SUBSCRIBED");
-
-  //         // Só mostra o toast se já estava conectado e perdeu a conexão
-  //         if (wasConnected && status === "CLOSED") {
-  //           toast({
-  //             title: "Conexão perdida",
-  //             description: "Não é possível receber atualizações em tempo real",
-  //             variant: "destructive",
-  //           });
-  //         } else if (status === "SUBSCRIBED" && !wasConnected) {
-  //           // Só mostra o toast de conexão estabelecida se não estava conectado antes
-  //           toast({
-  //             title: "Conexão estabelecida",
-  //             description: "Recebendo atualizações em tempo real",
-  //           });
-  //         }
-  //       });
-
-  //     channelRef.current = channel;
-  //   } catch (error) {
-  //     console.error("Error setting up realtime subscription:", error);
-  //     setIsConnected(false);
-  //   }
-  // };
-
   useEffect(() => {
     if (ordersData) {
       setOrders(ordersData.data);
@@ -200,12 +124,72 @@ export function ProductionView() {
         })),
       );
     }
-    // return () => {
-    //   if (channelRef.current) {
-    //     channelRef.current.unsubscribe();
-    //   }
-    // };
-  }, [isLoading, tenant]);
+  }, [ordersData]);
+
+    useEffect(() => {
+    if (!session.token || !tenant.id) return;
+
+    // Desconecta se já existir um socket
+    if (socketRef.current) {
+      socketRef.current.disconnect();
+    }
+
+    const socket = io(import.meta.env.VITE_ZENCORA_NOMA_API_URL, {
+      auth: { token: session.token },
+      transports: ["websocket"],
+    });
+
+    socketRef.current = socket;
+
+    // ✅ Eventos de conexão
+    socket.on("connect", () => {
+      const wasConnected = isConnected;
+      setIsConnected(true);
+
+      if (!wasConnected) {
+        toast({
+          title: "Conexão estabelecida",
+          description: "Recebendo atualizações em tempo real",
+        });
+      }
+    });
+
+    socket.on("disconnect", () => {
+      const wasConnected = isConnected;
+      setIsConnected(false);
+
+      if (wasConnected) {
+        toast({
+          title: "Conexão perdida",
+          description:
+            "Não é possível receber atualizações em tempo real",
+          variant: "destructive",
+        });
+      }
+    });
+
+    // 🎯 Listeners de pedidos
+    socket.on("order_created", (order) => {
+      setOrders((current) => [...current, order]);
+    });
+
+    socket.on("order_updated", (order) => {
+      setOrders((current) => {
+        const updated = [...current];
+        const index = updated.findIndex((o) => o.id === order.id);
+        if (index >= 0) updated[index] = order;
+        return updated;
+      });
+    });
+
+    socket.on("order_deleted", ({ id }) => {
+      setOrders((current) => current.filter((o) => o.id !== id));
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [session.token, tenant.id, isConnected]);
 
   const handleReconnect = async () => {};
 
