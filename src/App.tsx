@@ -38,6 +38,7 @@ import TermsAcceptance from "./pages/TermsAcceptance";
 import { useSessionStore } from "./storage/session";
 import { useTenantStorage } from "./storage/tenant";
 import { useSettingsStorage } from "./storage/settings";
+import PasswordVerification from "./components/auth/PasswordVerification";
 const queryClient = new QueryClient();
 
 const BLOCKED_ROUTES = [
@@ -234,6 +235,14 @@ const AppRoutes = () => {
               element={
                 <ProtectedRoute>
                   <SubscriptionExpired />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="verify-password"
+              element={
+                <ProtectedRoute>
+                  <PasswordVerification />
                 </ProtectedRoute>
               }
             />

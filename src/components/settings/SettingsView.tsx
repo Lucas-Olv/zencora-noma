@@ -5,39 +5,63 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/components/ui/use-toast";
 
-import { db } from "@/lib/db";
 import { useSettingsStorage } from "@/storage/settings";
 import { Settings } from "@/lib/types";
+import { useMutation } from "@tanstack/react-query";
+import { patchNomaApi } from "@/lib/apiHelpers";
+import { useTenantStorage } from "@/storage/tenant";
 
 export default function SettingsView() {
-  const { settings } = useSettingsStorage();
+  const { settings, setSettings } = useSettingsStorage();
+  const { tenant} = useTenantStorage();
   const { toast } = useToast();
+
+  const {
+    mutate: updateSettings,
+    error: updateSettingsError,
+    data: updateSettingsData,
+    isPending: isUpdatingSettings,
+  } = useMutation({
+    mutationFn: ({
+      settingsData,
+    }: {
+      settingsData: Settings;
+    }) =>
+      patchNomaApi(
+        `/api/noma/v1/settings/update`,
+        { settingsData },
+        {
+          params: { tenantId: tenant?.id, settingsId: settingsData.id },
+        },
+      ),
+    onSuccess: async (updateSettingsData) => {
+      await setSettings(updateSettingsData.data);
+      toast({
+        title: "Configurações atualizadas",
+        description: "As configurações foram atualizadas com sucesso.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao atualizar configurações",
+        description:
+          "Não foi possível atualizar as configurações. Tente novamente.",
+        variant: "destructive",
+      });
+      console.log(error);
+    },
+  });
 
   const handleUpdateSettings = async (
     field: keyof Settings,
     value: boolean,
   ) => {
-    // try {
-    //   if (!settings || !tenant?.id) return;
-    //   const updatedSettings = {
-    //     ...settings,
-    //     [field]: value,
-    //     tenant_id: tenant.id,
-    //   };
-    //   await updateSettings(updatedSettings);
-    //   await db.updateSettingsData(updatedSettings);
-    //   toast({
-    //     title: "Configurações atualizadas",
-    //     description: "As configurações foram atualizadas com sucesso.",
-    //   });
-    // } catch (error) {
-    //   toast({
-    //     title: "Erro ao atualizar configurações",
-    //     description:
-    //       "Não foi possível atualizar as configurações. Tente novamente.",
-    //     variant: "destructive",
-    //   });
-    // }
+    if (!settings) return;
+    const updatedSettings: Settings = {
+      ...settings,
+      [field]: value,
+    };
+    updateSettings({ settingsData: updatedSettings });
   };
 
   return (

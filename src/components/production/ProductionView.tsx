@@ -119,7 +119,6 @@ export function ProductionView() {
       error: updateOrderError,
       data: updateOrderData,
       isPending: isUpdatingOrder,
-      error: isUpdatingOrderError,
     } = useMutation({
       mutationFn: ({
         orderId, orderStatus
