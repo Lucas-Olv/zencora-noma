@@ -37,7 +37,7 @@ import { SubscriptionGate } from "../subscription/SubscriptionGate";
 import { useTenantStorage } from "@/storage/tenant";
 import { Order } from "@/lib/types";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { getNomaApi } from "@/lib/apiHelpers";
+import { getNomaApi, patchNomaApi } from "@/lib/apiHelpers";
 
 const OrdersView = () => {
   const { toast } = useToast();
@@ -49,6 +49,41 @@ const OrdersView = () => {
   const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
   const [dialogOrderId, setDialogOrderId] = useState<string | undefined>();
   const printRef = useRef<HTMLDivElement>(null);
+          const {
+          mutate: updateOrder,
+          error: updateOrderError,
+          data: updateOrderData,
+          isPending: isUpdatingOrder,
+          error: isUpdatingOrderError,
+        } = useMutation({
+          mutationFn: ({
+            orderId, orderStatus
+          }: {
+            orderId: string;
+            orderStatus: string;
+          }) =>
+            patchNomaApi(
+              `/api/noma/v1/orders/update`,
+              { tenantId: tenant?.id, orderData: { id: orderId, status: orderStatus } },
+              {
+                params: { orderId: orderId },
+              },
+            ),
+          onSuccess: () => {
+      toast({
+        title: "Status atualizado!",
+        description: `A encomenda foi marcada como ${status === "pending" ? "pendente" : status === "production" ? "Produção" : "concluída"}.`,
+      });
+          },
+          onError: (error) => {
+      toast({
+        title: "Erro ao atualizar status",
+        description: error.message,
+        variant: "destructive",
+      });
+            console.log(error);
+          },
+        });
   const {
     data: ordersData,
     isLoading: isOrdersLoading,
@@ -157,28 +192,11 @@ const OrdersView = () => {
     id: string,
     targetStatus: "pending" | "production" | "done",
   ) => {
-    // try {
-    //   const { error } = await supabaseService.orders.updateOrderStatus(
-    //     id,
-    //     targetStatus,
-    //   );
-    //   if (error) throw error;
-    //   setOrders(
-    //     orders.map((order) =>
-    //       order.id === id ? { ...order, status: targetStatus } : order,
-    //     ),
-    //   );
-    //   toast({
-    //     title: "Status atualizado!",
-    //     description: `A encomenda foi marcada como ${targetStatus === "pending" ? "pendente" : targetStatus === "production" ? "Produção" : "concluída"}.`,
-    //   });
-    // } catch (error: any) {
-    //   toast({
-    //     title: "Erro ao atualizar status",
-    //     description: error.message,
-    //     variant: "destructive",
-    //   });
-    // }
+
+    updateOrder({
+      orderId: id,
+      orderStatus: targetStatus,
+    });
   };
 
   const handleNewOrder = () => {
