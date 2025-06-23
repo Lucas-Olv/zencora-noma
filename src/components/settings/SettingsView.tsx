@@ -13,7 +13,7 @@ import { useTenantStorage } from "@/storage/tenant";
 
 export default function SettingsView() {
   const { settings, setSettings } = useSettingsStorage();
-  const { tenant} = useTenantStorage();
+  const { tenant } = useTenantStorage();
   const { toast } = useToast();
 
   const {
@@ -22,11 +22,7 @@ export default function SettingsView() {
     data: updateSettingsData,
     isPending: isUpdatingSettings,
   } = useMutation({
-    mutationFn: ({
-      settingsData,
-    }: {
-      settingsData: Settings;
-    }) =>
+    mutationFn: ({ settingsData }: { settingsData: Settings }) =>
       patchNomaApi(
         `/api/noma/v1/settings/update`,
         { settingsData },

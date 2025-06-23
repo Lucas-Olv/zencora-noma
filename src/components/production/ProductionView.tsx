@@ -114,42 +114,46 @@ export function ProductionView() {
       }),
   });
 
-    const {
-      mutate: updateOrder,
-      error: updateOrderError,
-      data: updateOrderData,
-      isPending: isUpdatingOrder,
-    } = useMutation({
-      mutationFn: ({
-        orderId, orderStatus
-      }: {
-        orderId: string;
-        orderStatus: string;
-      }) =>
-        patchNomaApi(
-          `/api/noma/v1/orders/update`,
-          { tenantId: tenant?.id, orderData: { id: orderId, status: orderStatus } },
-          {
-            params: { orderId: orderId },
-          },
-        ),
-      onSuccess: () => {
-        toast({
-          title: "Encomenda criada com sucesso",
-          description:
-            "Sua encomenda foi criada com sucesso! Você pode visualizá-la na lista de encomendas.",
-        });
-      },
-      onError: (error) => {
-        toast({
-          title: "Erro ao criar encomenda",
-          description:
-            "ocorreu um erro ao criar a encomenda. Por favor, tente novamente mais tarde.",
-          variant: "destructive",
-        });
-        console.log(error);
-      },
-    });
+  const {
+    mutate: updateOrder,
+    error: updateOrderError,
+    data: updateOrderData,
+    isPending: isUpdatingOrder,
+  } = useMutation({
+    mutationFn: ({
+      orderId,
+      orderStatus,
+    }: {
+      orderId: string;
+      orderStatus: string;
+    }) =>
+      patchNomaApi(
+        `/api/noma/v1/orders/update`,
+        {
+          tenantId: tenant?.id,
+          orderData: { id: orderId, status: orderStatus },
+        },
+        {
+          params: { orderId: orderId },
+        },
+      ),
+    onSuccess: () => {
+      toast({
+        title: "Encomenda criada com sucesso",
+        description:
+          "Sua encomenda foi criada com sucesso! Você pode visualizá-la na lista de encomendas.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao criar encomenda",
+        description:
+          "ocorreu um erro ao criar a encomenda. Por favor, tente novamente mais tarde.",
+        variant: "destructive",
+      });
+      console.log(error);
+    },
+  });
 
   useEffect(() => {
     if (ordersData) {

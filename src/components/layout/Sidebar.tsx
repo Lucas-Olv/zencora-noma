@@ -101,7 +101,15 @@ interface NavButtonProps {
   settings: any;
 }
 
-const NavButton = ({ item, isActive, onClick, isTrial, subscription, isBlocked, settings }: NavButtonProps) => {
+const NavButton = ({
+  item,
+  isActive,
+  onClick,
+  isTrial,
+  subscription,
+  isBlocked,
+  settings,
+}: NavButtonProps) => {
   const { blockedRoutes, allowedRoutes } = useSubscriptionRoutes();
 
   // Verifica se o usuário tem acesso ao item baseado no plano
@@ -379,7 +387,7 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
                 "w-full flex gap-3 justify-start h-10",
                 location.pathname === "/settings"
                   ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                  : ""
+                  : "",
               )}
               onClick={() => handleNavigation("/settings")}
             >

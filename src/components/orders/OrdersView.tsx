@@ -48,41 +48,45 @@ const OrdersView = () => {
   const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
   const [dialogOrderId, setDialogOrderId] = useState<string | undefined>();
   const printRef = useRef<HTMLDivElement>(null);
-          const {
-          mutate: updateOrder,
-          error: updateOrderError,
-          data: updateOrderData,
-          isPending: isUpdatingOrder,
-          error: isUpdatingOrderError,
-        } = useMutation({
-          mutationFn: ({
-            orderId, orderStatus
-          }: {
-            orderId: string;
-            orderStatus: string;
-          }) =>
-            patchNomaApi(
-              `/api/noma/v1/orders/update`,
-              { tenantId: tenant?.id, orderData: { id: orderId, status: orderStatus } },
-              {
-                params: { orderId: orderId },
-              },
-            ),
-          onSuccess: () => {
+  const {
+    mutate: updateOrder,
+    error: updateOrderError,
+    data: updateOrderData,
+    isPending: isUpdatingOrder,
+    error: isUpdatingOrderError,
+  } = useMutation({
+    mutationFn: ({
+      orderId,
+      orderStatus,
+    }: {
+      orderId: string;
+      orderStatus: string;
+    }) =>
+      patchNomaApi(
+        `/api/noma/v1/orders/update`,
+        {
+          tenantId: tenant?.id,
+          orderData: { id: orderId, status: orderStatus },
+        },
+        {
+          params: { orderId: orderId },
+        },
+      ),
+    onSuccess: () => {
       toast({
         title: "Status atualizado!",
         description: `A encomenda foi marcada como ${status === "pending" ? "pendente" : status === "production" ? "Produção" : "concluída"}.`,
       });
-          },
-          onError: (error) => {
+    },
+    onError: (error) => {
       toast({
         title: "Erro ao atualizar status",
         description: error.message,
         variant: "destructive",
       });
-            console.log(error);
-          },
-        });
+      console.log(error);
+    },
+  });
   const {
     data: ordersData,
     isLoading: isOrdersLoading,
@@ -191,7 +195,6 @@ const OrdersView = () => {
     id: string,
     targetStatus: "pending" | "production" | "done",
   ) => {
-
     updateOrder({
       orderId: id,
       orderStatus: targetStatus,
