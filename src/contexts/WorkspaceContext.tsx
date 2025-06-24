@@ -10,6 +10,7 @@ import { postNomaApi } from "@/lib/apiHelpers";
 interface WorkspaceContextType {
   loadWorkspace: () => Promise<void>;
   isLoading: boolean;
+  clearWorkspaceData: () => void;
 }
 
 const WorkspaceContext = createContext<WorkspaceContextType | undefined>(
@@ -61,10 +62,20 @@ export const WorkspaceProvider = ({
     setIsLoading(false);
   };
 
+    const clearWorkspaceData = () => {
+    useSessionStore.getState().clearSession();
+    useProductStore.getState().clearProduct();
+    useSubscriptionStorage.getState().clearSubscription();
+    useTenantStorage.getState().clearTenant();
+    useSettingsStorage.getState().clearSettings();
+    db.clearWorkspaceData();
+  }
+
   return (
     <WorkspaceContext.Provider
       value={{
         loadWorkspace,
+        clearWorkspaceData,
         isLoading,
       }}
     >

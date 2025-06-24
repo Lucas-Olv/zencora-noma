@@ -42,6 +42,9 @@ import { Loader2 } from "lucide-react";
 import { useSessionStore } from "@/storage/session";
 import { useSubscriptionStorage } from "@/storage/subscription";
 import { useSettingsStorage } from "@/storage/settings";
+import { useMutation } from "@tanstack/react-query";
+import { postCoreApi } from "@/lib/apiHelpers";
+import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -111,6 +114,7 @@ const NavButton = ({
   settings,
 }: NavButtonProps) => {
   const { blockedRoutes, allowedRoutes } = useSubscriptionRoutes();
+  
 
   // Verifica se o usuário tem acesso ao item baseado no plano
   const hasPlanAccess =
@@ -215,7 +219,25 @@ const NavButton = ({
 const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { clearWorkspaceData } = useWorkspaceContext();
   const { toast } = useToast();
+
+    const { mutate: logout } = useMutation({
+    mutationFn: () => postCoreApi("/api/core/v1/signout"),
+    onSuccess: () => {
+      clearWorkspaceData();
+      toast({
+        title: "Sessão encerrada",
+        description: "Sua sessão foi encerrada com sucesso. Até breve!",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao sair",
+        description: error.message,
+      });
+    },
+  });
 
   // Zustand stores
   const { session } = useSessionStore();
@@ -252,55 +274,26 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
     subscription?.plan !== "enterprise";
 
   const handleProfileClick = async () => {
-    // try {
-    //   const { data } = await supabase.auth.getSession();
-    //   if (!data?.session) {
-    //     toast({
-    //       title: "Erro ao acessar perfil",
-    //       description: "Você precisa estar logado para acessar seu perfil.",
-    //       variant: "destructive",
-    //     });
-    //     return;
-    //   }
-    //   const websiteUrl = import.meta.env.VITE_ZENCORA_ACCOUNT_WEBSITE;
-    //   if (!websiteUrl) {
-    //     toast({
-    //       title: "Erro ao acessar perfil",
-    //       description: "URL do site de perfil não configurada.",
-    //       variant: "destructive",
-    //     });
-    //     return;
-    //   }
-    //   const accessToken = data.session.access_token;
-    //   const refreshToken = data.session.refresh_token;
-    //   const redirectUrl = `${websiteUrl}account?access_token=${accessToken}&refresh_token=${refreshToken}`;
-    //   window.location.href = redirectUrl;
-    // } catch (error: any) {
-    //   toast({
-    //     title: "Erro ao acessar perfil",
-    //     description: error.message,
-    //     variant: "destructive",
-    //   });
-    // }
-  };
-
-  const handleLogout = async () => {
-    // try {
-    //   await db.clearWorkspaceData();
-    //   await supabase.auth.signOut();
-    //   toast({
-    //     title: "Logout realizado com sucesso",
-    //     description: "Você foi desconectado com sucesso.",
-    //   });
-    //   // Redireciona para a landing page
-    //   window.location.href = "/";
-    // } catch (error: any) {
-    //   toast({
-    //     title: "Erro ao fazer logout",
-    //     description: error.message,
-    //     variant: "destructive",
-    //   });
-    // }
+    try {
+      const websiteUrl = import.meta.env.VITE_ZENCORA_ACCOUNT_WEBSITE;
+      if (!websiteUrl) {
+        toast({
+          title: "Erro ao acessar perfil",
+          description: "URL do site de perfil não configurada.",
+          variant: "destructive",
+        });
+        return;
+      }
+      const accessToken = session?.token;
+      const redirectUrl = `${websiteUrl}account?access_token=${accessToken}`;
+      window.location.href = redirectUrl;
+    } catch (error: any) {
+      toast({
+        title: "Erro ao acessar perfil",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   const handleNavigation = (href: string) => {
@@ -433,7 +426,10 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
                   Cancelar
                 </AlertDialogCancel>
                 <AlertDialogAction
-                  onClick={handleLogout}
+                  onClick={() => {
+                    logout();
+                    closeSidebar();
+                  }}
                   className="w-full sm:w-auto bg-red-600 hover:bg-red-700"
                 >
                   Sair

@@ -175,7 +175,7 @@ export class ZencoraNomaDB extends Dexie {
     }
   }
 
-  async clearWorkspaceDataData(): Promise<void> {
+  async clearWorkspaceData(): Promise<void> {
     await this.workspaceData.clear();
   }
 }
