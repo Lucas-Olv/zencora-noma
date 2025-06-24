@@ -21,6 +21,17 @@ export const postCoreApiPublic = <T = any>(
     .then((res) => res.data);
 };
 
+export const postCoreApi = <T = any>(
+  url: string,
+  data?: any,
+  config: CustomAxiosConfig = { withCredentials: true },
+): Promise<T> => {
+  return coreApi
+    .post<T>(url, data, { withCredentials: true, ...config })
+    .then((res) => res.data);
+};
+
+
 export const getCoreApi = <T = any>(
   url: string,
   config: CustomAxiosConfig = { withCredentials: true },
