@@ -8,6 +8,9 @@ import {
 } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
+import { useSubscriptionStorage } from "@/storage/subscription";
+import { useSessionStore } from "@/storage/session";
+import dayjs from "dayjs";
 
 interface SubscriptionRoutesContextType {
   blockedRoutes: string[];
@@ -56,19 +59,11 @@ export const SubscriptionGate = ({
   blockMode = "hide",
   onBlock,
 }: Props) => {
-  const {
-    isLoading: subscriptionLoading,
-    isLoading: workspaceLoading,
-    isTrial,
-    isActive,
-    isBlocked,
-    subscription,
-    isExpired,
-    inGracePeriod,
-  } = useWorkspaceContext();
-  const { isAuthenticated } = useWorkspaceContext();
   const navigate = useNavigate();
   const location = useLocation();
+  const { isLoading } = useWorkspaceContext();
+  const { session } = useSessionStore();
+  const { subscription } = useSubscriptionStorage();
 
   const path = location.pathname;
 
@@ -108,33 +103,36 @@ export const SubscriptionGate = ({
       : false);
 
   // Verifica se o status da assinatura permite acesso
-  const allowedByStatus = onlyActive 
-    ? (isActive && !isExpired) || inGracePeriod // Se onlyActive, verifica se está ativo E não expirado OU em período de graça
-    : (isTrial || (isActive && !isExpired) || inGracePeriod); // Se não onlyActive, verifica se está em trial OU (ativo E não expirado) OU em período de graça
+  const allowedByStatus = onlyActive
+    ? (subscription?.status === "active" &&
+        dayjs(subscription?.expiresAt).isBefore(dayjs())) ||
+      dayjs(subscription?.gracePeriodUntil).isAfter(dayjs()) // Se onlyActive, verifica se está ativo E não expirado OU em período de graça
+    : subscription?.isTrial ||
+      (subscription?.status === "active" &&
+        dayjs(subscription?.expiresAt).isAfter(dayjs())) ||
+      dayjs(subscription?.gracePeriodUntil).isBefore(dayjs()); // Se não onlyActive, verifica se está em trial OU (ativo E não expirado) OU em período de graça
 
   // Verifica se o plano permite acesso
-  const isProPlan = subscription?.plan === "pro" || subscription?.plan === "enterprise";
+  const isProPlan =
+    subscription?.plan === "pro" || subscription?.plan === "enterprise";
   const isEssentialPlan = subscription?.plan === "essential";
 
   // Determina se deve bloquear o acesso
   const shouldBlock =
-    isAuthenticated &&
-    path !== DEFAULT_ALLOWED_ROUTE &&
-    // Se a assinatura é válida (não está bloqueada e tem status permitido), permite acesso por padrão
-    // Se a assinatura é inválida, aplica as regras do Gate
-    (isBlocked || !allowedByStatus) &&
-    // Se tiver allowedRoutes, usa a lógica de allowed
-    ((allowedRoutes?.length && !isRouteAllowed) ||
-      // Se tiver blockedRoutes, usa a lógica de blocked
-      (blockedRoutes?.length && isRouteBlocked) ||
-      // Se não tiver nenhum dos dois, bloqueia por padrão
-      (!allowedRoutes?.length && !blockedRoutes?.length)) ||
+    (session &&
+      path !== DEFAULT_ALLOWED_ROUTE &&
+      // Se a assinatura é válida (não está bloqueada e tem status permitido), permite acesso por padrão
+      // Se a assinatura é inválida, aplica as regras do Gate
+      !allowedByStatus &&
+      // Se tiver allowedRoutes, usa a lógica de allowed
+      ((allowedRoutes?.length && !isRouteAllowed) ||
+        // Se tiver blockedRoutes, usa a lógica de blocked
+        (blockedRoutes?.length && isRouteBlocked) ||
+        // Se não tiver nenhum dos dois, bloqueia por padrão
+        (!allowedRoutes?.length && !blockedRoutes?.length))) ||
     // Bloqueia acesso ao painel de produção e configurações para plano essencial
-    (isEssentialPlan && (path.startsWith("/production") || path.startsWith("/settings")));
-
-  // Verifica se ainda está carregando
-  const isLoading =
-    isAuthenticated && (subscriptionLoading || workspaceLoading);
+    (isEssentialPlan &&
+      (path.startsWith("/production") || path.startsWith("/settings")));
 
   useEffect(() => {
     if (!isLoading && shouldBlock && redirectTo && path !== redirectTo) {
@@ -147,7 +145,7 @@ export const SubscriptionGate = ({
   }, [isLoading, shouldBlock, redirectTo, navigate, onBlock, path]);
 
   // Se não estiver autenticado, renderiza normalmente
-  if (!isAuthenticated) {
+  if (!session) {
     return <>{children}</>;
   }
 

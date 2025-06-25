@@ -12,9 +12,7 @@ import {
 } from "@/components/ui/card";
 import { LoadingState } from "@/components/ui/loading-state";
 import { Badge } from "@/components/ui/badge";
-import { Tables } from "@/integrations/supabase/types";
-
-type Order = Tables<"orders">;
+import { Order } from "@/lib/types";
 
 interface RecentOrdersProps {
   orders: Order[];
@@ -41,7 +39,7 @@ function RecentOrders({ orders, loading = false }: RecentOrdersProps) {
         >
           <div className="space-y-4">
             {orders.map((order) => {
-              const isOverdue = new Date(order.due_date) < new Date();
+              const isOverdue = new Date(order.dueDate) < new Date();
               const status =
                 isOverdue && order.status === "pending"
                   ? "overdue"
@@ -59,7 +57,7 @@ function RecentOrders({ orders, loading = false }: RecentOrdersProps) {
                           {getOrderCode(order.id)}
                         </p>
                         <h3 className="font-semibold truncate">
-                          {order.client_name}
+                          {order.clientName}
                         </h3>
                       </div>
                       <div className="mt-1">
@@ -71,8 +69,8 @@ function RecentOrders({ orders, loading = false }: RecentOrdersProps) {
                         <span className="text-sm text-muted-foreground">
                           Entrega:{" "}
                           <span className="font-semibold">
-                            {order.due_date
-                              ? formatDate(order.due_date)
+                            {order.dueDate
+                              ? formatDate(order.dueDate)
                               : "Sem data"}
                           </span>
                         </span>

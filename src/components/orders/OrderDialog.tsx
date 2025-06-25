@@ -11,10 +11,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { supabaseService, OrderType } from "@/services/supabaseService";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { id, ptBR } from "date-fns/locale";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -26,25 +25,28 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTenantStorage } from "@/storage/tenant";
+import { Order } from "@/lib/types";
+import { patchNomaApi, postNomaApi } from "@/lib/apiHelpers";
 
 interface OrderDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   mode: "create" | "edit";
   orderId?: string;
-  orderData?: OrderType;
-  onSuccess?: (updatedOrder: OrderType) => void;
+  orderData?: Order;
+  onSuccess?: (updatedOrder: Order) => void;
 }
 
 const formSchema = z.object({
-  client_name: z.string().min(1, "Por favor, informe o nome do cliente"),
-  phone: z
+  clientName: z.string().min(1, "Por favor, informe o nome do cliente"),
+  clientPhone: z
     .string()
     .regex(/^$|^\(\d{2}\) \d{5}-\d{4}$/, "O telefone inválido")
     .optional(),
   description: z.string().min(1, "Por favor, descreva a encomenda"),
-  due_date: z
+  dueDate: z
     .string()
     .min(1, "Por favor, selecione a data de entrega")
     .refine((date) => {
@@ -58,7 +60,7 @@ const formSchema = z.object({
 
       return selectedDate.getTime() >= today.getTime();
     }, "A data de entrega não pode ser anterior a hoje"),
-  due_time: z.string().min(1, "Por favor, selecione a hora de entrega"),
+  dueTime: z.string().min(1, "Por favor, selecione a hora de entrega"),
   price: z
     .string()
     .min(1, "Por favor, informe um valor válido")
@@ -79,41 +81,117 @@ const OrderDialog = ({
   onSuccess,
 }: OrderDialogProps) => {
   const { toast } = useToast();
-  const { tenant } = useWorkspaceContext();
-  const [loading, setLoading] = useState(false);
+  const { tenant } = useTenantStorage();
   const queryClient = useQueryClient();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      client_name: "",
-      phone: "",
+      clientName: "",
+      clientPhone: "",
       description: "",
-      due_date: "",
-      due_time: "12:00",
+      dueDate: "",
+      dueTime: "12:00",
       price: "",
+    },
+  });
+  const {
+    mutate: createOrder,
+    error: createOrderError,
+    data: createOrderData,
+    isPending: isCreatingOrder,
+    error: isCreatingOrderError,
+  } = useMutation({
+    mutationFn: ({
+      orderData,
+    }: {
+      orderData: Omit<Order, "id" | "createdAt" | "updatedAt" | "tenantId">;
+    }) =>
+      postNomaApi(
+        "/api/noma/v1/orders/create",
+        { orderData },
+        { params: { tenantId: tenant?.id } },
+      ),
+    onSuccess: () => {
+      onSuccess?.(createOrderData);
+      onOpenChange(false);
+      toast({
+        title: "Encomenda criada com sucesso",
+        description:
+          "Sua encomenda foi criada com sucesso! Você pode visualizá-la na lista de encomendas.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao criar encomenda",
+        description:
+          "ocorreu um erro ao criar a encomenda. Por favor, tente novamente mais tarde.",
+        variant: "destructive",
+      });
+      console.log(error);
+    },
+  });
+
+  const {
+    mutate: updateOrder,
+    error: updateOrderError,
+    data: updateOrderData,
+    isPending: isUpdatingOrder,
+    error: isUpdatingOrderError,
+  } = useMutation({
+    mutationFn: ({
+      orderData,
+    }: {
+      orderData: Omit<Order, "createdAt" | "updatedAt" | "tenantId" | "id"> & {
+        id: string;
+      };
+    }) =>
+      patchNomaApi(
+        `/api/noma/v1/orders/update`,
+        { tenantId: tenant?.id, orderData },
+        {
+          params: { orderId: orderData.id },
+        },
+      ),
+    onSuccess: () => {
+      onSuccess?.(updateOrderData);
+      onOpenChange(false);
+      toast({
+        title: "Encomenda criada com sucesso",
+        description:
+          "Sua encomenda foi criada com sucesso! Você pode visualizá-la na lista de encomendas.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao criar encomenda",
+        description:
+          "ocorreu um erro ao criar a encomenda. Por favor, tente novamente mais tarde.",
+        variant: "destructive",
+      });
+      console.log(error);
     },
   });
 
   useEffect(() => {
     if (open) {
       if (mode === "edit" && orderData) {
-        const date = new Date(orderData.due_date);
+        const date = new Date(orderData.dueDate);
         form.reset({
-          client_name: orderData.client_name,
-          phone: orderData.phone || "",
+          clientName: orderData.clientName,
+          clientPhone: orderData.clientPhone || "",
           description: orderData.description || "",
-          due_date: format(date, "yyyy-MM-dd"),
-          due_time: format(date, "HH:mm"),
-          price: orderData.price.toFixed(2).replace(".", ","),
+          dueDate: format(date, "yyyy-MM-dd"),
+          dueTime: format(date, "HH:mm"),
+          price: orderData.price.replace(".", ","),
         });
       } else {
         form.reset({
-          client_name: "",
-          phone: "",
+          clientName: "",
+          clientPhone: "",
           description: "",
-          due_date: "",
-          due_time: "12:00",
+          dueDate: "",
+          dueTime: "12:00",
           price: "",
         });
       }
@@ -154,87 +232,24 @@ const OrderDialog = ({
 
   const onSubmit = async (data: FormValues) => {
     if (!tenant) return;
+    const [hours, minutes] = data.dueTime.split(":");
+    const dueDate = new Date(data.dueDate + "T00:00:00");
+    dueDate.setHours(parseInt(hours), parseInt(minutes));
 
-    setLoading(true);
-    try {
-      const [hours, minutes] = data.due_time.split(":");
-      // Criar a data no fuso horário local
-      const dueDate = new Date(data.due_date + "T00:00:00");
-      dueDate.setHours(parseInt(hours), parseInt(minutes));
+    const orderData = {
+      clientName: data.clientName,
+      clientPhone: data.clientPhone || null,
+      description: data.description,
+      dueDate: dueDate.toISOString(),
+      price: data.price.replace(".", "").replace(",", "."),
+      status: "pending" as const,
+      id: mode === "edit" && orderId ? orderId : undefined,
+    };
 
-      const orderData = {
-        client_name: data.client_name,
-        phone: data.phone || null,
-        description: data.description,
-        due_date: dueDate.toISOString(),
-        price: parseFloat(data.price.replace(".", "").replace(",", ".")),
-        tenant_id: tenant.id,
-        status: "pending" as const,
-        ...(mode === "edit" && orderId ? { id: orderId } : {}),
-      };
-
-      if (mode === "create") {
-        const { data: newOrder, error } =
-          await supabaseService.orders.createOrder(orderData);
-        if (error) throw error;
-
-        // Atualiza a lista otimisticamente
-        queryClient.setQueryData<OrderType[]>(
-          ["orders", tenant.id],
-          (old = []) => {
-            return [newOrder as OrderType, ...old];
-          },
-        );
-
-        // Invalida a query para forçar uma nova busca
-        await queryClient.invalidateQueries({
-          queryKey: ["orders", tenant.id],
-        });
-
-        onSuccess?.(newOrder as OrderType);
-
-        toast({
-          title: "Encomenda criada!",
-          description: "A encomenda foi criada com sucesso.",
-        });
-      } else if (mode === "edit" && orderId) {
-        const { data: updatedOrder, error } =
-          await supabaseService.orders.updateOrder(orderId, orderData);
-        if (error) throw error;
-
-        // Atualiza a lista otimisticamente
-        queryClient.setQueryData<OrderType[]>(
-          ["orders", tenant.id],
-          (old = []) => {
-            return old.map((order) =>
-              order.id === orderId ? (updatedOrder as OrderType) : order,
-            );
-          },
-        );
-
-        // Invalida a query para forçar uma nova busca
-        await queryClient.invalidateQueries({
-          queryKey: ["orders", tenant.id],
-        });
-
-        // Notifica o componente pai sobre a atualização
-        onSuccess?.(updatedOrder as OrderType);
-
-        toast({
-          title: "Encomenda atualizada!",
-          description: "A encomenda foi atualizada com sucesso.",
-        });
-      }
-
-      onOpenChange(false);
-    } catch (error: any) {
-      toast({
-        title: "Erro ao salvar encomenda",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
+    if (mode === "create") {
+      createOrder({ orderData });
+    } else {
+      updateOrder({ orderData });
     }
   };
 
@@ -256,7 +271,7 @@ const OrderDialog = ({
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="client_name"
+              name="clientName"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Nome do Cliente</FormLabel>
@@ -270,7 +285,7 @@ const OrderDialog = ({
 
             <FormField
               control={form.control}
-              name="phone"
+              name="clientPhone"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Telefone do Cliente</FormLabel>
@@ -310,7 +325,7 @@ const OrderDialog = ({
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="due_date"
+                name="dueDate"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Data de Entrega</FormLabel>
@@ -328,7 +343,7 @@ const OrderDialog = ({
 
               <FormField
                 control={form.control}
-                name="due_time"
+                name="dueTime"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Hora de Entrega</FormLabel>
@@ -373,10 +388,10 @@ const OrderDialog = ({
               </Button>
               <Button
                 type="submit"
-                disabled={loading}
+                disabled={isCreatingOrder || isUpdatingOrder}
                 className="w-full sm:w-auto"
               >
-                {loading ? "Salvando..." : "Salvar"}
+                {isCreatingOrder || isUpdatingOrder ? "Salvando..." : "Salvar"}
               </Button>
             </div>
           </form>

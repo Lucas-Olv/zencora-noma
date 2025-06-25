@@ -16,11 +16,10 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { Tables } from "@/integrations/supabase/types";
 import { parseDate } from "@/lib/utils";
 import { LoadingState } from "@/components/ui/loading-state";
 import { ChartBarIcon } from "lucide-react";
-type Order = Tables<"orders">;
+import { Order } from "@/lib/types";
 
 interface PerformanceMetricsProps {
   orders: Order[];
@@ -43,14 +42,14 @@ const calculateRevenueVariation = (orders: Order[]) => {
 
   const currentWeekRevenue = orders
     .filter((order) => {
-      const orderDate = parseDate(order.created_at);
+      const orderDate = parseDate(order.createdAt);
       return orderDate && orderDate >= lastWeek && orderDate <= today;
     })
     .reduce((sum, order) => sum + (order.price || 0), 0);
 
   const previousWeekRevenue = orders
     .filter((order) => {
-      const orderDate = parseDate(order.created_at);
+      const orderDate = parseDate(order.createdAt);
       return orderDate && orderDate >= twoWeeksAgo && orderDate < lastWeek;
     })
     .reduce((sum, order) => sum + (order.price || 0), 0);
@@ -76,12 +75,12 @@ const calculateOrdersVariation = (orders: Order[]) => {
   twoWeeksAgo.setDate(lastWeek.getDate() - 7);
 
   const currentWeekOrders = orders.filter((order) => {
-    const orderDate = parseDate(order.created_at);
+    const orderDate = parseDate(order.createdAt);
     return orderDate && orderDate >= lastWeek && orderDate <= today;
   }).length;
 
   const previousWeekOrders = orders.filter((order) => {
-    const orderDate = parseDate(order.created_at);
+    const orderDate = parseDate(order.createdAt);
     return orderDate && orderDate >= twoWeeksAgo && orderDate < lastWeek;
   }).length;
 
@@ -113,7 +112,7 @@ const getDailyData = (orders: Order[]) => {
   });
 
   orders.forEach((order) => {
-    const orderDate = parseDate(order.created_at);
+    const orderDate = parseDate(order.createdAt);
     if (orderDate && orderDate >= lastWeek && orderDate <= today) {
       const dayIndex = Math.floor(
         (orderDate.getTime() - lastWeek.getTime()) / (1000 * 60 * 60 * 24),

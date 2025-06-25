@@ -13,9 +13,7 @@ import {
 } from "@/components/ui/card";
 import { LoadingState } from "@/components/ui/loading-state";
 import { Badge } from "@/components/ui/badge";
-import { Tables } from "@/integrations/supabase/types";
-
-type Order = Tables<"orders">;
+import { Order } from "@/lib/types";
 
 interface DeliveryCalendarProps {
   orders: Order[];
@@ -29,31 +27,31 @@ function DeliveryCalendar({ orders, loading = false }: DeliveryCalendarProps) {
 
   const overdueOrders =
     orders?.filter((order) => {
-      const orderDate = parseDate(order.due_date);
+      const orderDate = parseDate(order.dueDate);
       return orderDate && isBefore(orderDate, today) && order.status !== "done";
     }) || [];
 
   const todayOrders =
     orders?.filter((order) => {
-      const orderDate = parseDate(order.due_date);
+      const orderDate = parseDate(order.dueDate);
       return orderDate && isSameDay(orderDate, today);
     }) || [];
 
   const tomorrowOrders =
     orders?.filter((order) => {
-      const orderDate = parseDate(order.due_date);
+      const orderDate = parseDate(order.dueDate);
       return orderDate && isSameDay(orderDate, tomorrow);
     }) || [];
 
   const futureOrders =
     orders
       ?.filter((order) => {
-        const orderDate = parseDate(order.due_date);
+        const orderDate = parseDate(order.dueDate);
         return orderDate && isAfter(orderDate, tomorrow);
       })
       .sort((a, b) => {
-        const dateA = parseDate(a.due_date);
-        const dateB = parseDate(b.due_date);
+        const dateA = parseDate(a.dueDate);
+        const dateB = parseDate(b.dueDate);
         return dateA.getTime() - dateB.getTime();
       }) || [];
 
@@ -77,7 +75,7 @@ function DeliveryCalendar({ orders, loading = false }: DeliveryCalendarProps) {
               <div className="space-y-2">
                 <h3 className="text-sm font-medium text-red-500">Atrasadas</h3>
                 {overdueOrders.map((order) => {
-                  const isOverdue = new Date(order.due_date) < new Date();
+                  const isOverdue = new Date(order.dueDate) < new Date();
                   const status =
                     isOverdue && order.status === "pending"
                       ? "overdue"
@@ -95,7 +93,7 @@ function DeliveryCalendar({ orders, loading = false }: DeliveryCalendarProps) {
                               {getOrderCode(order.id)}
                             </p>
                             <h3 className="font-semibold truncate">
-                              {order.client_name}
+                              {order.clientName}
                             </h3>
                           </div>
                           <div className="mt-1">
@@ -107,8 +105,8 @@ function DeliveryCalendar({ orders, loading = false }: DeliveryCalendarProps) {
                             <span className="text-sm text-muted-foreground">
                               Entrega:{" "}
                               <span className="font-semibold">
-                                {order.due_date
-                                  ? formatDate(order.due_date)
+                                {order.dueDate
+                                  ? formatDate(order.dueDate)
                                   : "Sem data"}
                               </span>
                             </span>
@@ -148,7 +146,7 @@ function DeliveryCalendar({ orders, loading = false }: DeliveryCalendarProps) {
                   Hoje
                 </h3>
                 {todayOrders.map((order) => {
-                  const isOverdue = new Date(order.due_date) < new Date();
+                  const isOverdue = new Date(order.dueDate) < new Date();
                   const status =
                     isOverdue && order.status === "pending"
                       ? "overdue"
@@ -166,7 +164,7 @@ function DeliveryCalendar({ orders, loading = false }: DeliveryCalendarProps) {
                               {getOrderCode(order.id)}
                             </p>
                             <h3 className="font-semibold truncate">
-                              {order.client_name}
+                              {order.clientName}
                             </h3>
                           </div>
                           <div className="mt-1">
@@ -178,8 +176,8 @@ function DeliveryCalendar({ orders, loading = false }: DeliveryCalendarProps) {
                             <span className="text-sm text-muted-foreground">
                               Entrega:{" "}
                               <span className="font-semibold">
-                                {order.due_date
-                                  ? formatDate(order.due_date)
+                                {order.dueDate
+                                  ? formatDate(order.dueDate)
                                   : "Sem data"}
                               </span>
                             </span>
@@ -219,7 +217,7 @@ function DeliveryCalendar({ orders, loading = false }: DeliveryCalendarProps) {
                   Amanhã
                 </h3>
                 {tomorrowOrders.map((order) => {
-                  const isOverdue = new Date(order.due_date) < new Date();
+                  const isOverdue = new Date(order.dueDate) < new Date();
                   const status =
                     isOverdue && order.status === "pending"
                       ? "overdue"
@@ -237,7 +235,7 @@ function DeliveryCalendar({ orders, loading = false }: DeliveryCalendarProps) {
                               {getOrderCode(order.id)}
                             </p>
                             <h3 className="font-semibold truncate">
-                              {order.client_name}
+                              {order.clientName}
                             </h3>
                           </div>
                           <div className="mt-1">
@@ -249,8 +247,8 @@ function DeliveryCalendar({ orders, loading = false }: DeliveryCalendarProps) {
                             <span className="text-sm text-muted-foreground">
                               Entrega:{" "}
                               <span className="font-semibold">
-                                {order.due_date
-                                  ? formatDate(order.due_date)
+                                {order.dueDate
+                                  ? formatDate(order.dueDate)
                                   : "Sem data"}
                               </span>
                             </span>
@@ -290,7 +288,7 @@ function DeliveryCalendar({ orders, loading = false }: DeliveryCalendarProps) {
                   Futuras Entregas
                 </h3>
                 {futureOrders.map((order) => {
-                  const isOverdue = new Date(order.due_date) < new Date();
+                  const isOverdue = new Date(order.dueDate) < new Date();
                   const status =
                     isOverdue && order.status === "pending"
                       ? "overdue"
@@ -308,7 +306,7 @@ function DeliveryCalendar({ orders, loading = false }: DeliveryCalendarProps) {
                               {getOrderCode(order.id)}
                             </p>
                             <h3 className="font-semibold truncate">
-                              {order.client_name}
+                              {order.clientName}
                             </h3>
                           </div>
                           <div className="mt-1">
@@ -320,8 +318,8 @@ function DeliveryCalendar({ orders, loading = false }: DeliveryCalendarProps) {
                             <span className="text-sm text-muted-foreground">
                               Entrega:{" "}
                               <span className="font-semibold">
-                                {order.due_date
-                                  ? formatDate(order.due_date)
+                                {order.dueDate
+                                  ? formatDate(order.dueDate)
                                   : "Sem data"}
                               </span>
                             </span>

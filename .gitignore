@@ -17,16 +17,6 @@ dist-ssr
 .env.*
 !.env.example
 
-# Supabase
-/supabase/.temp
-/supabase/.branches
-/supabase/.temp
-/supabase/.branches
-/supabase/.config
-/supabase/.secrets
-/supabase/.env
-/supabase/.env.*
-
 # Logs
 logs
 *.log

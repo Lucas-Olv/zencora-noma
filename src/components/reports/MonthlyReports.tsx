@@ -29,8 +29,6 @@ import {
 } from "recharts";
 import { cn, formatDate, getOrderCode, parseDate } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { supabase } from "@/integrations/supabase/client";
-import { Tables } from "@/integrations/supabase/types";
 import {
   format,
   startOfMonth,
@@ -47,7 +45,6 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { Badge } from "@/components/ui/badge";
 import { report } from "process";
-import supabaseService from "@/services/supabaseService";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import {
   Select,
@@ -60,8 +57,10 @@ import { useNavigate } from "react-router-dom";
 import { SubscriptionGate } from "../subscription/SubscriptionGate";
 import ReportOrdersList from "./ReportOrdersList";
 import { LoadingState } from "@/components/ui/loading-state";
-
-type Order = Tables<"orders">;
+import { useTenantStorage } from "@/storage/tenant";
+import { Order } from "@/lib/types";
+import { getNomaApi } from "@/lib/apiHelpers";
+import { useQuery } from "@tanstack/react-query";
 
 interface ReportData {
   totalOrders: number;
@@ -98,7 +97,6 @@ const MonthlyReports = () => {
     to: endOfMonth(new Date()),
   });
   const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
   const [reportData, setReportData] = useState<ReportData>({
     totalOrders: 0,
     totalRevenue: 0,
@@ -108,7 +106,7 @@ const MonthlyReports = () => {
     categoryData: [],
   });
   const isMobile = useIsMobile();
-  const { tenant, isLoading } = useWorkspaceContext();
+  const { tenant } = useTenantStorage();
   const navigate = useNavigate();
 
   const formatCurrency = (value: number) => {
@@ -118,15 +116,25 @@ const MonthlyReports = () => {
     });
   };
 
-  useEffect(() => {
-    if (!isLoading) {
-      fetchOrders();
-    }
-  }, [dateRange, isLoading, tenant]);
+  const {
+    data: ordersData,
+    isLoading: isOrdersLoading,
+    isError: isOrdersError,
+    refetch,
+  } = useQuery({
+    queryKey: ["orders", dateRange?.from, dateRange?.to, tenant?.id],
+    queryFn: () =>
+      getNomaApi(`/api/noma/v1/orders/tenant`, {
+        params: {
+          tenantId: tenant?.id,
+          periodStart: dateRange?.from?.toISOString(),
+          periodEnd: dateRange?.to?.toISOString(),
+        },
+      }),
+  });
 
-  const fetchOrders = async () => {
-    try {
-      setLoading(true);
+  useEffect(() => {
+    if (ordersData) {
       if (dateRange?.from && dateRange?.to) {
         // Ajusta as datas para o início e fim do dia
         const startDate = new Date(dateRange.from);
@@ -135,25 +143,20 @@ const MonthlyReports = () => {
         const endDate = new Date(dateRange.to);
         endDate.setHours(23, 59, 59, 999);
 
-        const { data, error } = await supabaseService.orders.getTenantOrders(
-          tenant.id,
-        );
-        if (error) throw error;
-
         // Filtra as encomendas no lado do cliente para garantir precisão
         const filteredOrders =
-          data
-            ?.filter((order) => {
-              const orderDate = parseDate(order.due_date);
+          ordersData.data
+            ?.filter((order: Order) => {
+              const orderDate = parseDate(order.dueDate);
               if (!orderDate) return false;
 
               // Verifica se a data está dentro do intervalo
               return orderDate >= startDate && orderDate <= endDate;
             })
-            .sort((a, b) => {
+            .sort((a: Order, b: Order) => {
               // Ordena por data de entrega em ordem crescente
-              const dateA = parseDate(a.due_date);
-              const dateB = parseDate(b.due_date);
+              const dateA = parseDate(a.dueDate);
+              const dateB = parseDate(b.dueDate);
               if (!dateA || !dateB) return 0;
               return dateA.getTime() - dateB.getTime();
             }) || [];
@@ -164,14 +167,14 @@ const MonthlyReports = () => {
         const processedData: ReportData = {
           totalOrders: filteredOrders.length,
           totalRevenue: filteredOrders.reduce(
-            (sum, order) => sum + (order.price || 0),
+            (sum: number, order: Order) => sum + (parseFloat(order.price) || 0),
             0,
           ),
           completedOrders: filteredOrders.filter(
-            (order) => order.status === "done",
+            (order: Order) => order.status === "done",
           ).length,
           pendingOrders: filteredOrders.filter(
-            (order) => order.status !== "done",
+            (order: Order) => order.status !== "done",
           ).length,
           dailyRevenue: [],
           categoryData: [],
@@ -184,15 +187,16 @@ const MonthlyReports = () => {
             end: dateRange.to,
           });
           processedData.dailyRevenue = days.map((day) => {
-            const dayOrders = filteredOrders.filter((order) => {
-              const orderDate = parseDate(order.due_date);
+            const dayOrders = filteredOrders.filter((order: Order) => {
+              const orderDate = parseDate(order.dueDate);
               if (!orderDate) return false;
               return isSameDay(orderDate, day);
             });
             return {
               day: format(day, "dd/MM"),
               Total: dayOrders.reduce(
-                (sum, order) => sum + (order.price || 0),
+                (sum: number, order: Order) =>
+                  sum + (parseFloat(order.price) || 0),
                 0,
               ),
               Encomendas: dayOrders.length,
@@ -210,12 +214,8 @@ const MonthlyReports = () => {
 
         setReportData(processedData);
       }
-    } catch (error) {
-      console.error("Error fetching orders:", error);
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [ordersData, isOrdersLoading]);
 
   const completionRate =
     reportData.totalOrders > 0
@@ -330,7 +330,7 @@ const MonthlyReports = () => {
       startY: (doc as any).lastAutoTable.finalY + 20,
       head: [["Cliente", "Descrição", "Valor", "Data", "Status"]],
       body: orders.map((order) => {
-        const isOverdue = new Date(order.due_date) < new Date();
+        const isOverdue = new Date(order.dueDate) < new Date();
         const status =
           isOverdue &&
           (order.status === "pending" || order.status === "production")
@@ -342,10 +342,10 @@ const MonthlyReports = () => {
                 : "Concluído";
 
         return [
-          order.client_name,
+          order.clientName,
           order.description || "Sem descrição",
-          formatCurrency(order.price),
-          formatDate(order.due_date),
+          formatCurrency(parseFloat(order.price)),
+          formatDate(order.dueDate),
           status,
         ];
       }),
@@ -399,7 +399,7 @@ const MonthlyReports = () => {
     );
   };
 
-  if (loading) {
+  if (isOrdersLoading) {
     return (
       <div className="flex items-center justify-center h-[50dvh]">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -443,7 +443,10 @@ const MonthlyReports = () => {
                     const monthYear = format(date, "yyyy-MM");
                     return (
                       <SelectItem key={monthYear} value={monthYear}>
-                        {format(date, "MMMM yyyy", { locale: ptBR }).replace(/^\w/, c => c.toUpperCase())}
+                        {format(date, "MMMM yyyy", { locale: ptBR }).replace(
+                          /^\w/,
+                          (c) => c.toUpperCase(),
+                        )}
                       </SelectItem>
                     );
                   }).filter((_, i, arr) => {
@@ -471,10 +474,10 @@ const MonthlyReports = () => {
                   variant="outline"
                   size="icon"
                   onClick={handleDownloadPDF}
-                  disabled={loading}
+                  disabled={isOrdersLoading}
                   className="shrink-0 h-10 w-10"
                 >
-                  {loading ? (
+                  {isOrdersLoading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
                     <Download className="h-4 w-4" />
@@ -643,7 +646,7 @@ const MonthlyReports = () => {
         </div>
       </div>
       <LoadingState
-        loading={loading}
+        loading={isOrdersLoading}
         empty={!orders.length}
         emptyText="Nenhuma encomenda encontrada"
         emptyIcon={<FileText className="h-12 w-12 text-muted-foreground" />}

@@ -16,7 +16,6 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
-import { supabaseService } from "@/services/supabaseService";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -40,9 +39,12 @@ import {
 } from "@/components/ui/tooltip";
 import { SettingsGate } from "@/components/settings/SettingsGate";
 import { Loader2 } from "lucide-react";
+import { useSessionStore } from "@/storage/session";
+import { useSubscriptionStorage } from "@/storage/subscription";
+import { useSettingsStorage } from "@/storage/settings";
+import { useMutation } from "@tanstack/react-query";
+import { postCoreApi } from "@/lib/apiHelpers";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
-import { db } from "@/lib/db";
-import { supabase } from "@/integrations/supabase/client";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -90,32 +92,29 @@ const mainNavItems: NavItem[] = [
   },
 ];
 
-const bottomNavItems: NavItem[] = [
-  {
-    title: "Configurações",
-    href: "/settings",
-    icon: Settings,
-    proOnly: true,
-  },
-];
+const bottomNavItems: NavItem[] = [];
 
 interface NavButtonProps {
   item: NavItem;
   isActive: boolean;
   onClick: () => void;
+  isTrial: boolean;
+  subscription: any;
+  isBlocked: boolean;
+  settings: any;
 }
 
-const NavButton = ({ item, isActive, onClick }: NavButtonProps) => {
+const NavButton = ({
+  item,
+  isActive,
+  onClick,
+  isTrial,
+  subscription,
+  isBlocked,
+  settings,
+}: NavButtonProps) => {
   const { blockedRoutes, allowedRoutes } = useSubscriptionRoutes();
-  const {
-    settings,
-    isBlocked,
-    isTrial,
-    isActive: subscriptionActive,
-    subscription,
-  } = useWorkspaceContext();
-  const isRouteBlocked = blockedRoutes.includes(item.href);
-  const isRouteAllowed = allowedRoutes.includes(item.href);
+  
 
   // Verifica se o usuário tem acesso ao item baseado no plano
   const hasPlanAccess =
@@ -132,6 +131,7 @@ const NavButton = ({ item, isActive, onClick }: NavButtonProps) => {
   // Só mostra o cadeado se:
   // 1. A rota estiver bloqueada E a assinatura estiver bloqueada
   // 2. A rota não estiver na lista de permitidas E a assinatura estiver bloqueada
+  const isRouteBlocked = blockedRoutes.includes(item.href);
   const shouldShowLock =
     (isBlocked && isRouteBlocked) || // Mostra cadeado se estiver bloqueado e a rota estiver na lista de bloqueadas
     (item.proOnly && !hasPlanAccess); // Mostra cadeado se for item Pro e não tiver acesso ao plano
@@ -140,9 +140,9 @@ const NavButton = ({ item, isActive, onClick }: NavButtonProps) => {
   const requiresPassword = (() => {
     switch (item.href) {
       case "/reports":
-        return settings?.lock_reports_by_password;
+        return settings?.lockReportsByPassword;
       case "/settings":
-        return settings?.lock_settings_by_password;
+        return settings?.lockSettingsByPassword;
       default:
         return false;
     }
@@ -219,17 +219,37 @@ const NavButton = ({ item, isActive, onClick }: NavButtonProps) => {
 const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { clearWorkspaceData } = useWorkspaceContext();
   const { toast } = useToast();
-  const {
-    settings,
-    appSession,
-    isLoading,
-    isBlocked,
-    isTrial,
-    isActive: subscriptionActive,
-    subscription,
-    roles,
-  } = useWorkspaceContext();
+
+    const { mutate: logout } = useMutation({
+    mutationFn: () => postCoreApi("/api/core/v1/signout"),
+    onSuccess: () => {
+      clearWorkspaceData();
+      toast({
+        title: "Sessão encerrada",
+        description: "Sua sessão foi encerrada com sucesso. Até breve!",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao sair",
+        description: error.message,
+      });
+    },
+  });
+
+  // Zustand stores
+  const { session } = useSessionStore();
+  const { subscription } = useSubscriptionStorage();
+  const { settings } = useSettingsStorage();
+
+  // Derivações
+  const appSession = session;
+  const isLoading = false; // zustand é síncrono, pode-se adicionar loading se necessário
+  const isTrial = !!subscription?.isTrial;
+  const subscriptionActive = subscription?.status === "active";
+  const isBlocked = subscription?.status !== "active" && !isTrial;
 
   // Se o app não estiver pronto, mostra um loader
   if (isLoading) {
@@ -246,7 +266,7 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
   }
 
   // Lógica para mostrar o cadeado nas configurações
-  const isSettingsLocked = settings?.lock_settings_by_password;
+  const isSettingsLocked = settings?.lockSettingsByPassword;
   const isSettingsBlocked =
     !isTrial &&
     !subscriptionActive &&
@@ -255,17 +275,6 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
 
   const handleProfileClick = async () => {
     try {
-      const { data } = await supabase.auth.getSession();
-
-      if (!data?.session) {
-        toast({
-          title: "Erro ao acessar perfil",
-          description: "Você precisa estar logado para acessar seu perfil.",
-          variant: "destructive",
-        });
-        return;
-      }
-
       const websiteUrl = import.meta.env.VITE_ZENCORA_ACCOUNT_WEBSITE;
       if (!websiteUrl) {
         toast({
@@ -275,36 +284,12 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
         });
         return;
       }
-
-      const accessToken = data.session.access_token;
-      const refreshToken = data.session.refresh_token;
-
-      const redirectUrl = `${websiteUrl}account?access_token=${accessToken}&refresh_token=${refreshToken}`;
+      const accessToken = session?.token;
+      const redirectUrl = `${websiteUrl}account?access_token=${accessToken}`;
       window.location.href = redirectUrl;
     } catch (error: any) {
       toast({
         title: "Erro ao acessar perfil",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      await db.clearWorkspaceData();
-      await supabase.auth.signOut();
-      
-      toast({
-        title: "Logout realizado com sucesso",
-        description: "Você foi desconectado com sucesso.",
-      });
-
-      // Redireciona para a landing page
-      window.location.href = "/";
-    } catch (error: any) {
-      toast({
-        title: "Erro ao fazer logout",
         description: error.message,
         variant: "destructive",
       });
@@ -322,7 +307,7 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
 
   const handleRoleSwitch = () => {
     // Se a configuração de senha para trocar de papel estiver ativa, redireciona para verificação
-    if (settings?.require_password_to_switch_role) {
+    if (settings?.requirePasswordToSwitchRole) {
       navigate("/verify-password", {
         state: {
           redirect: "/select-role",
@@ -375,17 +360,28 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
               item={item}
               isActive={location.pathname === item.href}
               onClick={() => handleNavigation(item.href)}
+              isTrial={isTrial}
+              subscription={subscription}
+              isBlocked={isBlocked}
+              settings={settings}
             />
           ))}
         </div>
 
         <div className="mt-auto border-t border-border pt-4">
           {/* Configurações */}
-          {(!subscription?.plan || subscription?.plan === "pro" || subscription?.plan === "enterprise" || isTrial) && 
-           (appSession?.role === "owner" || appSession?.role_id && roles.find(r => r.id === appSession.role_id)?.can_access_settings) && (
+          {(!subscription?.plan ||
+            subscription?.plan === "pro" ||
+            subscription?.plan === "enterprise" ||
+            isTrial) && (
             <Button
               variant="ghost"
-              className="w-full flex gap-3 justify-start h-10"
+              className={cn(
+                "w-full flex gap-3 justify-start h-10",
+                location.pathname === "/settings"
+                  ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                  : "",
+              )}
               onClick={() => handleNavigation("/settings")}
             >
               <Settings className="h-4 w-4" />
@@ -397,36 +393,14 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
           )}
 
           {/* Perfil ou Trocar Papel */}
-          {settings?.enable_roles ? (
-            appSession?.role === "owner" ? (
-              <Button
-                variant="ghost"
-                className="w-full flex gap-3 justify-start h-10"
-                onClick={handleProfileClick}
-              >
-                <User className="h-4 w-4" />
-                Meu Perfil
-              </Button>
-            ) : (
-              <Button
-                variant="ghost"
-                className="w-full flex gap-3 justify-start h-10"
-                onClick={handleRoleSwitch}
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Trocar Papel
-              </Button>
-            )
-          ) : (
-            <Button
-              variant="ghost"
-              className="w-full flex gap-3 justify-start h-10"
-              onClick={handleProfileClick}
-            >
-              <User className="h-4 w-4" />
-              Meu Perfil
-            </Button>
-          )}
+          <Button
+            variant="ghost"
+            className="w-full flex gap-3 justify-start h-10"
+            onClick={handleProfileClick}
+          >
+            <User className="h-4 w-4" />
+            Meu Perfil
+          </Button>
 
           {/* Sair - Sempre visível */}
           <AlertDialog>
@@ -439,7 +413,7 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
                 Sair
               </Button>
             </AlertDialogTrigger>
-            <AlertDialogContent className="w-[calc(100%-2rem)] max-w-[400px] mx-auto rounded-xl">
+            <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle>Confirmar saída</AlertDialogTitle>
                 <AlertDialogDescription>
@@ -452,7 +426,10 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
                   Cancelar
                 </AlertDialogCancel>
                 <AlertDialogAction
-                  onClick={handleLogout}
+                  onClick={() => {
+                    logout();
+                    closeSidebar();
+                  }}
                   className="w-full sm:w-auto bg-red-600 hover:bg-red-700"
                 >
                   Sair

@@ -8,8 +8,6 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { LoadingState } from "@/components/ui/loading-state";
-import { Tables } from "@/integrations/supabase/types";
-import { remindersService } from "@/services/supabaseService";
 import { useRef, useEffect, useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -20,8 +18,10 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
-
-type Reminder = Tables<"reminders">;
+import { Reminder } from "@/lib/types";
+import { useMutation } from "@tanstack/react-query";
+import { patchNomaApi } from "@/lib/apiHelpers";
+import { useTenantStorage } from "@/storage/tenant";
 
 interface RecentRemindersProps {
   reminders: Reminder[];
@@ -36,13 +36,47 @@ function RecentReminders({
   const [selectedReminder, setSelectedReminder] = useState<Reminder | null>(
     null,
   );
+  const { tenant } = useTenantStorage();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [reminders, setReminders] = useState<Reminder[]>(initialReminders);
+
+  const {
+    mutate: updateReminderStatus,
+    data: updateReminderStatusData,
+    error: isUpdateReminderStatusError,
+    isPending: isUpdateReminderStatusPending,
+  } = useMutation({
+    mutationFn: ({
+      reminderData,
+    }: {
+      reminderData: Omit<Reminder, "content" | "title" | "createdAt">;
+    }) =>
+      patchNomaApi(
+        `/api/noma/v1/reminders/update`,
+        { reminderData },
+        { params: { tenantId: tenant?.id, reminderId: reminderData.id } },
+      ),
+    onSuccess: () => {
+      toast({
+        title: "Status do lembrete atualizado com sucesso!",
+        description: "O status do lembrete foi atualizado com sucesso!",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao atualizar status do lembrete",
+        description:
+          "Ocorreu um erro ao atualizar o status do lembrete. Por favor, tente novamente mais tarde.",
+        variant: "destructive",
+      });
+      console.log(error);
+    },
+  });
 
   useEffect(() => {
     const sortedReminders = initialReminders.sort(
       (a, b) =>
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
     const slicedReminders = sortedReminders.slice(0, 5);
     setReminders(slicedReminders);
@@ -77,34 +111,12 @@ function RecentReminders({
   };
 
   const handleToggleDone = async (reminder: Reminder) => {
-    try {
-      const { data, error } = await remindersService.updateReminder(
-        reminder.id,
-        {
-          is_done: !reminder.is_done,
-          tenant_id: reminder.tenant_id,
-          title: reminder.title,
-          content: reminder.content,
-        },
-      );
-
-      if (error) throw error;
-
-      if (data) {
-        setReminders((prev) =>
-          prev.map((r) => (r.id === reminder.id ? data : r)),
-        );
-      }
-      toast({
-        title: "Lembrete atualizado com sucesso!",
-      });
-    } catch (error) {
-      toast({
-        title: "Erro ao atualizar lembrete",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+    updateReminderStatus({
+      reminderData: {
+        ...reminder,
+        isDone: !reminder.isDone,
+      },
+    });
   };
 
   const handleOpenDetails = (reminder: Reminder) => {
@@ -132,11 +144,11 @@ function RecentReminders({
                 className="flex items-center gap-2 p-2 border rounded-lg hover:bg-accent/50 transition-colors"
               >
                 <Checkbox
-                  checked={reminder.is_done}
+                  checked={reminder.isDone}
                   onCheckedChange={() => handleToggleDone(reminder)}
                 />
                 <span
-                  className={`flex-1 ${reminder.is_done ? "line-through text-muted-foreground" : ""}`}
+                  className={`flex-1 ${reminder.isDone ? "line-through text-muted-foreground" : ""}`}
                 >
                   {reminder.title}
                 </span>

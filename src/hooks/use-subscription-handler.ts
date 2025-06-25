@@ -1,5 +1,7 @@
 import { useToast } from "@/components/ui/use-toast";
-import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
+import { useSubscriptionStorage } from "@/storage/subscription";
+import { useSessionStore } from "@/storage/session";
+import { useProductStore } from "@/storage/product";
 
 // Price IDs for each plan
 const PRICE_IDS = {
@@ -15,32 +17,40 @@ const PRICE_IDS = {
 
 export function useSubscriptionHandler() {
   const { toast } = useToast();
-  const { product, subscription, session } = useWorkspaceContext();
+  const { session } = useSessionStore();
+  const { product } = useProductStore();
+  const { subscription } = useSubscriptionStorage();
 
-  const handleCheckout = async (planType: "essential" | "pro", billingCycle: "monthly" | "yearly") => {
+  const handleCheckout = async (
+    planType: "essential" | "pro",
+    billingCycle: "monthly" | "yearly",
+  ) => {
     try {
       if (!product?.id && !product?.name) {
         throw new Error("Product not found");
       }
 
       const priceId = PRICE_IDS[planType][billingCycle];
-      const userToken = session?.access_token;
+      const userToken = session?.token;
       const subscriptionId = subscription?.id;
 
-      const response = await fetch(`${import.meta.env.VITE_ZENCORA_PAYMENT_API_URL}checkout/create-checkout-session`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${userToken}`,
+      const response = await fetch(
+        `${import.meta.env.VITE_ZENCORA_PAYMENT_API_URL}checkout/create-checkout-session`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${userToken}`,
+          },
+          body: JSON.stringify({
+            productId: product.id,
+            productName: product.name,
+            priceId,
+            plan: planType,
+            subscriptionId,
+          }),
         },
-        body: JSON.stringify({
-          productId: product.id,
-          productName: product.name,
-          priceId,
-          plan: planType,
-          subscriptionId,
-        }),
-      });
+      );
 
       if (!response.ok) {
         throw new Error("Failed to create checkout session");
@@ -52,7 +62,8 @@ export function useSubscriptionHandler() {
       console.log(error);
       toast({
         title: "Erro ao processar pagamento",
-        description: "Ocorreu um erro ao tentar processar o pagamento. Por favor, tente novamente.",
+        description:
+          "Ocorreu um erro ao tentar processar o pagamento. Por favor, tente novamente.",
         variant: "destructive",
       });
     }
@@ -61,4 +72,4 @@ export function useSubscriptionHandler() {
   return {
     handleCheckout,
   };
-} 
+}

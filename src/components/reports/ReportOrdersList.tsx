@@ -9,10 +9,8 @@ import {
 } from "@/components/ui/card";
 import { LoadingState } from "@/components/ui/loading-state";
 import { Badge } from "@/components/ui/badge";
-import { Tables } from "@/integrations/supabase/types";
 import { useNavigate } from "react-router-dom";
-
-type Order = Tables<"orders">;
+import { Order } from "@/lib/types";
 
 interface ReportOrdersListProps {
   orders: Order[];
@@ -46,7 +44,7 @@ function ReportOrdersList({
         >
           <div className="space-y-2">
             {orders.map((order) => {
-              const isOverdue = new Date(order.due_date) < new Date();
+              const isOverdue = new Date(order.dueDate) < new Date();
               const status =
                 isOverdue && order.status === "pending"
                   ? "overdue"
@@ -64,7 +62,7 @@ function ReportOrdersList({
                           {getOrderCode(order.id)}
                         </p>
                         <h3 className="font-semibold truncate">
-                          {order.client_name}
+                          {order.clientName}
                         </h3>
                       </div>
                       <div className="mt-1">
@@ -84,8 +82,8 @@ function ReportOrdersList({
                                 "text-red-500",
                             )}
                           >
-                            {order.due_date
-                              ? formatDate(order.due_date)
+                            {order.dueDate
+                              ? formatDate(order.clientName)
                               : "Sem data"}
                           </span>
                         </span>
@@ -131,4 +129,4 @@ function ReportOrdersList({
   );
 }
 
-export default ReportOrdersList; 
+export default ReportOrdersList;

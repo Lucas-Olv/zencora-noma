@@ -13,7 +13,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
-import { supabaseService } from "@/services/supabaseService";
+import { useMutation } from "@tanstack/react-query";
+import { postCoreApi, postCoreApiPublic } from "@/lib/apiHelpers";
 
 export default function PasswordVerification() {
   const navigate = useNavigate();
@@ -21,7 +22,6 @@ export default function PasswordVerification() {
   const { toast } = useToast();
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
 
   // Extrair os parâmetros do state com valores padrão
   const targetPath = location.state?.redirect || "/dashboard";
@@ -39,22 +39,22 @@ export default function PasswordVerification() {
     navigate(-1);
   };
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+    const {
+      mutate: verifyPassword,
+      error: verifyPasswordError,
+      isPending: isVerifyingPassword,
+    } = useMutation({
+      mutationFn: ({
+      }: {
 
-    try {
-      // Verify the current session password
-      const { error } = await supabaseService.auth.verifyPassword(password);
-
-      if (error) throw error;
-
-      // Se for troca de papel, limpa a role atual antes de redirecionar
-      if (fromRoleSwitch) {
-        localStorage.removeItem("active_role_id");
-      }
-
-      // If password is correct, navigate to the target path with verified state
+      }) =>
+        postCoreApi(
+          `/api/core/v1/verify-password`,
+          {
+            password,
+          }
+        ),
+      onSuccess: () => {
       navigate(targetPath, {
         replace: true,
         state: {
@@ -62,21 +62,28 @@ export default function PasswordVerification() {
           verified: true,
         },
       });
-    } catch (error: any) {
+      },
+      onError: (error) => {
       toast({
         title: "Erro na verificação",
         description: "Senha incorreta. Por favor, tente novamente.",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
+        console.log(error);
+      },
+    });
+
+    async function handleVerifyPassword(e: FormEvent) {
+      e.preventDefault();
+      verifyPassword({
+        password,
+      });
     }
-  };
 
   return (
     <div className="flex flex-col items-center justify-center h-full">
       <Card className="w-full max-w-md">
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleVerifyPassword}>
           <CardHeader>
             <CardTitle>Verificação de Senha</CardTitle>
             <CardDescription>
@@ -118,12 +125,12 @@ export default function PasswordVerification() {
               variant="outline"
               className="w-full"
               onClick={handleBack}
-              disabled={loading}
+              disabled={isVerifyingPassword}
             >
               Voltar
             </Button>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? (
+            <Button type="submit" className="w-full" disabled={isVerifyingPassword}>
+              {isVerifyingPassword ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />{" "}
                   Verificando...

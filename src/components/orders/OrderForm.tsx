@@ -13,11 +13,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
-import { supabaseService } from "@/services/supabaseService";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { formatDate } from "@/lib/utils";
+import { useTenantStorage } from "@/storage/tenant";
 
 interface OrderFormProps {
   mode?: "create" | "edit";
@@ -46,7 +46,8 @@ interface FormErrors {
 const OrderForm = ({ mode = "create", orderId, onSuccess }: OrderFormProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { tenant, isLoading } = useWorkspaceContext();
+  const { isLoading } = useWorkspaceContext();
+  const { tenant } = useTenantStorage();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(mode === "edit");
   const [errors, setErrors] = useState<FormErrors>({});
@@ -69,55 +70,55 @@ const OrderForm = ({ mode = "create", orderId, onSuccess }: OrderFormProps) => {
       : "",
   );
 
-  useEffect(() => {
-    const fetchOrderDetails = async () => {
-      if (mode !== "edit" || !orderId || isLoading) return;
+  // useEffect(() => {
+  //   const fetchOrderDetails = async () => {
+  //     if (mode !== "edit" || !orderId || isLoading) return;
 
-      try {
-        const { data, error } =
-          await supabaseService.orders.getOrderById(orderId);
+  //     try {
+  //       const { data, error } =
+  //         await supabaseService.orders.getOrderById(orderId);
 
-        if (error) throw error;
-        if (!data) {
-          toast({
-            title: "Encomenda não encontrada",
-            description: "A encomenda solicitada não existe ou foi removida.",
-            variant: "destructive",
-          });
-          navigate("/orders");
-          return;
-        }
+  //       if (error) throw error;
+  //       if (!data) {
+  //         toast({
+  //           title: "Encomenda não encontrada",
+  //           description: "A encomenda solicitada não existe ou foi removida.",
+  //           variant: "destructive",
+  //         });
+  //         navigate("/orders");
+  //         return;
+  //       }
 
-        const dueDate = parseISO(data.due_date);
-        setFormData({
-          customerName: data.client_name,
-          phone: data.phone || "",
-          description: data.description || "",
-          value: data.price.toFixed(2).replace(".", ","),
-          deliveryDate: formatDate(data.due_date, "yyyy-MM-dd"),
-          deliveryTime: formatDate(data.due_date, "HH:mm"),
-        });
+  //       const dueDate = parseISO(data.due_date);
+  //       setFormData({
+  //         customerName: data.client_name,
+  //         phone: data.phone || "",
+  //         description: data.description || "",
+  //         value: data.price.toFixed(2).replace(".", ","),
+  //         deliveryDate: formatDate(data.due_date, "yyyy-MM-dd"),
+  //         deliveryTime: formatDate(data.due_date, "HH:mm"),
+  //       });
 
-        setPriceInput(
-          new Intl.NumberFormat("pt-BR", {
-            style: "currency",
-            currency: "BRL",
-          }).format(data.price),
-        );
-      } catch (error: any) {
-        toast({
-          title: "Erro ao carregar encomenda",
-          description: error.message,
-          variant: "destructive",
-        });
-        navigate("/orders");
-      } finally {
-        setLoading(false);
-      }
-    };
+  //       setPriceInput(
+  //         new Intl.NumberFormat("pt-BR", {
+  //           style: "currency",
+  //           currency: "BRL",
+  //         }).format(data.price),
+  //       );
+  //     } catch (error: any) {
+  //       toast({
+  //         title: "Erro ao carregar encomenda",
+  //         description: error.message,
+  //         variant: "destructive",
+  //       });
+  //       navigate("/orders");
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
 
-    fetchOrderDetails();
-  }, [mode, orderId, navigate, toast, isLoading]);
+  //   fetchOrderDetails();
+  // }, [mode, orderId, navigate, toast, isLoading]);
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
@@ -257,55 +258,55 @@ const OrderForm = ({ mode = "create", orderId, onSuccess }: OrderFormProps) => {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!validateForm()) return;
+    // if (!validateForm()) return;
 
-    setIsSubmitting(true);
+    // setIsSubmitting(true);
 
-    try {
-      const numericValue = parseFloat(formData.value.replace(",", "."));
-      const dueDate = new Date(
-        `${formData.deliveryDate}T${formData.deliveryTime}:00`,
-      );
+    // try {
+    //   const numericValue = parseFloat(formData.value.replace(",", "."));
+    //   const dueDate = new Date(
+    //     `${formData.deliveryDate}T${formData.deliveryTime}:00`,
+    //   );
 
-      const orderData = {
-        client_name: formData.customerName,
-        phone: formData.phone || null,
-        description: formData.description,
-        price: numericValue,
-        due_date: dueDate.toISOString(),
-        tenant_id: tenant?.id,
-        status: "pending" as const,
-      };
+    //   const orderData = {
+    //     client_name: formData.customerName,
+    //     phone: formData.phone || null,
+    //     description: formData.description,
+    //     price: numericValue,
+    //     due_date: dueDate.toISOString(),
+    //     tenant_id: tenant?.id,
+    //     status: "pending" as const,
+    //   };
 
-      if (mode === "create") {
-        const { error } = await supabaseService.orders.createOrder(orderData);
-        if (error) throw error;
-        toast({
-          title: "Encomenda criada",
-          description: "A encomenda foi registrada com sucesso.",
-        });
-      } else if (mode === "edit" && orderId) {
-        const { error } = await supabaseService.orders.updateOrder(
-          orderId,
-          orderData,
-        );
-        if (error) throw error;
-        toast({
-          title: "Encomenda atualizada",
-          description: "A encomenda foi atualizada com sucesso.",
-        });
-      }
+    //   if (mode === "create") {
+    //     const { error } = await supabaseService.orders.createOrder(orderData);
+    //     if (error) throw error;
+    //     toast({
+    //       title: "Encomenda criada",
+    //       description: "A encomenda foi registrada com sucesso.",
+    //     });
+    //   } else if (mode === "edit" && orderId) {
+    //     const { error } = await supabaseService.orders.updateOrder(
+    //       orderId,
+    //       orderData,
+    //     );
+    //     if (error) throw error;
+    //     toast({
+    //       title: "Encomenda atualizada",
+    //       description: "A encomenda foi atualizada com sucesso.",
+    //     });
+    //   }
 
-      onSuccess?.();
-    } catch (error: any) {
-      toast({
-        title: "Erro",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+    //   onSuccess?.();
+    // } catch (error: any) {
+    //   toast({
+    //     title: "Erro",
+    //     description: error.message,
+    //     variant: "destructive",
+    //   });
+    // } finally {
+    //   setIsSubmitting(false);
+    // }
   };
 
   if (loading) {

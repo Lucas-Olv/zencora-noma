@@ -34,22 +34,15 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/components/ui/use-toast";
-import { supabaseService, OrderType } from "@/services/supabaseService";
 import OrderDialog from "@/components/orders/OrderDialog";
 import { SubscriptionGate } from "@/components/subscription/SubscriptionGate";
 import { SettingsGate } from "@/components/settings/SettingsGate";
-// Interface para a ordem com dados do colaborador
-interface OrderWithCollaborator extends OrderType {
-  collaborator?: {
-    name: string | null;
-  } | null;
-  status: "done" | "pending" | "production";
-}
+import { Order } from "@/lib/types";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { delNomaAPi, getNomaApi, patchNomaApi } from "@/lib/apiHelpers";
+import { useTenantStorage } from "@/storage/tenant";
 
-const getStatusDisplay = (
-  status: "done" | "pending" | "production" | null,
-  dueDate?: string | null,
-) => {
+const getStatusDisplay = (status: string | null, dueDate?: string | null) => {
   switch (status) {
     case "pending":
       // Verifica se está atrasado
@@ -126,115 +119,94 @@ const OrderDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [order, setOrder] = useState<OrderWithCollaborator | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [order, setOrder] = useState<Order | null>(null);
+  const { tenant } = useTenantStorage();
   const [dialogOpen, setDialogOpen] = useState(false);
-
-  const handleOrderUpdate = (updatedOrder: OrderType) => {
-    setOrder(updatedOrder);
-  };
+  const {
+    data: orderData,
+    isLoading: isOrderLoading,
+    isError: isOrderError,
+    refetch,
+  } = useQuery({
+    queryKey: ["order", id],
+    queryFn: () =>
+      getNomaApi(`/api/noma/v1/orders`, {
+        params: { tenantId: tenant?.id, orderId: id },
+      }),
+  });
 
   useEffect(() => {
     document.title = "Detalhes da Encomenda | Zencora Noma";
+    if (orderData) {
+      setOrder(orderData.data);
+    }
+  }, [orderData, isOrderLoading, isOrderError]);
 
-    const fetchOrderDetails = async () => {
-      if (!id) return;
-
-      try {
-        const { data, error } = await supabaseService.orders.getOrderById(id);
-
-        if (error) throw error;
-        if (!data) {
-          toast({
-            title: "Encomenda não encontrada",
-            description: "A encomenda solicitada não existe ou foi removida.",
-            variant: "destructive",
-          });
-          navigate("/orders");
-          return;
-        }
-
-        // Garante que o status seja um dos valores permitidos
-        const orderData = {
-          ...data,
-          status: (data.status || "pending") as
-            | "pending"
-            | "production"
-            | "done",
-        };
-        setOrder(orderData);
-      } catch (error: any) {
-        toast({
-          title: "Erro ao carregar encomenda",
-          description: error.message,
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchOrderDetails();
-  }, [id, toast, navigate]);
-
-  const updateOrderStatus = async (
-    newStatus: "pending" | "production" | "done",
-  ) => {
-    if (!id || !order) return;
-
-    try {
-      const { error } = await supabaseService.orders.updateOrderStatus(
-        id,
-        newStatus,
-      );
-
-      if (error) throw error;
-
-      setOrder((prev) => (prev ? { ...prev, status: newStatus } : null));
-
-      const statusLabels = {
-        pending: "pendente",
-        production: "Produção",
-        done: "concluída",
-      };
-
+  const {
+    mutate: updateOrderStatus,
+    error: updateOrderStatusError,
+    isPending: isUpdateOrderStatus,
+    error: isUpdateOrderStatusError,
+  } = useMutation({
+    mutationFn: ({ status }: { status: string }) =>
+      patchNomaApi(
+        `/api/noma/v1/orders/update`,
+        { tenantId: tenant?.id, orderData: { status } },
+        {
+          params: { orderId: id },
+        },
+      ),
+    onSuccess: () => {
       toast({
-        title: `Encomenda ${statusLabels[newStatus]}`,
-        description: `Status da encomenda atualizado com sucesso.`,
+        title: "Encomenda atualizada com sucesso",
+        description: "O status da encomenda foi atualizado com sucesso!",
       });
-    } catch (error: any) {
+    },
+    onError: (error) => {
       toast({
-        title: "Erro ao atualizar status",
-        description: error.message,
+        title: "Erro ao atualizar encomenda",
+        description:
+          "ocorreu um erro ao atualizar o status da encomenda. Por favor, tente novamente mais tarde.",
         variant: "destructive",
       });
-    }
-  };
+      console.log(error);
+    },
+  });
 
-  const handleDelete = async () => {
-    if (!id) return;
-
-    try {
-      const { error } = await supabaseService.orders.deleteOrder(id);
-
-      if (error) throw error;
-
+  const {
+    mutate: deleteOrder,
+    error: deleteOrderError,
+    isPending: isDeleteOrder,
+    error: isDeleteOrderError,
+  } = useMutation({
+    mutationFn: () =>
+      delNomaAPi(`/api/noma/v1/orders/delete`, {
+        params: { tenantId: tenant?.id, orderId: id },
+      }),
+    onSuccess: () => {
       toast({
-        title: "Encomenda excluída",
-        description: "A encomenda foi removida com sucesso.",
+        title: "Encomenda excluída com sucesso",
+        description: "A encomenda foi excluÍda com sucesso!",
       });
 
       navigate("/orders");
-    } catch (error: any) {
+    },
+    onError: (error) => {
       toast({
         title: "Erro ao excluir encomenda",
-        description: error.message,
+        description:
+          "ocorreu um erro ao excluir a encomenda. Por favor, tente novamente mais tarde.",
         variant: "destructive",
       });
-    }
+      console.log(error);
+    },
+  });
+
+  const handleOrderUpdate = () => {
+    refetch();
   };
 
-  if (loading) {
+  if (isOrderLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60dvh]">
         <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
@@ -263,7 +235,7 @@ const OrderDetail = () => {
     );
   }
 
-  const statusDisplay = getStatusDisplay(order.status, order.due_date);
+  const statusDisplay = getStatusDisplay(order.status, order.dueDate);
 
   return (
     <div className="space-y-6">
@@ -286,7 +258,7 @@ const OrderDetail = () => {
       <Card>
         <CardHeader className="flex flex-row items-start justify-between">
           <CardTitle className="text-xl truncate max-w-[60dvw]">
-            {order.client_name}
+            {order.clientName}
           </CardTitle>
           <Badge variant="outline" className={statusDisplay.className}>
             {statusDisplay.label}
@@ -309,7 +281,7 @@ const OrderDetail = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Data de Entrega</p>
-                <p className="font-medium">{formatDate(order.due_date)}</p>
+                <p className="font-medium">{formatDate(order.dueDate)}</p>
               </div>
             </div>
 
@@ -320,7 +292,7 @@ const OrderDetail = () => {
               <div>
                 <p className="text-sm text-muted-foreground">Valor</p>
                 <p className="font-medium">
-                  R$ {order.price.toFixed(2).replace(".", ",")}
+                  R$ {order.price.replace(".", ",")}
                 </p>
               </div>
             </div>
@@ -332,7 +304,7 @@ const OrderDetail = () => {
               <div>
                 <p className="text-sm text-muted-foreground">Criada em</p>
                 <p className="font-medium">
-                  {formatDate(order.created_at, "dd/MM/yyyy")}
+                  {formatDate(order.createdAt, "dd/MM/yyyy")}
                 </p>
               </div>
             </div>
@@ -349,7 +321,7 @@ const OrderDetail = () => {
                     <Button
                       variant="outline"
                       className="w-full"
-                      onClick={() => updateOrderStatus("pending")}
+                      onClick={() => updateOrderStatus({ status: "pending" })}
                     >
                       <Clock className="h-4 w-4 row-span-full mr-2" />
                       Marcar como Pendente
@@ -359,7 +331,9 @@ const OrderDetail = () => {
                     <Button
                       variant="outline"
                       className="w-full"
-                      onClick={() => updateOrderStatus("production")}
+                      onClick={() =>
+                        updateOrderStatus({ status: "production" })
+                      }
                     >
                       <Package className="h-4 w-4 row-span-full mr-2" />
                       Marcar como Produção
@@ -369,7 +343,7 @@ const OrderDetail = () => {
                     <Button
                       variant="outline"
                       className="w-full"
-                      onClick={() => updateOrderStatus("done")}
+                      onClick={() => updateOrderStatus({ status: "done" })}
                     >
                       <CheckCircle className="h-4 w-4 row-span-full mr-2" />
                       Marcar como Concluída
@@ -404,20 +378,20 @@ const OrderDetail = () => {
                       Excluir
                     </Button>
                   </AlertDialogTrigger>
-                  <AlertDialogContent className="w-[calc(100%-2rem)] max-w-[400px] mx-auto rounded-xl">
+                  <AlertDialogContent>
                     <AlertDialogHeader>
                       <AlertDialogTitle>Excluir encomenda?</AlertDialogTitle>
                       <AlertDialogDescription className="line-clamp-3 max-w-[80dvw] md:max-w-[18dvw]">
                         Esta ação não poderá ser desfeita. Isso excluirá
                         permanentemente a encomenda do cliente{" "}
-                        {order?.client_name}.
+                        {order?.clientName}.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancelar</AlertDialogCancel>
                       <AlertDialogAction
                         className="bg-red-600 hover:bg-red-700"
-                        onClick={handleDelete}
+                        onClick={() => deleteOrder()}
                       >
                         Excluir
                       </AlertDialogAction>

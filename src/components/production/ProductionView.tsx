@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { io, Socket } from "socket.io-client";
 import {
   Card,
   CardContent,
@@ -32,11 +33,14 @@ import {
 } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
-import { supabaseService, OrderType } from "@/services/supabaseService";
-import { useMediaQuery } from "@/hooks/use-media-query";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { SubscriptionGate } from "../subscription/SubscriptionGate";
-import { supabase } from "@/integrations/supabase/client";
 import { SettingsGate } from "../settings/SettingsGate";
+import { useTenantStorage } from "@/storage/tenant";
+import { Order } from "@/lib/types";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { getNomaApi, patchNomaApi } from "@/lib/apiHelpers";
+import { useSessionStore } from "@/storage/session";
 
 function ConnectionStatus({
   isConnected,
@@ -88,130 +92,162 @@ function ConnectionStatus({
 
 export function ProductionView() {
   const { toast } = useToast();
-  const { isLoading, tenant } = useWorkspaceContext();
-  const [orders, setOrders] = useState<OrderType[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { tenant } = useTenantStorage();
+  const { session } = useSessionStore();
+  const [orders, setOrders] = useState<Order[]>([]);
   const [isConnected, setIsConnected] = useState<boolean | undefined>(
     undefined,
   );
-  const channelRef = useRef<any>(null);
+  const socketRef = useRef<Socket | null>(null);
   const navigate = useNavigate();
 
-  const setupRealtimeSubscription = async () => {
-    if (!tenant) return;
+  const {
+    data: ordersData,
+    isLoading: isOrdersLoading,
+    isError: isOrdersError,
+    refetch,
+  } = useQuery({
+    queryKey: ["productionOrders", tenant?.id],
+    queryFn: () =>
+      getNomaApi(`/api/noma/v1/orders/tenant`, {
+        params: { tenantId: tenant?.id },
+      }),
+  });
 
-    // Cleanup existing subscription if any
-    if (channelRef.current) {
-      channelRef.current.unsubscribe();
-    }
-
-    // Reset connection state
-    setIsConnected(undefined);
-
-    try {
-      // Set auth for Realtime
-      await supabase.realtime.setAuth();
-
-      // Create new subscription
-      const channel = supabase
-        .channel(`orders:${tenant.id}`, {
-          config: { private: true },
-        })
-        .on("broadcast", { event: "INSERT" }, (payload) => {
-          if (payload.payload?.record) {
-            setOrders((currentOrders) => [
-              ...currentOrders,
-              payload.payload.record,
-            ]);
-          }
-        })
-        .on("broadcast", { event: "UPDATE" }, (payload) => {
-          if (payload.payload?.record) {
-            setOrders((currentOrders) => {
-              const updatedOrders = [...currentOrders];
-              const orderIndex = updatedOrders.findIndex(
-                (o) => o.id === payload.payload.record.id,
-              );
-              if (orderIndex >= 0) {
-                updatedOrders[orderIndex] = payload.payload.record;
-              }
-              return updatedOrders;
-            });
-          }
-        })
-        .on("broadcast", { event: "DELETE" }, (payload) => {
-          if (payload.payload?.old_record?.id) {
-            setOrders((currentOrders) =>
-              currentOrders.filter(
-                (order) => order.id !== payload.payload.old_record.id,
-              ),
-            );
-          }
-        })
-        .subscribe((status) => {
-          const wasConnected = isConnected;
-          setIsConnected(status === "SUBSCRIBED");
-
-          // Só mostra o toast se já estava conectado e perdeu a conexão
-          if (wasConnected && status === "CLOSED") {
-            toast({
-              title: "Conexão perdida",
-              description: "Não é possível receber atualizações em tempo real",
-              variant: "destructive",
-            });
-          } else if (status === "SUBSCRIBED" && !wasConnected) {
-            // Só mostra o toast de conexão estabelecida se não estava conectado antes
-            toast({
-              title: "Conexão estabelecida",
-              description: "Recebendo atualizações em tempo real",
-            });
-          }
-        });
-
-      channelRef.current = channel;
-    } catch (error) {
-      console.error("Error setting up realtime subscription:", error);
-      setIsConnected(false);
-    }
-  };
+  const {
+    mutate: updateOrder,
+    error: updateOrderError,
+    data: updateOrderData,
+    isPending: isUpdatingOrder,
+  } = useMutation({
+    mutationFn: ({
+      orderId,
+      orderStatus,
+    }: {
+      orderId: string;
+      orderStatus: string;
+    }) =>
+      patchNomaApi(
+        `/api/noma/v1/orders/update`,
+        {
+          tenantId: tenant?.id,
+          orderData: { id: orderId, status: orderStatus },
+        },
+        {
+          params: { orderId: orderId },
+        },
+      ),
+    onSuccess: () => {
+      toast({
+        title: "Encomenda criada com sucesso",
+        description:
+          "Sua encomenda foi criada com sucesso! Você pode visualizá-la na lista de encomendas.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao criar encomenda",
+        description:
+          "ocorreu um erro ao criar a encomenda. Por favor, tente novamente mais tarde.",
+        variant: "destructive",
+      });
+      console.log(error);
+    },
+  });
 
   useEffect(() => {
-    if (!isLoading && tenant) {
-      fetchOrders();
-      setupRealtimeSubscription();
-    }
-
-    return () => {
-      if (channelRef.current) {
-        channelRef.current.unsubscribe();
-      }
-    };
-  }, [isLoading, tenant]);
-
-  const handleReconnect = async () => {
-    await setupRealtimeSubscription();
-  };
-
-  const fetchOrders = async () => {
-    try {
-      const { data, error } = await supabaseService.orders.getTenantOrders(
-        tenant.id,
-      );
-      if (error) throw error;
+    if (ordersData) {
       setOrders(
-        (data || []).map((order) => ({
+        (ordersData.data || []).map((order: Order) => ({
           ...order,
           status: order.status as "pending" | "production" | "done",
         })),
       );
-    } catch (error: any) {
+    }
+  }, [ordersData]);
+
+  // Realtime socket.io
+  useEffect(() => {
+    if (!session.token || !tenant?.id) return;
+
+    console.log("[SocketIO] Tentando conectar...");
+    // Desconecta se já existir um socket
+    if (socketRef.current) {
+      socketRef.current.disconnect();
+    }
+
+    const socket = io(import.meta.env.VITE_ZENCORA_NOMA_API_URL, {
+      auth: { token: session.token, tenantId: tenant.id },
+      transports: ["websocket"],
+    });
+
+    socketRef.current = socket;
+
+    // Eventos de conexão
+    socket.on("connect", () => {
+      console.log("[SocketIO] Conectado!");
+      setIsConnected(true);
       toast({
-        title: "Erro ao carregar encomendas",
-        description: error.message,
+        title: "Conexão estabelecida",
+        description: "Recebendo atualizações em tempo real",
+      });
+    });
+
+    socket.on("disconnect", (reason) => {
+      console.log("[SocketIO] Desconectado! Motivo:", reason);
+      setIsConnected(false);
+      toast({
+        title: "Conexão perdida",
+        description: "Não é possível receber atualizações em tempo real",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
+    });
+
+    socket.on("connect_error", (err) => {
+      console.error("[SocketIO] Erro de conexão:", err);
+      setIsConnected(false);
+      toast({
+        title: "Erro ao conectar",
+        description: err.message || "Não foi possível conectar ao servidor.",
+        variant: "destructive",
+      });
+    });
+
+    // Listeners de pedidos
+    socket.on("order_created", (order) => {
+      console.log("[SocketIO] Pedido criado:", order);
+      setOrders((current) => [...current, order]);
+    });
+
+    socket.on("order_updated", (order) => {
+      console.log("[SocketIO] Pedido atualizado:", order);
+      setOrders((current) => {
+        const updated = [...current];
+        const index = updated.findIndex((o) => o.id === order.id);
+        if (index >= 0) updated[index] = order;
+        return updated;
+      });
+    });
+
+    socket.on("order_deleted", ({ id }) => {
+      console.log("[SocketIO] Pedido deletado:", id);
+      setOrders((current) => current.filter((o) => o.id !== id));
+    });
+
+    return () => {
+      console.log("[SocketIO] Desconectando socket...");
+      socket.disconnect();
+    };
+  }, [session.token, tenant.id]);
+
+  // Handler para reconectar
+  const handleReconnect = () => {
+    if (socketRef.current) {
+      console.log("[SocketIO] Forçando reconexão...");
+      socketRef.current.connect();
+    } else {
+      // Se não houver socket, tenta criar um novo disparando o useEffect
+      setIsConnected(undefined);
     }
   };
 
@@ -225,17 +261,16 @@ export function ProductionView() {
       if (a.status !== "production" && b.status === "production") return 1;
 
       // Se o status for igual, ordena por data de entrega
-      return parseDate(a.due_date).getTime() - parseDate(b.due_date).getTime();
+      return parseDate(a.dueDate).getTime() - parseDate(b.dueDate).getTime();
     });
 
   const completedOrders = orders
     .filter((order) => order.status === "done")
     .sort(
-      (a, b) =>
-        parseDate(a.due_date).getTime() - parseDate(b.due_date).getTime(),
+      (a, b) => parseDate(a.dueDate).getTime() - parseDate(b.dueDate).getTime(),
     );
 
-  const [selectedOrder, setSelectedOrder] = useState<OrderType | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const printRef = useRef<HTMLDivElement>(null);
   const handlePrint = usePrint(printRef, {
     pageStyle: `
@@ -254,8 +289,8 @@ export function ProductionView() {
 
   const isMobile = useMediaQuery("(max-width: 640px)");
 
-  const OrderCard = ({ order }: { order: OrderType }) => {
-    const isOverdue = new Date(order.due_date) < new Date();
+  const OrderCard = ({ order }: { order: Order }) => {
+    const isOverdue = new Date(order.dueDate) < new Date();
     const status =
       isOverdue && order.status === "pending" ? "overdue" : order.status;
 
@@ -271,7 +306,7 @@ export function ProductionView() {
                 <p className="font-mono text-sm text-muted-foreground shrink-0">
                   {getOrderCode(order.id)}
                 </p>
-                <h3 className="font-semibold truncate">{order.client_name}</h3>
+                <h3 className="font-semibold truncate">{order.clientName}</h3>
               </div>
               <div className="mt-1">
                 <p className="text-sm text-muted-foreground line-clamp-2">
@@ -282,7 +317,7 @@ export function ProductionView() {
                 <span className="text-sm text-muted-foreground">
                   Entrega:{" "}
                   <span className="font-semibold">
-                    {order.due_date ? formatDate(order.due_date) : "Sem data"}
+                    {order.dueDate ? formatDate(order.dueDate) : "Sem data"}
                   </span>
                 </span>
               </div>
@@ -360,7 +395,7 @@ export function ProductionView() {
               <p className="font-mono text-sm text-muted-foreground shrink-0">
                 {getOrderCode(order.id)}
               </p>
-              <h3 className="font-semibold truncate">{order.client_name}</h3>
+              <h3 className="font-semibold truncate">{order.clientName}</h3>
             </div>
             <div className="mt-1">
               <p className="text-sm text-muted-foreground">
@@ -371,7 +406,7 @@ export function ProductionView() {
               <span className="text-sm text-muted-foreground">
                 Entrega:{" "}
                 <span className="font-semibold">
-                  {order.due_date ? formatDate(order.due_date) : "Sem data"}
+                  {order.dueDate ? formatDate(order.dueDate) : "Sem data"}
                 </span>
               </span>
             </div>
@@ -438,11 +473,11 @@ export function ProductionView() {
     );
   };
 
-  const OrderLabel = ({ order }: { order: OrderType }) => {
-    const isOverdue = new Date(order.due_date) < new Date();
+  const OrderLabel = ({ order }: { order: Order }) => {
+    const isOverdue = new Date(order.dueDate) < new Date();
     const status =
       isOverdue && order.status === "pending" ? "overdue" : order.status;
-    const statusDisplay = getStatusDisplay(status, order.due_date);
+    const statusDisplay = getStatusDisplay(status, order.dueDate);
 
     return (
       <div className="w-[100mm] h-[150mm] bg-white text-black p-6">
@@ -460,14 +495,14 @@ export function ProductionView() {
           {/* Informações principais */}
           <div className="flex-1 flex flex-col gap-4 text-zinc-800">
             <div className="grid grid-cols-2 gap-4">
-              <LabelItem title="Cliente" content={order.client_name} />
-              <LabelItem title="Entrega" content={formatDate(order.due_date)} />
+              <LabelItem title="Cliente" content={order.clientName} />
+              <LabelItem title="Entrega" content={formatDate(order.dueDate)} />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <LabelItem
                 title="Valor"
-                content={`R$ ${order.price.toFixed(2).replace(".", ",")}`}
+                content={`R$ ${order.price.replace(".", ",")}`}
               />
               <LabelItem title="Status" content={statusDisplay.label} />
             </div>
@@ -507,40 +542,13 @@ export function ProductionView() {
   );
 
   const handleChangeOrderStatus = async (id: string, status: string) => {
-    try {
-      const order = orders.find((o) => o.id === id);
-      if (!order) return;
-
-      const newStatus = status === "pending" ? "production" : "done";
-
-      const { error } = await supabaseService.orders.updateOrderStatus(
-        id,
-        newStatus,
-      );
-      if (error) throw error;
-
-      // Atualiza o estado local
-      setOrders(
-        orders.map((order) =>
-          order.id === id ? { ...order, status: newStatus } : order,
-        ),
-      );
-
-      toast({
-        title: "Status atualizado",
-        description: "O status da encomenda foi atualizado com sucesso.",
-      });
-    } catch (error: any) {
-      console.error("Error updating order status:", error);
-      toast({
-        title: "Erro ao atualizar status",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+    updateOrder({
+      orderId: id,
+      orderStatus: status === "pending" ? "production" : "done",
+    });
   };
 
-  if (loading) {
+  if (isOrdersLoading) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-200px)]">
         <div className="flex flex-col items-center gap-2">
@@ -590,7 +598,7 @@ export function ProductionView() {
 
             <TabsContent value="pending">
               <LoadingState
-                loading={loading}
+                loading={isOrdersLoading}
                 empty={!pendingOrders.length}
                 emptyText="Nenhuma encomenda pendente"
                 emptyIcon={
@@ -601,7 +609,7 @@ export function ProductionView() {
                   {pendingOrders.map((order) => {
                     const statusDisplay = getStatusDisplay(
                       order.status,
-                      order.due_date,
+                      order.dueDate,
                     );
                     return <OrderCard key={order.id} order={order} />;
                   })}
@@ -611,7 +619,7 @@ export function ProductionView() {
 
             <TabsContent value="completed">
               <LoadingState
-                loading={loading}
+                loading={isOrdersLoading}
                 empty={!completedOrders.length}
                 emptyText="Nenhuma encomenda concluída"
                 emptyIcon={

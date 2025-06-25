@@ -1,117 +1,183 @@
 import Dexie, { Table } from "dexie";
-import { Session, User } from "@supabase/supabase-js";
-import { Tables } from "@/integrations/supabase/types";
+import { Product, Session, Tenant, Settings, Subscription } from "@/lib/types";
 
-type Tenant = Tables<"tenants">;
-type Settings = Tables<"settings">;
-type RoleType = Tables<"roles">;
-type SubscriptionType = Tables<"subscriptions">;
-type AppSessionType = Tables<"app_sessions">;
-type ProductType = Tables<"products">;
-
-interface WorkspaceData {
+interface workspaceData {
   id?: number;
+  tenant: Tenant | null;
+  settings: Settings | null;
+  product: Product | null;
+  session: Session;
+  subscription: Subscription;
   initialized: boolean;
   initializedAt: string;
   initializedBy: string;
-  tenant: Tenant | null;
-  settings: Settings | null;
-  product: ProductType | null;
-  selectedRole: RoleType | null;
-  subscription: SubscriptionType | null;
-  roles: RoleType[];
-  isOwner: boolean;
-  appSession: AppSessionType | null;
 }
 
-export class ZencoraDB extends Dexie {
-  workspace!: Table<WorkspaceData>;
-
+export class ZencoraNomaDB extends Dexie {
+  workspaceData!: Table<workspaceData>;
   constructor() {
-    super("zencoraDB");
+    super("zencora-noma-db");
     this.version(1).stores({
-      workspace: "++id,initialized,initializedAt,initializedBy",
+      workspaceData: "++id,initialized,initializedAt,initializedBy",
     });
   }
 
-  async getWorkspaceData(): Promise<WorkspaceData | undefined> {
-    return await this.workspace.orderBy("id").last();
+  async init() {
+    if (!this.workspaceData) {
+      this.workspaceData = this.table("workspaceDataData");
+    }
+    const count = await this.workspaceData.count();
+    if (count === 0) {
+      await this.saveWorkspaceDataData({
+        initialized: false,
+        initializedAt: new Date().toISOString(),
+        initializedBy: "system",
+        session: undefined,
+        product: undefined,
+        tenant: undefined,
+        settings: undefined,
+        subscription: undefined,
+      });
+    }
   }
 
-  async saveWorkspaceData(data: WorkspaceData): Promise<number> {
+  async getWorkspaceData(): Promise<workspaceData | undefined> {
+    return await this.workspaceData.orderBy("id").last();
+  }
+
+  async getProductData(): Promise<Product | null> {
+    return this.getWorkspaceData().then(
+      (workspaceData) => workspaceData?.product || null,
+    );
+  }
+
+  async getSessionData(): Promise<Session | null> {
+    return this.getWorkspaceData().then(
+      (workspaceData) => workspaceData?.session || null,
+    );
+  }
+  async getTenantData(): Promise<Tenant | null> {
+    return this.getWorkspaceData().then(
+      (workspaceData) => workspaceData?.tenant || null,
+    );
+  }
+  async getSubscriptionData(): Promise<Subscription | null> {
+    return this.getWorkspaceData().then(
+      (workspaceData) => workspaceData?.subscription || null,
+    );
+  }
+
+  async saveWorkspaceDataData(data: workspaceData): Promise<number> {
     // Clear previous data
-    await this.workspace.clear();
+    await this.workspaceData.clear();
     // Save new data
-    return await this.workspace.add(data);
+    return await this.workspaceData.add(data);
   }
 
   async updateSettingsData(settings: Settings): Promise<void> {
-    const workspace = await this.getWorkspaceData();
-    if (workspace) {
-      workspace.settings = settings;
-      await this.workspace.put(workspace);
+    const workspaceData = await this.getWorkspaceData();
+    if (workspaceData) {
+      workspaceData.settings = settings;
+      await this.workspaceData.put(workspaceData);
     }
   }
 
-  async updateRolesData(roles: RoleType[]): Promise<void> {
-    const workspace = await this.getWorkspaceData();
-    if (workspace) {
-      workspace.roles = roles;
-      await this.workspace.put(workspace);
+  async getSettingsData(): Promise<Settings | null> {
+    const workspaceData = await this.getWorkspaceData();
+    return workspaceData?.settings || null;
+  }
+
+  async clearProductData(): Promise<void> {
+    const workspaceData = await this.getWorkspaceData();
+    if (workspaceData) {
+      workspaceData.product = null;
+      await this.workspaceData.put(workspaceData);
     }
   }
 
-  async updateProductData(product: ProductType): Promise<void> {
-    const workspace = await this.getWorkspaceData();
-    if (workspace) {
-      workspace.product = product;
-      await this.workspace.put(workspace);
+  async clearSettingsData(): Promise<void> {
+    const workspaceData = await this.getWorkspaceData();
+    if (workspaceData) {
+      workspaceData.settings = null;
+      await this.workspaceData.put(workspaceData);
     }
   }
 
-  async updateIsOwnerData(isOwner: boolean): Promise<void> {
-    const workspace = await this.getWorkspaceData();
-    if (workspace) {
-      workspace.isOwner = isOwner;
-      await this.workspace.put(workspace);
+  async clearSessionData(): Promise<void> {
+    const workspaceData = await this.getWorkspaceData();
+    if (workspaceData) {
+      workspaceData.session = null;
+      await this.workspaceData.put(workspaceData);
     }
   }
 
-  async updateAppSessionData(appSession: AppSessionType): Promise<void> {
-    const workspace = await this.getWorkspaceData();
-    if (workspace) {
-      workspace.appSession = appSession;
-      await this.workspace.put(workspace);
+  async clearSubscriptionData(): Promise<void> {
+    const workspaceData = await this.getWorkspaceData();
+    if (workspaceData) {
+      workspaceData.subscription = null;
+      await this.workspaceData.put(workspaceData);
     }
   }
 
-  async updateSelectedRoleData(selectedRole: RoleType | null): Promise<void> {
-    const workspace = await this.getWorkspaceData();
-    if (workspace) {
-      workspace.selectedRole = selectedRole;
-      await this.workspace.put(workspace);
+  async clearTenantData(): Promise<void> {
+    const workspaceData = await this.getWorkspaceData();
+    if (workspaceData) {
+      workspaceData.tenant = null;
+      await this.workspaceData.put(workspaceData);
+    }
+  }
+
+  async updateSessionData(session: Session): Promise<void> {
+    const workspaceData = await this.getWorkspaceData();
+    if (workspaceData) {
+      workspaceData.session = session;
+      await this.workspaceData.put(workspaceData);
+    }
+  }
+
+  async updateProductData(product: Product): Promise<void> {
+    const workspaceData = await this.getWorkspaceData();
+    if (workspaceData) {
+      workspaceData.product = product;
+      await this.workspaceData.put(workspaceData);
     }
   }
 
   async updateTenantData(tenant: Tenant): Promise<void> {
-    const workspace = await this.getWorkspaceData();
-    if (workspace) {
-      workspace.tenant = tenant;
-      await this.workspace.put(workspace);
+    const workspaceData = await this.getWorkspaceData();
+    if (workspaceData) {
+      workspaceData.tenant = tenant;
+      await this.workspaceData.put(workspaceData);
     }
   }
 
-  async updateSubscriptionData(subscription: SubscriptionType): Promise<void> {
-    const workspace = await this.getWorkspaceData();
-    if (workspace) {
-      workspace.subscription = subscription;
-      await this.workspace.put(workspace);
+  async updateSubscriptionData(subscription: Subscription): Promise<void> {
+    const workspaceData = await this.getWorkspaceData();
+    if (workspaceData) {
+      workspaceData.subscription = subscription;
+      await this.workspaceData.put(workspaceData);
+    }
+  }
+
+  async saveSessionData(session: Session): Promise<void> {
+    const workspaceDataData = await this.getWorkspaceData();
+    if (workspaceDataData) {
+      workspaceDataData.session = session;
+      await this.saveWorkspaceDataData(workspaceDataData);
+    }
+  }
+
+  async saveProductData(product: Product): Promise<void> {
+    const workspaceDataData = await this.getWorkspaceData();
+    if (workspaceDataData) {
+      workspaceDataData.product = product;
+      await this.saveWorkspaceDataData(workspaceDataData);
     }
   }
 
   async clearWorkspaceData(): Promise<void> {
-    await this.workspace.clear();
+    await this.workspaceData.clear();
   }
 }
 
-export const db = new ZencoraDB();
+export const db = new ZencoraNomaDB();

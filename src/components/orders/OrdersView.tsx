@@ -31,22 +31,74 @@ import {
   getStatusDisplay,
   cn,
 } from "@/lib/utils";
-import { supabaseService, OrderType } from "@/services/supabaseService";
-import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import OrderDialog from "./OrderDialog";
 import { SubscriptionGate } from "../subscription/SubscriptionGate";
+import { useTenantStorage } from "@/storage/tenant";
+import { Order } from "@/lib/types";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { getNomaApi, patchNomaApi } from "@/lib/apiHelpers";
 
 const OrdersView = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [orders, setOrders] = useState<OrderType[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedOrder, setSelectedOrder] = useState<OrderType | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
   const [dialogOrderId, setDialogOrderId] = useState<string | undefined>();
   const printRef = useRef<HTMLDivElement>(null);
+  const {
+    mutate: updateOrder,
+    error: updateOrderError,
+    data: updateOrderData,
+    isPending: isUpdatingOrder,
+    error: isUpdatingOrderError,
+  } = useMutation({
+    mutationFn: ({
+      orderId,
+      orderStatus,
+    }: {
+      orderId: string;
+      orderStatus: string;
+    }) =>
+      patchNomaApi(
+        `/api/noma/v1/orders/update`,
+        {
+          tenantId: tenant?.id,
+          orderData: { id: orderId, status: orderStatus },
+        },
+        {
+          params: { orderId: orderId },
+        },
+      ),
+    onSuccess: () => {
+      toast({
+        title: "Status atualizado!",
+        description: `A encomenda foi marcada como ${status === "pending" ? "pendente" : status === "production" ? "Produção" : "concluída"}.`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao atualizar status",
+        description: error.message,
+        variant: "destructive",
+      });
+      console.log(error);
+    },
+  });
+  const {
+    data: ordersData,
+    isLoading: isOrdersLoading,
+    isError: isOrdersError,
+    refetch,
+  } = useQuery({
+    queryKey: ["orders"],
+    queryFn: () =>
+      getNomaApi(`/api/noma/v1/orders/tenant`, {
+        params: { tenantId: tenant?.id },
+      }),
+  });
   const handlePrint = usePrint(printRef, {
     pageStyle: `
       @page {
@@ -61,13 +113,13 @@ const OrdersView = () => {
       }
     `,
   });
-  const { tenant, isLoading } = useWorkspaceContext();
+  const { tenant } = useTenantStorage();
 
-  const OrderLabel = ({ order }: { order: OrderType }) => {
-    const isOverdue = new Date(order.due_date) < new Date();
+  const OrderLabel = ({ order }: { order: Order }) => {
+    const isOverdue = new Date(order.dueDate) < new Date();
     const status =
       isOverdue && order.status === "pending" ? "overdue" : order.status;
-    const statusDisplay = getStatusDisplay(status, order.due_date);
+    const statusDisplay = getStatusDisplay(status, order.dueDate);
 
     return (
       <div className="w-[100mm] h-[150mm] bg-white text-black p-6">
@@ -85,14 +137,14 @@ const OrdersView = () => {
           {/* Informações principais */}
           <div className="flex-1 flex flex-col gap-4 text-zinc-800">
             <div className="grid grid-cols-2 gap-4">
-              <LabelItem title="Cliente" content={order.client_name} />
-              <LabelItem title="Entrega" content={formatDate(order.due_date)} />
+              <LabelItem title="Cliente" content={order.clientName} />
+              <LabelItem title="Entrega" content={formatDate(order.dueDate)} />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <LabelItem
                 title="Valor"
-                content={`R$ ${order.price.toFixed(2).replace(".", ",")}`}
+                content={`R$ ${order.price.replace(".", ",")}`}
               />
               <LabelItem title="Status" content={statusDisplay.label} />
             </div>
@@ -132,63 +184,21 @@ const OrdersView = () => {
   );
 
   useEffect(() => {
-    if (!isLoading && tenant) {
-      fetchOrders();
+    document.title = "Encomendas | Zencora Noma";
+    if (ordersData) {
+      const fetchedOrders = ordersData.data as Order[];
+      setOrders(fetchedOrders);
     }
-  }, [isLoading, tenant]);
-
-  const fetchOrders = async () => {
-    try {
-      if (isLoading) return;
-      if (!tenant) {
-        throw new Error("Tenant não encontrado");
-      }
-
-      const { data, error } = await supabaseService.orders.getTenantOrders(
-        tenant.id,
-      );
-      if (error) throw error;
-
-      setOrders(data as OrderType[]);
-    } catch (error: any) {
-      toast({
-        title: "Erro ao carregar encomendas",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [ordersData, isOrdersLoading]);
 
   const handleStatusChange = async (
     id: string,
     targetStatus: "pending" | "production" | "done",
   ) => {
-    try {
-      const { error } = await supabaseService.orders.updateOrderStatus(
-        id,
-        targetStatus,
-      );
-      if (error) throw error;
-
-      setOrders(
-        orders.map((order) =>
-          order.id === id ? { ...order, status: targetStatus } : order,
-        ),
-      );
-
-      toast({
-        title: "Status atualizado!",
-        description: `A encomenda foi marcada como ${targetStatus === "pending" ? "pendente" : targetStatus === "production" ? "Produção" : "concluída"}.`,
-      });
-    } catch (error: any) {
-      toast({
-        title: "Erro ao atualizar status",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+    updateOrder({
+      orderId: id,
+      orderStatus: targetStatus,
+    });
   };
 
   const handleNewOrder = () => {
@@ -197,30 +207,15 @@ const OrdersView = () => {
     setDialogOpen(true);
   };
 
-  const handleEditOrder = (order: OrderType) => {
+  const handleEditOrder = (order: Order) => {
     setDialogMode("edit");
     setDialogOrderId(order.id);
     setSelectedOrder(order);
     setDialogOpen(true);
   };
 
-  const handleListUpdate = (updatedOrder: OrderType) => {
-    if (dialogMode === "create") {
-      let newOrders = [updatedOrder as OrderType, ...orders];
-      newOrders.sort(
-        (a, b) =>
-          new Date(a.due_date).getTime() - new Date(b.due_date).getTime(),
-      );
-      setOrders(newOrders);
-    } else {
-      setOrders(
-        orders.map((order) =>
-          order.id === updatedOrder.id
-            ? { ...order, ...updatedOrder, id: order.id }
-            : order,
-        ),
-      );
-    }
+  const handleListUpdate = async (updatedOrder: Order) => {
+    refetch();
   };
 
   const filteredOrders =
@@ -231,9 +226,7 @@ const OrdersView = () => {
             getOrderCode(order.id)
               .toLowerCase()
               .includes(searchTerm.toLowerCase()) ||
-            order.client_name
-              .toLowerCase()
-              .includes(searchTerm.toLowerCase()) ||
+            order.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
             (order.description &&
               order.description
                 .toLowerCase()
@@ -283,7 +276,7 @@ const OrdersView = () => {
           </div>
         </CardHeader>
         <CardContent>
-          {loading ? (
+          {isOrdersLoading ? (
             <div className="flex justify-center py-8">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
@@ -331,7 +324,7 @@ const OrdersView = () => {
                   </TableHeader>
                   <TableBody>
                     {filteredOrders.map((order) => {
-                      const isOverdue = new Date(order.due_date) < new Date();
+                      const isOverdue = new Date(order.dueDate) < new Date();
                       const status =
                         isOverdue && order.status === "pending"
                           ? "overdue"
@@ -342,11 +335,11 @@ const OrdersView = () => {
                             {getOrderCode(order.id)}
                           </TableCell>
                           <TableCell className="font-medium truncate max-w-[20dvw]">
-                            {order.client_name}
+                            {order.clientName}
                           </TableCell>
-                          <TableCell>{formatDate(order.due_date)}</TableCell>
+                          <TableCell>{formatDate(order.dueDate)}</TableCell>
                           <TableCell>
-                            R$ {order.price.toFixed(2).replace(".", ",")}
+                            R$ {order.price.replace(".", ",")}
                           </TableCell>
                           <TableCell>
                             <Badge
@@ -460,7 +453,7 @@ const OrdersView = () => {
               {/* Mobile Card View */}
               <div className="md:hidden space-y-4">
                 {filteredOrders.map((order) => {
-                  const isOverdue = new Date(order.due_date) < new Date();
+                  const isOverdue = new Date(order.dueDate) < new Date();
                   const status =
                     isOverdue && order.status === "pending"
                       ? "overdue"
@@ -476,11 +469,11 @@ const OrdersView = () => {
                                   {getOrderCode(order.id)}
                                 </p>
                                 <h3 className="font-medium truncate max-w-[40dvw]">
-                                  {order.client_name}
+                                  {order.dueDate}
                                 </h3>
                               </div>
                               <p className="text-sm text-muted-foreground">
-                                {formatDate(order.due_date)}
+                                {formatDate(order.dueDate)}
                               </p>
                             </div>
                             <Badge
