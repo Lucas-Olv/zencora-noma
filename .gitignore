@@ -9,6 +9,7 @@ coverage
 # Production
 build
 dist
+dev-dist
 dist-ssr
 *.local
 
