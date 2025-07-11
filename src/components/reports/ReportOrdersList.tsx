@@ -114,7 +114,7 @@ function ReportOrdersList({
                           {new Intl.NumberFormat("pt-BR", {
                             style: "currency",
                             currency: "BRL",
-                          }).format(order.price)}
+                          }).format(parseFloat(order.price))}
                         </p>
                       </div>
                     </div>
