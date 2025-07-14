@@ -75,7 +75,6 @@ const RemindersView = () => {
       refetchReminders();
       toast({
         title: "Lembrete excluído com sucesso!",
-        description: "O lembrete foi excluÍda com sucesso!",
       });
     },
     onError: (error) => {
@@ -105,7 +104,6 @@ const RemindersView = () => {
       refetchReminders();
       toast({
         title: "Lembrete criado com sucesso!",
-        description: "O lembrete foi criado com sucesso!",
       });
     },
     onError: (error) => {
@@ -135,7 +133,6 @@ const RemindersView = () => {
       refetchReminders();
       toast({
         title: "Lembrete atualizado com sucesso!",
-        description: "O lembrete foi atualizado com sucesso!",
       });
     },
     onError: (error) => {
@@ -165,13 +162,6 @@ const RemindersView = () => {
         { reminderData },
         { params: { tenantId: tenant?.id, reminderId: reminderData.id } },
       ),
-    onSuccess: () => {
-      refetchReminders();
-      toast({
-        title: "Status do lembrete atualizado com sucesso!",
-        description: "O status do lembrete foi atualizado com sucesso!",
-      });
-    },
     onError: (error) => {
       toast({
         title: "Erro ao atualizar status do lembrete",
@@ -209,14 +199,25 @@ const RemindersView = () => {
 
   const handleToggleDone = async (reminder: Reminder) => {
     if (!reminder.id) return;
-    updateReminderStatus({
-      reminderData: {
-        id: reminder.id,
-        tenantId: reminder.tenantId,
-        isDone: !reminder.isDone,
-        updatedAt: new Date().toISOString(),
+    updateReminderStatus(
+      {
+        reminderData: {
+          id: reminder.id,
+          tenantId: reminder.tenantId,
+          isDone: !reminder.isDone,
+          updatedAt: new Date().toISOString(),
+        },
       },
-    });
+      {
+        onSuccess: () => {
+          refetchReminders();
+          toast({
+            title: "Status do lembrete atualizado com sucesso!",
+            description: `O lembrete foi marcado como ${!reminder.isDone ? "concluído" : "pendente"}`,
+          });
+        },
+      },
+    );
   };
 
   const handleOpenDetails = (reminder: Reminder) => {

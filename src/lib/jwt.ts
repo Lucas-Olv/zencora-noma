@@ -1,7 +1,7 @@
 import * as jose from "jose";
 
 const publicKeyPromise = jose.importSPKI(
-  import.meta.env.VITE_AUTH_API_PUBLIC_KEY!.replace(/\\n/g, '\n'),
+  import.meta.env.VITE_AUTH_API_PUBLIC_KEY!.replace(/\\n/g, "\n"),
   import.meta.env.VITE_AUTH_JWT_ALGORITHM!,
 );
 

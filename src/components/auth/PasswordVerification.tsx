@@ -39,22 +39,16 @@ export default function PasswordVerification() {
     navigate(-1);
   };
 
-    const {
-      mutate: verifyPassword,
-      error: verifyPasswordError,
-      isPending: isVerifyingPassword,
-    } = useMutation({
-      mutationFn: ({
-      }: {
-
-      }) =>
-        postCoreApi(
-          `/api/core/v1/verify-password`,
-          {
-            password,
-          }
-        ),
-      onSuccess: () => {
+  const {
+    mutate: verifyPassword,
+    error: verifyPasswordError,
+    isPending: isVerifyingPassword,
+  } = useMutation({
+    mutationFn: ({}: {}) =>
+      postCoreApi(`/api/core/v1/verify-password`, {
+        password,
+      }),
+    onSuccess: () => {
       navigate(targetPath, {
         replace: true,
         state: {
@@ -62,23 +56,23 @@ export default function PasswordVerification() {
           verified: true,
         },
       });
-      },
-      onError: (error) => {
+    },
+    onError: (error) => {
       toast({
         title: "Erro na verificação",
         description: "Senha incorreta. Por favor, tente novamente.",
         variant: "destructive",
       });
-        console.log(error);
-      },
-    });
+      console.log(error);
+    },
+  });
 
-    async function handleVerifyPassword(e: FormEvent) {
-      e.preventDefault();
-      verifyPassword({
-        password,
-      });
-    }
+  async function handleVerifyPassword(e: FormEvent) {
+    e.preventDefault();
+    verifyPassword({
+      password,
+    });
+  }
 
   return (
     <div className="flex flex-col items-center justify-center h-full">
@@ -129,7 +123,11 @@ export default function PasswordVerification() {
             >
               Voltar
             </Button>
-            <Button type="submit" className="w-full" disabled={isVerifyingPassword}>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isVerifyingPassword}
+            >
               {isVerifyingPassword ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />{" "}

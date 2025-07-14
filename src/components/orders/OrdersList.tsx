@@ -10,13 +10,11 @@ import {
 } from "@/components/ui/card";
 import { LoadingState } from "@/components/ui/loading-state";
 import { Badge } from "@/components/ui/badge";
-import { Tables } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
 import { SettingsGate } from "../settings/SettingsGate";
 import { SubscriptionGate } from "../subscription/SubscriptionGate";
 import { Plus, Pencil, Trash2 } from "lucide-react";
-
-type Order = Tables<"orders">;
+import { Order } from "@/lib/types";
 
 interface OrdersListProps {
   orders: Order[];
@@ -70,7 +68,7 @@ function OrdersList({
         >
           <div className="space-y-2">
             {orders.map((order) => {
-              const isOverdue = new Date(order.due_date) < new Date();
+              const isOverdue = new Date(order.dueDate) < new Date();
               const status =
                 isOverdue && order.status === "pending"
                   ? "overdue"
@@ -88,7 +86,7 @@ function OrdersList({
                           {getOrderCode(order.id)}
                         </p>
                         <h3 className="font-semibold truncate">
-                          {order.client_name}
+                          {order.clientName}
                         </h3>
                       </div>
                       <div className="mt-1">
@@ -108,8 +106,8 @@ function OrdersList({
                                 "text-red-500",
                             )}
                           >
-                            {order.due_date
-                              ? formatDate(order.due_date)
+                            {order.dueDate
+                              ? formatDate(order.dueDate)
                               : "Sem data"}
                           </span>
                         </span>
@@ -141,7 +139,7 @@ function OrdersList({
                             {new Intl.NumberFormat("pt-BR", {
                               style: "currency",
                               currency: "BRL",
-                            }).format(order.price)}
+                            }).format(parseFloat(order.price))}
                           </p>
                         </div>
                         <div className="flex items-center gap-1">

@@ -10,13 +10,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { useEffect } from "react";
 import { useSubscriptionStorage } from "@/storage/subscription";
 import dayjs from "dayjs";
 
 export function SubscriptionExpired() {
-  const navigate = useNavigate();
   const { subscription } = useSubscriptionStorage();
 
   // Verifica periodicamente o status da assinatura

@@ -163,7 +163,7 @@ const OrderDetail = () => {
         description: "O status da encomenda foi atualizado com sucesso!",
       });
       setOrder((prevOrder) =>
-        prevOrder ? { ...prevOrder, status: variables.status } : prevOrder
+        prevOrder ? { ...prevOrder, status: variables.status } : prevOrder,
       );
     },
     onError: (error) => {

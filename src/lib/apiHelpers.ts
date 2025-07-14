@@ -31,7 +31,6 @@ export const postCoreApi = <T = any>(
     .then((res) => res.data);
 };
 
-
 export const getCoreApi = <T = any>(
   url: string,
   config: CustomAxiosConfig = { withCredentials: true },

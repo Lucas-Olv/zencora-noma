@@ -22,13 +22,19 @@ const TermsAcceptance = () => {
     isPending: isAcceptTermsPending,
   } = useMutation({
     mutationFn: () =>
-      patchNomaApi("/api/noma/v1/tenants/accept-terms", {
-        userAcceptedTerms: accepted,
-      }, {
-        params: { tenantId: tenant?.id },
-      }),
+      patchNomaApi(
+        "/api/noma/v1/tenants/accept-terms",
+        {
+          userAcceptedTerms: accepted,
+        },
+        {
+          params: { tenantId: tenant?.id },
+        },
+      ),
     onSuccess: async () => {
-      await useTenantStorage.getState().setTenant({ ...tenant, userAcceptedTerms: true });
+      await useTenantStorage
+        .getState()
+        .setTenant({ ...tenant, userAcceptedTerms: true });
       toast({
         title: "Termos aceitos",
         description: "Obrigado por aceitar os termos de uso.",
@@ -44,7 +50,7 @@ const TermsAcceptance = () => {
     },
   });
 
-  useEffect(() => { 
+  useEffect(() => {
     document.title = "Termos de Uso | Zencora Noma";
   }, []);
 

@@ -45,14 +45,20 @@ const calculateRevenueVariation = (orders: Order[]) => {
       const orderDate = parseDate(order.createdAt);
       return orderDate && orderDate >= lastWeek && orderDate <= today;
     })
-    .reduce((sum, order) => sum + (order.price || 0), 0);
+    .reduce(
+      (sum: number, order: Order) => sum + (parseFloat(order.price) || 0),
+      0,
+    );
 
   const previousWeekRevenue = orders
     .filter((order) => {
       const orderDate = parseDate(order.createdAt);
       return orderDate && orderDate >= twoWeeksAgo && orderDate < lastWeek;
     })
-    .reduce((sum, order) => sum + (order.price || 0), 0);
+    .reduce(
+      (sum: number, order: Order) => sum + (parseFloat(order.price) || 0),
+      0,
+    );
 
   const variation =
     previousWeekRevenue === 0
@@ -118,7 +124,7 @@ const getDailyData = (orders: Order[]) => {
         (orderDate.getTime() - lastWeek.getTime()) / (1000 * 60 * 60 * 24),
       );
       if (dayIndex >= 0 && dayIndex < 7) {
-        dailyData[dayIndex].Receita += order.price || 0;
+        dailyData[dayIndex].Receita += parseFloat(order.price) || 0;
         dailyData[dayIndex].Encomendas += 1;
       }
     }

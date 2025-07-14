@@ -202,11 +202,11 @@ const OrdersView = () => {
           });
           setOrders((prevOrders) =>
             prevOrders.map((order) =>
-              order.id === id ? { ...order, status: targetStatus } : order
-            )
+              order.id === id ? { ...order, status: targetStatus } : order,
+            ),
           );
         },
-      }
+      },
     );
   };
 

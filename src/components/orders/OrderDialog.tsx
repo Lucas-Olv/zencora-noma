@@ -157,9 +157,7 @@ const OrderDialog = ({
       onSuccess?.(updateOrderData);
       onOpenChange(false);
       toast({
-        title: "Encomenda criada com sucesso",
-        description:
-          "Sua encomenda foi criada com sucesso! Você pode visualizá-la na lista de encomendas.",
+        title: "Encomenda atualizada com sucesso",
       });
     },
     onError: (error) => {

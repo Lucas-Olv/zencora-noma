@@ -137,11 +137,6 @@ export function ProductionView() {
           params: { orderId: orderId },
         },
       ),
-    onSuccess: () => {
-      toast({
-        title: "Encomenda atualizada com sucesso",
-      });
-    },
     onError: (error) => {
       toast({
         title: "Erro ao atualizar encomenda",
@@ -542,10 +537,20 @@ export function ProductionView() {
   );
 
   const handleChangeOrderStatus = async (id: string, status: string) => {
-    updateOrder({
-      orderId: id,
-      orderStatus: status === "pending" ? "production" : "done",
-    });
+    updateOrder(
+      {
+        orderId: id,
+        orderStatus: status === "pending" ? "production" : "done",
+      },
+      {
+        onSuccess: () => {
+          toast({
+            title: "Status atualizado!",
+            description: `A encomenda foi marcada como ${status === "pending" ? "em produção" : "concluída"}.`,
+          });
+        },
+      },
+    );
   };
 
   if (isOrdersLoading) {

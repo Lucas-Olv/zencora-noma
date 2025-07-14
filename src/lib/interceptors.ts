@@ -4,6 +4,9 @@ import { useSessionStore } from "@/storage/session"; // Caminho ajustado
 import { CustomAxiosConfig, Session } from "./types"; // Importa a tipagem customizada
 import { coreApi } from "./api";
 import { verifyToken } from "./jwt";
+import { useTenantStorage } from "@/storage/tenant";
+import { useSettingsStorage } from "@/storage/settings";
+import { cleanWorkspaceData } from "./utils";
 
 // Variáveis de controle para o refresh de token
 let isRefreshing = false;
@@ -33,12 +36,11 @@ export const setupAuthRefreshInterceptor = (api: AxiosInstance) => {
         originalRequest.__retryCount = (originalRequest.__retryCount || 0) + 1;
 
         // Se exceder o limite de retries, limpa a sessão e redireciona
-        if (originalRequest.__retryCount > 0) {
+        if (originalRequest.__retryCount > 1) {
           console.warn(
             "[API] Tentativas de refresh excedidas. Limpando sessão.",
           );
-          useSessionStore.getState().clearSession();
-          window.location.href = "/login"; // Redireciona para a página de login
+          await cleanWorkspaceData();
           return Promise.reject(error); // Rejeita a requisição original
         }
 
@@ -107,8 +109,7 @@ export const setupAuthRefreshInterceptor = (api: AxiosInstance) => {
           failedQueue.forEach((p) => p.reject(refreshError));
           failedQueue = [];
 
-          useSessionStore.getState().clearSession(); // Limpa a sessão
-          window.location.href = "/login"; // Redireciona para o login
+          await cleanWorkspaceData();
           return Promise.reject(refreshError); // Rejeita o erro original
         } finally {
           isRefreshing = false; // Finaliza o processo de refresh

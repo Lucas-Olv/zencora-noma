@@ -21,6 +21,11 @@ import { Session } from "@/lib/types";
 import { postCoreApiPublic } from "@/lib/apiHelpers";
 import { useProductStore } from "@/storage/product";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
+import {
+  getCommonLoginErrorsMessages,
+  getCommonRegisterErrorsMessages,
+} from "@/lib/commonErrors";
+import { AxiosError } from "axios";
 
 export const LoginForm = () => {
   const { toast } = useToast();
@@ -33,7 +38,7 @@ export const LoginForm = () => {
   const [activeTab, setActiveTab] = useState("login");
   const [showResetPassword, setShowResetPassword] = useState(false);
   const { setSession } = useSessionStore();
-  const {loadWorkspace} = useWorkspaceContext();
+  const { loadWorkspace } = useWorkspaceContext();
 
   const {
     mutate: register,
@@ -50,10 +55,11 @@ export const LoginForm = () => {
       });
       setActiveTab("login");
     },
-    onError: (error) => {
+    onError: (error: AxiosError) => {
       toast({
         title: "Erro ao criar conta",
-        description: getErrorMessage(error),
+        description: getCommonRegisterErrorsMessages(error.response.data),
+        variant: "destructive",
       });
       console.log(error);
     },
@@ -138,8 +144,12 @@ export const LoginForm = () => {
         });
       }
     },
-    onError: (error) => {
-      toast({ title: "Erro no login", description: getErrorMessage(error) });
+    onError: (error: AxiosError) => {
+      toast({
+        title: "Erro no login",
+        description: getCommonLoginErrorsMessages(error.response.data),
+        variant: "destructive",
+      });
     },
   });
 
@@ -149,25 +159,6 @@ export const LoginForm = () => {
       setActiveTab("register");
     }
   }, [searchParams]);
-
-  const getErrorMessage = (error: any) => {
-    const errorMessages: { [key: string]: string } = {
-      "Invalid login credentials": "Credenciais de login inválidas",
-      "Email not confirmed": "Email não confirmado",
-      "User not found": "Usuário não encontrado",
-      "Invalid email or password": "Email ou senha inválidos",
-      "Email already registered": "Email já cadastrado",
-      "Password should be at least 6 characters":
-        "A senha deve ter pelo menos 6 caracteres",
-      "Invalid email": "Email inválido",
-    };
-
-    return (
-      errorMessages[error.message] ||
-      error.message ||
-      "Ocorreu um erro. Por favor, tente novamente."
-    );
-  };
 
   const handleSignUp = async (e: FormEvent) => {
     e.preventDefault();

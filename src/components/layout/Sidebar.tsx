@@ -12,7 +12,7 @@ import {
   NotepadText,
   ArrowLeft,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cleanWorkspaceData, cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
@@ -44,7 +44,6 @@ import { useSubscriptionStorage } from "@/storage/subscription";
 import { useSettingsStorage } from "@/storage/settings";
 import { useMutation } from "@tanstack/react-query";
 import { postCoreApi } from "@/lib/apiHelpers";
-import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -114,7 +113,6 @@ const NavButton = ({
   settings,
 }: NavButtonProps) => {
   const { blockedRoutes, allowedRoutes } = useSubscriptionRoutes();
-  
 
   // Verifica se o usuário tem acesso ao item baseado no plano
   const hasPlanAccess =
@@ -219,13 +217,12 @@ const NavButton = ({
 const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { clearWorkspaceData } = useWorkspaceContext();
   const { toast } = useToast();
 
-    const { mutate: logout } = useMutation({
+  const { mutate: logout } = useMutation({
     mutationFn: () => postCoreApi("/api/core/v1/signout"),
-    onSuccess: () => {
-      clearWorkspaceData();
+    onSuccess: async () => {
+      await cleanWorkspaceData();
       toast({
         title: "Sessão encerrada",
         description: "Sua sessão foi encerrada com sucesso. Até breve!",

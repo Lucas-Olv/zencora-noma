@@ -8,7 +8,6 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import ptBrLocale from "@fullcalendar/core/locales/pt-br";
 import "@/styles/calendar.css";
-import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { cn } from "@/lib/utils";
 import { useTenantStorage } from "@/storage/tenant";
 import { getNomaApi } from "@/lib/apiHelpers";
@@ -70,7 +69,6 @@ const getEventColor = (status: string | null, dueDate: string) => {
 const CalendarPage = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { isLoading } = useWorkspaceContext();
   const { tenant } = useTenantStorage();
   const [orders, setOrders] = useState<Order[]>([]);
 

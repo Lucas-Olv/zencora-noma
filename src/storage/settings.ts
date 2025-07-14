@@ -9,28 +9,28 @@ interface SettingsState {
   loadSettings: () => Promise<void>;
 }
 
-export const useSettingsStorage = create<SettingsState>(    (set, get) => ({
-      settings: null,
+export const useSettingsStorage = create<SettingsState>((set, get) => ({
+  settings: null,
 
-      setSettings: async (settings) => {
-        await db.clearSettingsData();
-        await db.updateSettingsData(settings);
-        set({ settings });
-      },
+  setSettings: async (settings) => {
+    await db.clearSettingsData();
+    await db.updateSettingsData(settings);
+    set({ settings });
+  },
 
-      clearSettings: async () => {
-        await db.clearSettingsData();
-        set({ settings: null });
-      },
+  clearSettings: async () => {
+    await db.clearSettingsData();
+    set({ settings: null });
+  },
 
-      loadSettings: async () => {
-        const { settings } = get();
-        if (settings) return;
+  loadSettings: async () => {
+    const { settings } = get();
+    if (settings) return;
 
-        const settingsData = await db.getSettingsData();
-        if (settingsData) {
-          set({ settings: settingsData });
-          return;
-        }
-      },
-    }),)
+    const settingsData = await db.getSettingsData();
+    if (settingsData) {
+      set({ settings: settingsData });
+      return;
+    }
+  },
+}));

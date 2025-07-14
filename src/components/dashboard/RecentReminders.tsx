@@ -40,9 +40,7 @@ function RecentReminders({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [reminders, setReminders] = useState<Reminder[]>(initialReminders);
 
-  const {
-    mutate: updateReminderStatus,
-  } = useMutation({
+  const { mutate: updateReminderStatus } = useMutation({
     mutationFn: ({
       reminderData,
     }: {
@@ -113,15 +111,15 @@ function RecentReminders({
         onSuccess: () => {
           setReminders((prevReminders) =>
             prevReminders.map((r) =>
-              r.id === reminder.id ? { ...r, isDone: !reminder.isDone } : r
-            )
+              r.id === reminder.id ? { ...r, isDone: !reminder.isDone } : r,
+            ),
           );
           toast({
             title: "Status do lembrete atualizado com sucesso!",
-            description: "O status do lembrete foi atualizado com sucesso!",
+            description: `O lembrete foi marcado como ${!reminder.isDone ? "concluído" : "pendente"}`,
           });
         },
-      }
+      },
     );
   };
 
