@@ -221,14 +221,9 @@ const OrderDetail = () => {
   if (!order) {
     return (
       <div className="space-y-6">
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
           <h2 className="text-3xl font-bold tracking-tight">
             Encomenda não encontrada
           </h2>
-        </div>
         <p className="text-muted-foreground">
           A encomenda solicitada não existe ou foi removida.
         </p>
@@ -245,9 +240,6 @@ const OrderDetail = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
           <div>
             <h2 className="text-3xl font-bold tracking-tight">
               Detalhes da Encomenda
@@ -365,7 +357,7 @@ const OrderDetail = () => {
             <div className="grid grid-rows-2 sm:grid-cols-1 gap-3">
               <SettingsGate permission="edit">
                 <Button
-                  variant="outline"
+                  variant="defaultText"
                   size="sm"
                   onClick={() => setDialogOpen(true)}
                 >
@@ -402,6 +394,10 @@ const OrderDetail = () => {
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
+                <Button  onClick={() => navigate(-1)} variant="outline" size="sm">
+                      <ArrowLeft className="h-4 w-4 mr-1" />
+                      Voltar
+                    </Button>
               </SettingsGate>
             </div>
           </CardContent>
