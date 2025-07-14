@@ -27,45 +27,44 @@ const SubscriptionInfo = () => {
     dayjs(subscription.expiresAt).diff(dayjs(), "day") <= 3 &&
     subscription.status === "active";
 
+  // Verifica se a assinatura está ativa e válida
+  const isActive = subscription?.status === "active" && dayjs(subscription?.expiresAt).isAfter(dayjs()) && dayjs(subscription?.gracePeriodUntil).isAfter(dayjs());
+  // Verifica se período de teste terminou
+  const isTrialExpired = subscription?.isTrial && dayjs(subscription?.expiresAt).isBefore(dayjs());
+  // Verifica se assinatura é periodo de teste
+  const isTrial = subscription?.isTrial;
+  // Verifica se o pagamento falhou
+  const isPaymentFailed = subscription.status === "payment_failed";
+
+  console.log(isActive, isTrialExpired, isTrial, isPaymentFailed, subscription )
+
   const headerSubscriptionStatusWarning =
-    subscription?.isTrial && dayjs(subscription?.expiresAt).isBefore(dayjs())
+    isTrialExpired
       ? "Seu período de teste expirou"
-      : subscription.status !== "active" &&
-          dayjs(subscription?.expiresAt).isAfter(dayjs()) &&
-          dayjs(subscription?.gracePeriodUntil).isAfter(dayjs())
+      : !isActive
         ? "Sua assinatura expirou"
-        : subscription.status === "payment_failed"
+        : isPaymentFailed
           ? "Ocorreu um erro no pagamento, por favor, verifique seus meios de pagamento"
-          : dayjs(subscription?.expiresAt).isAfter(dayjs())
-            ? "Sua assinatura expirou"
-            : subscription?.isTrial
+            : isActive && isTrial
               ? "Você está em período de teste"
               : isAboutToExpire
                 ? "Sua assinatura irá expirar em breve"
                 : isAboutToRenew
                   ? "Sua assinatura será renovada em breve"
-                  : subscription?.status === "active"
+                  : isActive
                     ? "Sua assinatura está ativa"
                     : "";
 
   const headerSubscriptionStatusWarningColor =
-    subscription?.isTrial && dayjs(subscription?.expiresAt).isBefore(dayjs())
+    isTrialExpired || !isActive || isPaymentFailed
       ? "text-red-500"
-      : subscription.status !== "active" &&
-          dayjs(subscription?.expiresAt).isAfter(dayjs()) &&
-          dayjs(subscription?.gracePeriodUntil).isAfter(dayjs())
-        ? "text-red-500"
-        : subscription.status === "payment_failed"
-          ? "text-red-500"
-          : dayjs(subscription?.expiresAt).isAfter(dayjs())
-            ? "text-red-500"
-            : subscription?.isTrial
+            : isTrial
               ? "text-yellow-500"
               : isAboutToExpire
                 ? "text-red-500"
                 : isAboutToRenew
                   ? "text-yellow-500"
-                  : subscription?.status === "active"
+                  : isActive
                     ? "text-green-500"
                     : "";
 
