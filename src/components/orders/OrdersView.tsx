@@ -72,12 +72,6 @@ const OrdersView = () => {
           params: { orderId: orderId },
         },
       ),
-    onSuccess: () => {
-      toast({
-        title: "Status atualizado!",
-        description: `A encomenda foi marcada como ${status === "pending" ? "pendente" : status === "production" ? "Produção" : "concluída"}.`,
-      });
-    },
     onError: (error) => {
       toast({
         title: "Erro ao atualizar status",
@@ -195,10 +189,25 @@ const OrdersView = () => {
     id: string,
     targetStatus: "pending" | "production" | "done",
   ) => {
-    updateOrder({
-      orderId: id,
-      orderStatus: targetStatus,
-    });
+    updateOrder(
+      {
+        orderId: id,
+        orderStatus: targetStatus,
+      },
+      {
+        onSuccess: () => {
+          toast({
+            title: "Status atualizado!",
+            description: `A encomenda foi marcada como ${targetStatus === "pending" ? "pendente" : targetStatus === "production" ? "Produção" : "concluída"}.`,
+          });
+          setOrders((prevOrders) =>
+            prevOrders.map((order) =>
+              order.id === id ? { ...order, status: targetStatus } : order
+            )
+          );
+        },
+      }
+    );
   };
 
   const handleNewOrder = () => {

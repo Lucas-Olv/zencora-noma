@@ -36,8 +36,6 @@ const SubscriptionInfo = () => {
   // Verifica se o pagamento falhou
   const isPaymentFailed = subscription.status === "payment_failed";
 
-  console.log(isActive, isTrialExpired, isTrial, isPaymentFailed, subscription )
-
   const headerSubscriptionStatusWarning =
     isTrialExpired
       ? "Seu período de teste expirou"

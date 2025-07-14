@@ -56,31 +56,3 @@ setupAuthRequestInterceptor(nomaApi);
 // Isso garante que qualquer 401 de qualquer uma das APIs acione a mesma lógica de refresh.
 setupAuthRefreshInterceptor(coreApi);
 setupAuthRefreshInterceptor(nomaApi);
-
-// Exemplo de uso (em algum outro arquivo, como um serviço ou componente)
-/*
-// Exemplo de como você usaria as APIs em outro lugar:
-import { coreApi, nomaApi } from '@/lib/api';
-
-async function fetchDataFromCore() {
-  try {
-    const response = await coreApi.get('/some-core-endpoint');
-    console.log('Dados da Core API:', response.data);
-  } catch (error) {
-    console.error('Erro ao buscar dados da Core API:', error);
-  }
-}
-
-async function sendDataToNoma() {
-  try {
-    const response = await nomaApi.post('/some-noma-endpoint', { data: 'payload' });
-    console.log('Resposta da Noma API:', response.data);
-  } catch (error) {
-    console.error('Erro ao enviar dados para Noma API:', error);
-  }
-}
-
-// Chamar as funções (ex: em um useEffect de um componente React)
-// fetchDataFromCore();
-// sendDataToNoma();
-*/

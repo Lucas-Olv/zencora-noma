@@ -194,11 +194,13 @@ export function ProductionView() {
     socket.on("disconnect", (reason) => {
       console.log("[SocketIO] Desconectado! Motivo:", reason);
       setIsConnected(false);
-      toast({
-        title: "Conexão perdida",
-        description: "Não é possível receber atualizações em tempo real",
-        variant: "destructive",
-      });
+      if (reason !== "io client disconnect") {
+        toast({
+          title: "Conexão perdida",
+          description: "Não é possível receber atualizações em tempo real",
+          variant: "destructive",
+        });
+      }
     });
 
     socket.on("connect_error", (err) => {

@@ -1,7 +1,9 @@
 // src/lib/interceptors.ts
 import { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from "axios";
 import { useSessionStore } from "@/storage/session"; // Caminho ajustado
-import { CustomAxiosConfig } from "./types"; // Importa a tipagem customizada
+import { CustomAxiosConfig, Session } from "./types"; // Importa a tipagem customizada
+import { coreApi } from "./api";
+import { verifyToken } from "./jwt";
 
 // Variáveis de controle para o refresh de token
 let isRefreshing = false;
@@ -31,7 +33,7 @@ export const setupAuthRefreshInterceptor = (api: AxiosInstance) => {
         originalRequest.__retryCount = (originalRequest.__retryCount || 0) + 1;
 
         // Se exceder o limite de retries, limpa a sessão e redireciona
-        if (originalRequest.__retryCount > 2) {
+        if (originalRequest.__retryCount > 0) {
           console.warn(
             "[API] Tentativas de refresh excedidas. Limpando sessão.",
           );
@@ -62,7 +64,7 @@ export const setupAuthRefreshInterceptor = (api: AxiosInstance) => {
           // Importante: Esta requisição **não** deve depender de um token de acesso expirado.
           // Idealmente, ela usa um refresh token em um cookie HTTP-only (com withCredentials: true).
           // Se sua API de refresh exige o `accessToken` expirado, a lógica precisaria de ajuste.
-          const { data } = await api.post(
+          const { data } = await coreApi.post(
             "/api/core/v1/refresh",
             {},
             {
@@ -76,7 +78,21 @@ export const setupAuthRefreshInterceptor = (api: AxiosInstance) => {
           );
 
           const newAccessToken = data.data.accessToken;
-          useSessionStore.getState().handleTokenRefresh(newAccessToken); // Atualiza o token na store
+
+          // Verifica token e seta nova sessão
+          const payload = await verifyToken(newAccessToken);
+          const session: Session = {
+            id: payload.sessionId as string,
+            user: {
+              id: payload.sub as string,
+              name: payload.name as string,
+              email: payload.email as string,
+              sessionId: payload.sessionId as string,
+            },
+            token: newAccessToken,
+            productId: payload.productId as string,
+          };
+          useSessionStore.getState().setSession(session, newAccessToken);
 
           // Processa todas as requisições que estavam na fila com o novo token
           failedQueue.forEach((p) => p.resolve(newAccessToken));

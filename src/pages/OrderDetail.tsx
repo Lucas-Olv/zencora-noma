@@ -145,6 +145,7 @@ const OrderDetail = () => {
   const {
     mutate: updateOrderStatus,
     error: updateOrderStatusError,
+    data: updatedOrderData,
     isPending: isUpdateOrderStatus,
     error: isUpdateOrderStatusError,
   } = useMutation({
@@ -156,11 +157,14 @@ const OrderDetail = () => {
           params: { orderId: id },
         },
       ),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       toast({
         title: "Encomenda atualizada com sucesso",
         description: "O status da encomenda foi atualizado com sucesso!",
       });
+      setOrder((prevOrder) =>
+        prevOrder ? { ...prevOrder, status: variables.status } : prevOrder
+      );
     },
     onError: (error) => {
       toast({

@@ -285,7 +285,7 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
         return;
       }
       const accessToken = session?.token;
-      const redirectUrl = `${websiteUrl}account?access_token=${accessToken}`;
+      const redirectUrl = `${websiteUrl}/account?access_token=${accessToken}`;
       window.location.href = redirectUrl;
     } catch (error: any) {
       toast({

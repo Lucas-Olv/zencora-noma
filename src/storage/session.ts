@@ -14,7 +14,7 @@ interface SessionState {
   setSession: (session: Session, token: string) => void;
   restoreSession: () => Promise<void>;
   clearSession: () => Promise<void>;
-  handleTokenRefresh: (token: string) => void;
+  handleTokenRefresh: (token: string) => Promise<void>;
 }
 
 export const useSessionStore = create<SessionState>((set) => ({
@@ -33,11 +33,11 @@ export const useSessionStore = create<SessionState>((set) => ({
         db.updateSessionData(session);
       },
 
-      handleTokenRefresh: (token: string) => {
+      handleTokenRefresh: async (token: string) => {
         set({
           token,
         });
-        db.updateSessionData({ ...useSessionStore.getState().session, token });
+       await db.updateSessionData({ ...useSessionStore.getState().session, token });
       },
 
       restoreSession: async () => {
