@@ -22,20 +22,27 @@ export const WorkspaceProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  const { session } = useSessionStore();
-  const { subscription } = useSubscriptionStorage();
-  const { tenant } = useTenantStorage();
-  const { settings } = useSettingsStorage();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     loadWorkspace();
-  }, [session]);
+  }, []);
 
   const loadWorkspace = async () => {
     setIsLoading(true);
+    await db.init();
+    await useProductStore.getState().loadProduct();
     await useSessionStore.getState().restoreSession();
+    await useProductStore.getState().loadProduct();
+    await useSubscriptionStorage.getState().loadSubscription();
+    await useTenantStorage.getState().loadTenant();
+    await useSettingsStorage.getState().loadSettings();
+
     const session = useSessionStore.getState().session;
+    const subscription = useSubscriptionStorage.getState().subscription;
+    const tenant = useTenantStorage.getState().tenant;
+    const settings = useSettingsStorage.getState().settings;
+
     if (session) {
       if (!subscription || !tenant || !settings) {
         const workspaceData = await postNomaApi("/api/noma/v1/workspace/init");
@@ -52,15 +59,7 @@ export const WorkspaceProvider = ({
             .getState()
             .setSettings(workspaceData.data.settings);
         }
-      } else {
-        await useProductStore.getState().loadProduct();
-        await useSubscriptionStorage.getState().loadSubscription();
-        await useTenantStorage.getState().loadTenant();
-        await useSettingsStorage.getState().loadSettings();
       }
-    } else {
-      await db.init();
-      await useProductStore.getState().loadProduct();
     }
     setIsLoading(false);
   };

@@ -33,6 +33,7 @@ export const LoginForm = () => {
   const [activeTab, setActiveTab] = useState("login");
   const [showResetPassword, setShowResetPassword] = useState(false);
   const { setSession } = useSessionStore();
+  const {loadWorkspace} = useWorkspaceContext();
 
   const {
     mutate: register,
@@ -123,6 +124,7 @@ export const LoginForm = () => {
           productId: payload.productId as string,
         };
         setSession(session, response.data.accessToken);
+        loadWorkspace();
         toast({
           title: "Login realizado com sucesso",
           description: "Bem vindo de volta!",

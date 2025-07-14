@@ -139,16 +139,14 @@ export function ProductionView() {
       ),
     onSuccess: () => {
       toast({
-        title: "Encomenda criada com sucesso",
-        description:
-          "Sua encomenda foi criada com sucesso! Você pode visualizá-la na lista de encomendas.",
+        title: "Encomenda atualizada com sucesso",
       });
     },
     onError: (error) => {
       toast({
-        title: "Erro ao criar encomenda",
+        title: "Erro ao atualizar encomenda",
         description:
-          "ocorreu um erro ao criar a encomenda. Por favor, tente novamente mais tarde.",
+          "ocorreu um erro ao atualizar a encomenda. Por favor, tente novamente mais tarde.",
         variant: "destructive",
       });
       console.log(error);

@@ -42,9 +42,6 @@ function RecentReminders({
 
   const {
     mutate: updateReminderStatus,
-    data: updateReminderStatusData,
-    error: isUpdateReminderStatusError,
-    isPending: isUpdateReminderStatusPending,
   } = useMutation({
     mutationFn: ({
       reminderData,
@@ -56,12 +53,6 @@ function RecentReminders({
         { reminderData },
         { params: { tenantId: tenant?.id, reminderId: reminderData.id } },
       ),
-    onSuccess: () => {
-      toast({
-        title: "Status do lembrete atualizado com sucesso!",
-        description: "O status do lembrete foi atualizado com sucesso!",
-      });
-    },
     onError: (error) => {
       toast({
         title: "Erro ao atualizar status do lembrete",
@@ -111,12 +102,27 @@ function RecentReminders({
   };
 
   const handleToggleDone = async (reminder: Reminder) => {
-    updateReminderStatus({
-      reminderData: {
-        ...reminder,
-        isDone: !reminder.isDone,
+    updateReminderStatus(
+      {
+        reminderData: {
+          ...reminder,
+          isDone: !reminder.isDone,
+        },
       },
-    });
+      {
+        onSuccess: () => {
+          setReminders((prevReminders) =>
+            prevReminders.map((r) =>
+              r.id === reminder.id ? { ...r, isDone: !reminder.isDone } : r
+            )
+          );
+          toast({
+            title: "Status do lembrete atualizado com sucesso!",
+            description: "O status do lembrete foi atualizado com sucesso!",
+          });
+        },
+      }
+    );
   };
 
   const handleOpenDetails = (reminder: Reminder) => {

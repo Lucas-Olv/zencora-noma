@@ -75,7 +75,6 @@ const Dashboard = () => {
       const endOfWeek = new Date(startOfWeek);
       endOfWeek.setDate(startOfWeek.getDate() + 6);
       const orders = ordersData.data;
-      console.log("Orders fetched:", orders);
       const activeOrders =
         orders.filter(
           (order: Order) =>
