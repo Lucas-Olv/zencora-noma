@@ -1,8 +1,10 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 import { db } from "@/lib/db";
 import { verifyToken } from "@/lib/jwt";
 import { Session, User } from "@/lib/types";
+import { useSubscriptionStorage } from "./subscription";
+import { useTenantStorage } from "./tenant";
+import { useSettingsStorage } from "./settings";
 
 interface SessionState {
   token: string | null;
@@ -11,13 +13,11 @@ interface SessionState {
   isAuthenticated: boolean;
   setSession: (session: Session, token: string) => void;
   restoreSession: () => Promise<void>;
-  clearSession: () => void;
+  clearSession: () => Promise<void>;
   handleTokenRefresh: (token: string) => void;
 }
 
-export const useSessionStore = create<SessionState>()(
-  persist(
-    (set) => ({
+export const useSessionStore = create<SessionState>((set) => ({
       token: null,
       user: null,
       session: null,
@@ -67,24 +67,20 @@ export const useSessionStore = create<SessionState>()(
             isAuthenticated: true,
           });
         } catch (error) {
-          useSessionStore.getState().clearSession();
-          window.location.href = "/login";
+          await useSessionStore.getState().clearSession();
+          await useSubscriptionStorage.getState().clearSubscription();
+          await useTenantStorage.getState().clearTenant();
+          await useSettingsStorage.getState().clearSettings();
         }
       },
 
-      clearSession: () => {
-        db.clearSessionData();
+      clearSession: async () => {
+        await db.clearSessionData();
         set({
           token: null,
           user: null,
           session: null,
           isAuthenticated: false,
         });
-        window.location.href = "/login";
       },
-    }),
-    {
-      name: "session-storage",
-    },
-  ),
-);
+    }),)

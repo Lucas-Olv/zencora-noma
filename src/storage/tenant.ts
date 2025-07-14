@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 import { Tenant } from "@/lib/types";
 import { db } from "@/lib/db";
 
@@ -10,9 +9,7 @@ interface TenantState {
   loadTenant: () => Promise<void>;
 }
 
-export const useTenantStorage = create<TenantState>()(
-  persist(
-    (set, get) => ({
+export const useTenantStorage = create<TenantState>(    (set, get) => ({
       tenant: null,
 
       setTenant: async (tenant) => {
@@ -22,7 +19,7 @@ export const useTenantStorage = create<TenantState>()(
       },
 
       clearTenant: async () => {
-        await db.clearProductData();
+        await db.clearTenantData();
         set({ tenant: null });
       },
 
@@ -36,9 +33,4 @@ export const useTenantStorage = create<TenantState>()(
           return;
         }
       },
-    }),
-    {
-      name: "tenant-storage",
-    },
-  ),
-);
+    }))

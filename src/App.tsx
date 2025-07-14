@@ -68,9 +68,7 @@ const AppRoutes = () => {
   }
 
   // Se estiver autenticado mas não aceitou os termos, redireciona para a tela de aceitação
-  const shouldAcceptTerms = session && tenant && tenant.userAcceptedTerms;
-
-  console.log("shouldAcceptTerms", shouldAcceptTerms);
+  const shouldAcceptTerms = session && tenant && tenant.userAcceptedTerms === false;
 
   return (
     <Routes>

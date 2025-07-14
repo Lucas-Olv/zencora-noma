@@ -27,12 +27,15 @@ export const WorkspaceProvider = ({
   const { tenant } = useTenantStorage();
   const { settings } = useSettingsStorage();
   const [isLoading, setIsLoading] = useState(true);
+
   useEffect(() => {
     loadWorkspace();
   }, [session]);
 
   const loadWorkspace = async () => {
     setIsLoading(true);
+    await useSessionStore.getState().restoreSession();
+    const session = useSessionStore.getState().session;
     if (session) {
       if (!subscription || !tenant || !settings) {
         const workspaceData = await postNomaApi("/api/noma/v1/workspace/init");
@@ -62,13 +65,12 @@ export const WorkspaceProvider = ({
     setIsLoading(false);
   };
 
-    const clearWorkspaceData = () => {
-    useSessionStore.getState().clearSession();
-    useProductStore.getState().clearProduct();
-    useSubscriptionStorage.getState().clearSubscription();
-    useTenantStorage.getState().clearTenant();
-    useSettingsStorage.getState().clearSettings();
-    db.clearWorkspaceData();
+    const clearWorkspaceData = async () => {
+      await useSubscriptionStorage.getState().clearSubscription();
+      await useTenantStorage.getState().clearTenant();
+      await useSettingsStorage.getState().clearSettings();
+      await useSessionStore.getState().clearSession();
+      window.location.href = "/login";
   }
 
   return (

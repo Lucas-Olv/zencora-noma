@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -23,11 +23,12 @@ const TermsAcceptance = () => {
   } = useMutation({
     mutationFn: () =>
       patchNomaApi("/api/noma/v1/tenants/accept-terms", {
-        tenant: tenant?.id,
         userAcceptedTerms: accepted,
+      }, {
+        params: { tenantId: tenant?.id },
       }),
-    onSuccess: () => {
-      useTenantStorage.getState().setTenant(tenant);
+    onSuccess: async () => {
+      await useTenantStorage.getState().setTenant({ ...tenant, userAcceptedTerms: true });
       toast({
         title: "Termos aceitos",
         description: "Obrigado por aceitar os termos de uso.",
@@ -42,6 +43,10 @@ const TermsAcceptance = () => {
       console.log(error);
     },
   });
+
+  useEffect(() => { 
+    document.title = "Termos de Uso | Zencora Noma";
+  }, []);
 
   const handleAccept = async () => {
     if (!tenant) return;

@@ -106,15 +106,6 @@ export default function SettingsView() {
                 }
               />
             </div>
-            <Separator />
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Exigir senha para trocar de papel</Label>
-                <p className="text-sm text-muted-foreground">
-                  Exige senha ao trocar entre papéis de usuário.
-                </p>
-              </div>
-            </div>
           </CardContent>
         </Card>
       </div>

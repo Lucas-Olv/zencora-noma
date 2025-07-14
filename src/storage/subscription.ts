@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 import { Subscription } from "@/lib/types";
 import { db } from "@/lib/db";
 
@@ -10,9 +9,7 @@ interface SubscriptionState {
   loadSubscription: () => Promise<void>;
 }
 
-export const useSubscriptionStorage = create<SubscriptionState>()(
-  persist(
-    (set, get) => ({
+export const useSubscriptionStorage = create<SubscriptionState>(    (set, get) => ({
       subscription: null,
 
       setSubscription: async (subscription) => {
@@ -36,9 +33,4 @@ export const useSubscriptionStorage = create<SubscriptionState>()(
           return;
         }
       },
-    }),
-    {
-      name: "subscription-storage",
-    },
-  ),
-);
+    }))

@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 import { Settings } from "@/lib/types";
 import { db } from "@/lib/db";
 
@@ -10,9 +9,7 @@ interface SettingsState {
   loadSettings: () => Promise<void>;
 }
 
-export const useSettingsStorage = create<SettingsState>()(
-  persist(
-    (set, get) => ({
+export const useSettingsStorage = create<SettingsState>(    (set, get) => ({
       settings: null,
 
       setSettings: async (settings) => {
@@ -22,7 +19,7 @@ export const useSettingsStorage = create<SettingsState>()(
       },
 
       clearSettings: async () => {
-        await db.clearProductData();
+        await db.clearSettingsData();
         set({ settings: null });
       },
 
@@ -36,9 +33,4 @@ export const useSettingsStorage = create<SettingsState>()(
           return;
         }
       },
-    }),
-    {
-      name: "settings-storage",
-    },
-  ),
-);
+    }),)
