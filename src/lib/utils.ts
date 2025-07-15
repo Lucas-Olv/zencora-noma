@@ -6,7 +6,7 @@ import { useReactToPrint, type UseReactToPrintOptions } from "react-to-print";
 import { useSubscriptionStorage } from "@/storage/subscription";
 import { useTenantStorage } from "@/storage/tenant";
 import { useSettingsStorage } from "@/storage/settings";
-import { useSessionStore } from "@/storage/session";
+import { useSessionStorage } from "@/storage/session";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -47,7 +47,7 @@ export async function cleanWorkspaceData() {
   await useSubscriptionStorage.getState().clearSubscription();
   await useTenantStorage.getState().clearTenant();
   await useSettingsStorage.getState().clearSettings();
-  await useSessionStore.getState().clearSession();
+  await useSessionStorage.getState().clearSession();
   window.location.href = "/login";
 }
 

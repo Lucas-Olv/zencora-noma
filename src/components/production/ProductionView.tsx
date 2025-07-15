@@ -40,7 +40,7 @@ import { useTenantStorage } from "@/storage/tenant";
 import { Order } from "@/lib/types";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { getNomaApi, patchNomaApi } from "@/lib/apiHelpers";
-import { useSessionStore } from "@/storage/session";
+import { useSessionStorage } from "@/storage/session";
 
 function ConnectionStatus({
   isConnected,
@@ -93,7 +93,7 @@ function ConnectionStatus({
 export function ProductionView() {
   const { toast } = useToast();
   const { tenant } = useTenantStorage();
-  const { session } = useSessionStore();
+  const { session } = useSessionStorage();
   const [orders, setOrders] = useState<Order[]>([]);
   const [isConnected, setIsConnected] = useState<boolean | undefined>(
     undefined,

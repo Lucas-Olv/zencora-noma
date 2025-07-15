@@ -9,7 +9,7 @@ import {
 import { useNavigate, useLocation } from "react-router-dom";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { useSubscriptionStorage } from "@/storage/subscription";
-import { useSessionStore } from "@/storage/session";
+import { useSessionStorage } from "@/storage/session";
 import dayjs from "dayjs";
 
 interface SubscriptionRoutesContextType {
@@ -62,7 +62,7 @@ export const SubscriptionGate = ({
   const navigate = useNavigate();
   const location = useLocation();
   const { isLoading } = useWorkspaceContext();
-  const { session } = useSessionStore();
+  const { session } = useSessionStorage();
   const { subscription } = useSubscriptionStorage();
 
   const path = location.pathname;

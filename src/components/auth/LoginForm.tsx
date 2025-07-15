@@ -15,7 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import { Eye, EyeOff, Loader2, ArrowLeft } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
-import { useSessionStore } from "@/storage/session";
+import { useSessionStorage } from "@/storage/session";
 import { verifyToken } from "@/lib/jwt";
 import { Session } from "@/lib/types";
 import { postCoreApiPublic } from "@/lib/apiHelpers";
@@ -37,15 +37,10 @@ export const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
   const [showResetPassword, setShowResetPassword] = useState(false);
-  const { setSession } = useSessionStore();
+  const { setSession } = useSessionStorage();
   const { loadWorkspace } = useWorkspaceContext();
 
-  const {
-    mutate: register,
-    error: registerError,
-    data: registerData,
-    isPending: isRegisterPending,
-  } = useMutation({
+  const { mutate: signUp, isPending: isSignUpPending } = useMutation({
     mutationFn: () =>
       postCoreApiPublic("/api/core/v1/signup", { email, password, name }),
     onSuccess: () => {
@@ -92,12 +87,7 @@ export const LoginForm = () => {
     },
   });
 
-  const {
-    mutate: login,
-    isPending: isLoginPending,
-    error: loginError,
-    data: loginData,
-  } = useMutation({
+  const { mutate: signIn, isPending: isSignInPending } = useMutation({
     mutationFn: ({
       email,
       password,
@@ -162,12 +152,12 @@ export const LoginForm = () => {
 
   const handleSignUp = async (e: FormEvent) => {
     e.preventDefault();
-    register();
+    signUp();
   };
 
   const handleSignIn = async (e: FormEvent) => {
     e.preventDefault();
-    login({
+    signIn({
       email,
       password,
       productId: useProductStore.getState().product.id.toString(),
@@ -275,6 +265,7 @@ export const LoginForm = () => {
                       id="email"
                       type="email"
                       placeholder="seu@email.com"
+                      disabled={isSignInPending}
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
@@ -289,6 +280,8 @@ export const LoginForm = () => {
                         type={showPassword ? "text" : "password"}
                         required
                         placeholder="••••••••"
+                        disabled={isSignInPending}
+                        minLength={8}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                       />
@@ -297,6 +290,7 @@ export const LoginForm = () => {
                         variant="ghost"
                         size="icon"
                         className="absolute right-0 top-0 h-full"
+                        disabled={isSignInPending}
                         onClick={() => setShowPassword(!showPassword)}
                       >
                         {showPassword ? (
@@ -310,6 +304,7 @@ export const LoginForm = () => {
                   <Button
                     type="button"
                     variant="link"
+                    disabled={isSignInPending}
                     className="w-full text-sm text-muted-foreground hover:text-primary"
                     onClick={() => setShowResetPassword(true)}
                   >
@@ -318,8 +313,8 @@ export const LoginForm = () => {
                 </CardContent>
 
                 <CardFooter>
-                  <Button className="w-full" disabled={isLoginPending}>
-                    {isLoginPending ? (
+                  <Button className="w-full" disabled={isSignInPending}>
+                    {isSignInPending ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />{" "}
                         Entrando...
@@ -349,6 +344,7 @@ export const LoginForm = () => {
                     <Input
                       id="register-name"
                       placeholder="Seu nome"
+                      disabled={isSignUpPending}
                       required
                       value={name}
                       onChange={(e) => setName(e.target.value)}
@@ -361,6 +357,7 @@ export const LoginForm = () => {
                       id="register-email"
                       type="email"
                       placeholder="seu@email.com"
+                      disabled={isSignUpPending}
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
@@ -374,6 +371,8 @@ export const LoginForm = () => {
                         id="register-password"
                         type={showPassword ? "text" : "password"}
                         required
+                        disabled={isSignUpPending}
+                        minLength={8}
                         placeholder="••••••••"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
@@ -381,6 +380,7 @@ export const LoginForm = () => {
                       <Button
                         type="button"
                         variant="ghost"
+                        disabled={isSignUpPending}
                         size="icon"
                         className="absolute right-0 top-0 h-full"
                         onClick={() => setShowPassword(!showPassword)}
@@ -396,8 +396,8 @@ export const LoginForm = () => {
                 </CardContent>
 
                 <CardFooter>
-                  <Button className="w-full" disabled={isRegisterPending}>
-                    {isRegisterPending ? (
+                  <Button className="w-full" disabled={isSignUpPending}>
+                    {isSignUpPending ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />{" "}
                         Criando conta...

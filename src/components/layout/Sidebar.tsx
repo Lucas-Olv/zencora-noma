@@ -39,7 +39,7 @@ import {
 } from "@/components/ui/tooltip";
 import { SettingsGate } from "@/components/settings/SettingsGate";
 import { Loader2 } from "lucide-react";
-import { useSessionStore } from "@/storage/session";
+import { useSessionStorage } from "@/storage/session";
 import { useSubscriptionStorage } from "@/storage/subscription";
 import { useSettingsStorage } from "@/storage/settings";
 import { useMutation } from "@tanstack/react-query";
@@ -90,8 +90,6 @@ const mainNavItems: NavItem[] = [
     icon: Calendar,
   },
 ];
-
-const bottomNavItems: NavItem[] = [];
 
 interface NavButtonProps {
   item: NavItem;
@@ -219,6 +217,10 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // Zustand stores
+  const { subscription } = useSubscriptionStorage();
+  const { settings } = useSettingsStorage();
+
   const { mutate: logout } = useMutation({
     mutationFn: () => postCoreApi("/api/core/v1/signout"),
     onSuccess: async () => {
@@ -236,13 +238,7 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
     },
   });
 
-  // Zustand stores
-  const { session } = useSessionStore();
-  const { subscription } = useSubscriptionStorage();
-  const { settings } = useSettingsStorage();
-
   // Derivações
-  const appSession = session;
   const isLoading = false; // zustand é síncrono, pode-se adicionar loading se necessário
   const isTrial = !!subscription?.isTrial;
   const subscriptionActive = subscription?.status === "active";
@@ -281,7 +277,7 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
         });
         return;
       }
-      const accessToken = session?.token;
+      const accessToken = useSessionStorage.getState().session.token;
       const redirectUrl = `${websiteUrl}/account?access_token=${accessToken}`;
       window.location.href = redirectUrl;
     } catch (error: any) {
@@ -299,24 +295,6 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
       return;
     }
     navigate(href);
-    closeSidebar();
-  };
-
-  const handleRoleSwitch = () => {
-    // Se a configuração de senha para trocar de papel estiver ativa, redireciona para verificação
-    if (settings?.requirePasswordToSwitchRole) {
-      navigate("/verify-password", {
-        state: {
-          redirect: "/select-role",
-          name: "trocar de papel",
-          fromRoleSwitch: true,
-        },
-      });
-    } else {
-      // Se não precisar de senha, limpa a role atual e vai direto para a seleção de papéis
-      localStorage.removeItem("active_role_id");
-      navigate("/select-role");
-    }
     closeSidebar();
   };
 

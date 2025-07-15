@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { db } from "@/lib/db";
 import { useProductStore } from "@/storage/product";
-import { useSessionStore } from "@/storage/session";
+import { useSessionStorage } from "@/storage/session";
 import { useSubscriptionStorage } from "@/storage/subscription";
 import { useTenantStorage } from "@/storage/tenant";
 import { useSettingsStorage } from "@/storage/settings";
@@ -31,13 +31,13 @@ export const WorkspaceProvider = ({
     setIsLoading(true);
     await db.init();
     await useProductStore.getState().loadProduct();
-    await useSessionStore.getState().restoreSession();
+    await useSessionStorage.getState().restoreSession();
     await useProductStore.getState().loadProduct();
     await useSubscriptionStorage.getState().loadSubscription();
     await useTenantStorage.getState().loadTenant();
     await useSettingsStorage.getState().loadSettings();
 
-    const session = useSessionStore.getState().session;
+    const session = useSessionStorage.getState().session;
     const subscription = useSubscriptionStorage.getState().subscription;
     const tenant = useTenantStorage.getState().tenant;
     const settings = useSettingsStorage.getState().settings;

@@ -1,11 +1,11 @@
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { ReactNode, useEffect } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
-import { useSessionStore } from "@/storage/session";
+import { useSessionStorage } from "@/storage/session";
 
 const ProtectedRoute = ({ children }: { children: ReactNode }) => {
   const location = useLocation();
-  const { session } = useSessionStore();
+  const { session } = useSessionStorage();
   const { isLoading } = useWorkspaceContext();
   const navigate = useNavigate();
 

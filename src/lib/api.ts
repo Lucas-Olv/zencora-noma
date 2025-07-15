@@ -1,7 +1,7 @@
 // src/lib/api.ts
 import axios, { AxiosInstance } from "axios";
 import { CustomAxiosConfig } from "./types";
-import { useSessionStore } from "@/storage/session";
+import { useSessionStorage } from "@/storage/session";
 import { setupAuthRefreshInterceptor } from "./interceptors"; // Importa o interceptor de refresh
 
 // Cria as instâncias Axios para suas APIs
@@ -29,7 +29,7 @@ const setupAuthRequestInterceptor = (apiInstance: AxiosInstance) => {
       customConfig.withAuth !== false && !customConfig.__isRetryRequest;
 
     if (shouldAddAuth) {
-      const token = useSessionStore.getState().token;
+      const token = useSessionStorage.getState().token;
       if (token) {
         // Verifica se o token não é nulo/undefined/strings vazias, etc.
         if (

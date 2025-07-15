@@ -221,9 +221,9 @@ const OrderDetail = () => {
   if (!order) {
     return (
       <div className="space-y-6">
-          <h2 className="text-3xl font-bold tracking-tight">
-            Encomenda não encontrada
-          </h2>
+        <h2 className="text-3xl font-bold tracking-tight">
+          Encomenda não encontrada
+        </h2>
         <p className="text-muted-foreground">
           A encomenda solicitada não existe ou foi removida.
         </p>
@@ -394,10 +394,14 @@ const OrderDetail = () => {
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
-                <Button  onClick={() => navigate(-1)} variant="outline" size="sm">
-                      <ArrowLeft className="h-4 w-4 mr-1" />
-                      Voltar
-                    </Button>
+                <Button
+                  onClick={() => navigate(-1)}
+                  variant="outline"
+                  size="sm"
+                >
+                  <ArrowLeft className="h-4 w-4 mr-1" />
+                  Voltar
+                </Button>
               </SettingsGate>
             </div>
           </CardContent>

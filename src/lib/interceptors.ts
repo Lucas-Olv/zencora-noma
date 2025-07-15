@@ -1,11 +1,9 @@
 // src/lib/interceptors.ts
 import { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from "axios";
-import { useSessionStore } from "@/storage/session"; // Caminho ajustado
+import { useSessionStorage } from "@/storage/session"; // Caminho ajustado
 import { CustomAxiosConfig, Session } from "./types"; // Importa a tipagem customizada
 import { coreApi } from "./api";
 import { verifyToken } from "./jwt";
-import { useTenantStorage } from "@/storage/tenant";
-import { useSettingsStorage } from "@/storage/settings";
 import { cleanWorkspaceData } from "./utils";
 
 // Variáveis de controle para o refresh de token
@@ -70,8 +68,9 @@ export const setupAuthRefreshInterceptor = (api: AxiosInstance) => {
             productId: payload.productId as string,
           };
 
-          await useSessionStore.getState().setSession(session, newAccessToken);
-
+          await useSessionStorage
+            .getState()
+            .setSession(session, newAccessToken);
           // Processa fila de requisições falhadas
           failedQueue.forEach((p) => p.resolve(newAccessToken));
           failedQueue = [];
@@ -83,7 +82,7 @@ export const setupAuthRefreshInterceptor = (api: AxiosInstance) => {
           failedQueue.forEach((p) => p.reject(refreshError));
           failedQueue = [];
 
-          await useSessionStore.getState().clearSession();
+          await cleanWorkspaceData();
           window.location.href = "/login";
           return Promise.reject(refreshError);
         } finally {

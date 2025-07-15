@@ -1,6 +1,6 @@
 import { useToast } from "@/components/ui/use-toast";
 import { useSubscriptionStorage } from "@/storage/subscription";
-import { useSessionStore } from "@/storage/session";
+import { useSessionStorage } from "@/storage/session";
 import { useProductStore } from "@/storage/product";
 
 // Price IDs for each plan
@@ -17,7 +17,7 @@ const PRICE_IDS = {
 
 export function useSubscriptionHandler() {
   const { toast } = useToast();
-  const { session } = useSessionStore();
+  const { session } = useSessionStorage();
   const { product } = useProductStore();
   const { subscription } = useSubscriptionStorage();
 

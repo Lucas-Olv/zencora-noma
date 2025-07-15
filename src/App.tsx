@@ -35,7 +35,7 @@ import {
   WorkspaceProvider,
 } from "@/contexts/WorkspaceContext";
 import TermsAcceptance from "./pages/TermsAcceptance";
-import { useSessionStore } from "./storage/session";
+import { useSessionStorage } from "./storage/session";
 import { useTenantStorage } from "./storage/tenant";
 import { useSettingsStorage } from "./storage/settings";
 import PasswordVerification from "./components/auth/PasswordVerification";
@@ -54,7 +54,7 @@ const BLOCKED_ROUTES = [
 const AppRoutes = () => {
   const { isLoading } = useWorkspaceContext();
 
-  const { session } = useSessionStore();
+  const { session } = useSessionStorage();
   const { tenant } = useTenantStorage();
   const { settings } = useSettingsStorage();
   const location = useLocation();

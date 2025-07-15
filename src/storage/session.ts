@@ -12,36 +12,25 @@ interface SessionState {
   user: User | null;
   session: Session | null;
   isAuthenticated: boolean;
-  setSession: (session: Session, token: string) => void;
+  setSession: (session: Session, token: string) => Promise<void>;
   restoreSession: () => Promise<void>;
   clearSession: () => Promise<void>;
-  handleTokenRefresh: (token: string) => Promise<void>;
 }
 
-export const useSessionStore = create<SessionState>((set) => ({
+export const useSessionStorage = create<SessionState>((set) => ({
   token: null,
   user: null,
   session: null,
   isAuthenticated: false,
 
-  setSession: (session, token) => {
+  setSession: async (session, token) => {
     set({
       token,
       user: session.user,
       session,
       isAuthenticated: true,
     });
-    db.updateSessionData(session);
-  },
-
-  handleTokenRefresh: async (token: string) => {
-    set({
-      token,
-    });
-    await db.updateSessionData({
-      ...useSessionStore.getState().session,
-      token,
-    });
+    await db.updateSessionData(session);
   },
 
   restoreSession: async () => {

@@ -10,10 +10,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import dayjs from "dayjs";
 import { useSubscriptionStorage } from "@/storage/subscription";
+import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 
 const SubscriptionInfo = () => {
-  const [mounted, setMounted] = useState(false);
   const { subscription } = useSubscriptionStorage();
+  const { isLoading } = useWorkspaceContext();
 
   // Verifica se a assinatura está próxima de expirar (3 dias)
   const isAboutToExpire =
@@ -38,7 +39,7 @@ const SubscriptionInfo = () => {
   // Verifica se assinatura é periodo de teste
   const isTrial = subscription?.isTrial;
   // Verifica se o pagamento falhou
-  const isPaymentFailed = subscription.status === "payment_failed";
+  const isPaymentFailed = subscription?.status === "payment_failed";
 
   const headerSubscriptionStatusWarning = isTrialExpired
     ? "Seu período de teste expirou"
@@ -68,15 +69,6 @@ const SubscriptionInfo = () => {
             : isActive
               ? "text-green-500"
               : "";
-
-  // Avoid hydration mismatch
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    return null;
-  }
 
   return (
     <DropdownMenu>
