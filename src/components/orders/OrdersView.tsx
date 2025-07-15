@@ -478,7 +478,7 @@ const OrdersView = () => {
                                   {getOrderCode(order.id)}
                                 </p>
                                 <h3 className="font-medium truncate max-w-[40dvw]">
-                                  {order.dueDate}
+                                  {order.clientName}
                                 </h3>
                               </div>
                               <p className="text-sm text-muted-foreground">
@@ -506,7 +506,7 @@ const OrdersView = () => {
                             </Badge>
                           </div>
 
-                          <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center justify-between">
                             <SubscriptionGate blockMode="disable">
                               <Button
                                 variant="ghost"
