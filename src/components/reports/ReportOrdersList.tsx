@@ -82,9 +82,7 @@ function ReportOrdersList({
                                 "text-red-500",
                             )}
                           >
-                            {order.dueDate
-                              ? formatDate(order.clientName)
-                              : "Sem data"}
+                            {formatDate(order.dueDate)}
                           </span>
                         </span>
                       </div>
