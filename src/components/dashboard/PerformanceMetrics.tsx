@@ -21,6 +21,8 @@ import { LoadingState } from "@/components/ui/loading-state";
 import { ChartBarIcon } from "lucide-react";
 import { Order } from "@/lib/types";
 import dayjs from "dayjs";
+import "dayjs/locale/pt-br";
+dayjs.locale("pt-br");
 
 interface PerformanceMetricsProps {
   orders: Order[];
@@ -114,7 +116,7 @@ const getDailyData = (orders: Order[]) => {
   const dailyData = Array.from({ length: 7 }, (_, i) => {
     const date = lastWeekStart.add(i, "day");
     return {
-      date: date.format("ddd"),
+      date: date.format("ddd"), // agora em português
       Receita: 0,
       Encomendas: 0,
       _date: date,
