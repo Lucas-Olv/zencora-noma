@@ -20,6 +20,7 @@ import { parseDate } from "@/lib/utils";
 import { LoadingState } from "@/components/ui/loading-state";
 import { ChartBarIcon } from "lucide-react";
 import { Order } from "@/lib/types";
+import dayjs from "dayjs";
 
 interface PerformanceMetricsProps {
   orders: Order[];
@@ -33,38 +34,41 @@ const formatCurrency = (value: number) => {
   }).format(value);
 };
 
+// Utilitário para normalizar uma data para o início do dia (00:00:00)
+function startOfDay(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+// Utilitário para normalizar uma data para o fim do dia (23:59:59.999)
+function endOfDay(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999);
+}
+
 const calculateRevenueVariation = (orders: Order[]) => {
-  const today = new Date();
-  const lastWeek = new Date(today);
-  lastWeek.setDate(today.getDate() - 7);
-  const twoWeeksAgo = new Date(lastWeek);
-  twoWeeksAgo.setDate(lastWeek.getDate() - 7);
+  const today = dayjs().startOf("day");
+  const endToday = dayjs().endOf("day");
+  const lastWeekStart = today.subtract(6, "day"); // 7 dias incluindo hoje
+  const previousWeekStart = lastWeekStart.subtract(7, "day");
+  const previousWeekEnd = lastWeekStart.subtract(1, "day").endOf("day");
 
   const currentWeekRevenue = orders
     .filter((order) => {
-      const orderDate = parseDate(order.createdAt);
-      return orderDate && orderDate >= lastWeek && orderDate <= today;
+      const orderDate = dayjs(parseDate(order.dueDate)).startOf("day");
+      return (orderDate.isAfter(lastWeekStart) || orderDate.isSame(lastWeekStart)) && (orderDate.isBefore(endToday) || orderDate.isSame(endToday));
     })
-    .reduce(
-      (sum: number, order: Order) => sum + (parseFloat(order.price) || 0),
-      0,
-    );
+    .reduce((sum: number, order: Order) => sum + (parseFloat(order.price) || 0), 0);
 
   const previousWeekRevenue = orders
     .filter((order) => {
-      const orderDate = parseDate(order.createdAt);
-      return orderDate && orderDate >= twoWeeksAgo && orderDate < lastWeek;
+      const orderDate = dayjs(parseDate(order.dueDate)).startOf("day");
+      return (orderDate.isAfter(previousWeekStart) || orderDate.isSame(previousWeekStart)) && (orderDate.isBefore(previousWeekEnd) || orderDate.isSame(previousWeekEnd));
     })
-    .reduce(
-      (sum: number, order: Order) => sum + (parseFloat(order.price) || 0),
-      0,
-    );
+    .reduce((sum: number, order: Order) => sum + (parseFloat(order.price) || 0), 0);
 
   const variation =
     previousWeekRevenue === 0
-      ? 100
-      : ((currentWeekRevenue - previousWeekRevenue) / previousWeekRevenue) *
-        100;
+      ? currentWeekRevenue > 0 ? 100 : 0
+      : ((currentWeekRevenue - previousWeekRevenue) / previousWeekRevenue) * 100;
 
   return {
     currentWeekRevenue,
@@ -74,25 +78,25 @@ const calculateRevenueVariation = (orders: Order[]) => {
 };
 
 const calculateOrdersVariation = (orders: Order[]) => {
-  const today = new Date();
-  const lastWeek = new Date(today);
-  lastWeek.setDate(today.getDate() - 7);
-  const twoWeeksAgo = new Date(lastWeek);
-  twoWeeksAgo.setDate(lastWeek.getDate() - 7);
+  const today = dayjs().startOf("day");
+  const endToday = dayjs().endOf("day");
+  const lastWeekStart = today.subtract(6, "day");
+  const previousWeekStart = lastWeekStart.subtract(7, "day");
+  const previousWeekEnd = lastWeekStart.subtract(1, "day").endOf("day");
 
   const currentWeekOrders = orders.filter((order) => {
-    const orderDate = parseDate(order.createdAt);
-    return orderDate && orderDate >= lastWeek && orderDate <= today;
+    const orderDate = dayjs(parseDate(order.dueDate)).startOf("day");
+    return (orderDate.isAfter(lastWeekStart) || orderDate.isSame(lastWeekStart)) && (orderDate.isBefore(endToday) || orderDate.isSame(endToday));
   }).length;
 
   const previousWeekOrders = orders.filter((order) => {
-    const orderDate = parseDate(order.createdAt);
-    return orderDate && orderDate >= twoWeeksAgo && orderDate < lastWeek;
+    const orderDate = dayjs(parseDate(order.dueDate)).startOf("day");
+    return (orderDate.isAfter(previousWeekStart) || orderDate.isSame(previousWeekStart)) && (orderDate.isBefore(previousWeekEnd) || orderDate.isSame(previousWeekEnd));
   }).length;
 
   const variation =
     previousWeekOrders === 0
-      ? 100
+      ? currentWeekOrders > 0 ? 100 : 0
       : ((currentWeekOrders - previousWeekOrders) / previousWeekOrders) * 100;
 
   return {
@@ -103,34 +107,31 @@ const calculateOrdersVariation = (orders: Order[]) => {
 };
 
 const getDailyData = (orders: Order[]) => {
-  const today = new Date();
-  const lastWeek = new Date(today);
-  lastWeek.setDate(today.getDate() - 7);
+  const today = dayjs().startOf("day");
+  const lastWeekStart = today.subtract(6, "day");
 
+  // Cria array de 7 dias (de 6 dias atrás até hoje)
   const dailyData = Array.from({ length: 7 }, (_, i) => {
-    const date = new Date(lastWeek);
-    date.setDate(lastWeek.getDate() + i);
+    const date = lastWeekStart.add(i, "day");
     return {
-      date: date.toLocaleDateString("pt-BR", { weekday: "short" }),
+      date: date.format("ddd"),
       Receita: 0,
       Encomendas: 0,
+      _date: date,
     };
   });
 
   orders.forEach((order) => {
-    const orderDate = parseDate(order.createdAt);
-    if (orderDate && orderDate >= lastWeek && orderDate <= today) {
-      const dayIndex = Math.floor(
-        (orderDate.getTime() - lastWeek.getTime()) / (1000 * 60 * 60 * 24),
-      );
-      if (dayIndex >= 0 && dayIndex < 7) {
-        dailyData[dayIndex].Receita += parseFloat(order.price) || 0;
-        dailyData[dayIndex].Encomendas += 1;
-      }
+    const orderDate = dayjs(parseDate(order.dueDate)).startOf("day");
+    const dayIndex = dailyData.findIndex((d) => d._date.isSame(orderDate, "day"));
+    if (dayIndex !== -1) {
+      dailyData[dayIndex].Receita += parseFloat(order.price) || 0;
+      dailyData[dayIndex].Encomendas += 1;
     }
   });
 
-  return dailyData;
+  // Remove _date antes de retornar
+  return dailyData.map(({ _date, ...rest }) => rest);
 };
 
 export default function PerformanceMetrics({
