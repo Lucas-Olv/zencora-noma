@@ -39,6 +39,7 @@ import { useSessionStorage } from "./storage/session";
 import { useTenantStorage } from "./storage/tenant";
 import { useSettingsStorage } from "./storage/settings";
 import PasswordVerification from "./components/auth/PasswordVerification";
+import Delivery from "./components/delivery/Delivery";
 const queryClient = new QueryClient();
 
 const BLOCKED_ROUTES = [
@@ -155,6 +156,18 @@ const AppRoutes = () => {
                     <Navigate to="/terms-acceptance" replace />
                   ) : (
                     <Production />
+                  )}
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="delivery"
+              element={
+                <ProtectedRoute>
+                  {shouldAcceptTerms ? (
+                    <Navigate to="/terms-acceptance" replace />
+                  ) : (
+                    <Delivery />
                   )}
                 </ProtectedRoute>
               }

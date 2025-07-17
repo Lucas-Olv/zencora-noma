@@ -18,6 +18,8 @@ import {
   CheckCircle,
   Clock,
   DollarSign,
+  ReceiptText,
+  CreditCardIcon,
   Edit,
   Trash,
   Package,
@@ -149,7 +151,7 @@ const OrderDetail = () => {
     isPending: isUpdateOrderStatus,
     error: isUpdateOrderStatusError,
   } = useMutation({
-    mutationFn: ({ status }: { status: string }) =>
+    mutationFn: ({ status }: { status: "pending" | "production" | "done" | "canceled" | "delivered" }) =>
       patchNomaApi(
         `/api/noma/v1/orders/update`,
         { tenantId: tenant?.id, orderData: { status } },
@@ -270,7 +272,7 @@ const OrderDetail = () => {
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-5 gap-6">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-primary/10 rounded-lg">
                 <Calendar className="h-5 w-5 text-primary" />
@@ -301,6 +303,35 @@ const OrderDetail = () => {
                 <p className="text-sm text-muted-foreground">Criada em</p>
                 <p className="font-medium">
                   {formatDate(order.createdAt, "dd/MM/yyyy")}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50 rounded-lg">
+                <ReceiptText className="h-5 w-5 bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Estado do pagamento</p>
+                <p className="font-medium">
+                {order.paymentStatus === "pending" && "Pagamento Pendente"}
+                                  {order.paymentStatus === "paid" && "Pagamento Efetuado"}
+                                  {order.paymentStatus === "partially_paid" && "Parcialmente Pago"}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-destructive/10 rounded-lg">
+                <CreditCardIcon className="h-5 w-5 text-destructive" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Método de pagamento</p>
+                <p className="font-medium">
+                {order.paymentMethod === "credit_card" && "Cartão de Crédito"}
+                                  {order.paymentMethod === "debit_card" && "Cartão de Débito"}
+                                  {order.paymentMethod === "pix" && "Pix"}
+                                  {order.paymentMethod === "cash" && "Dinheiro"}
+                                  {!order.paymentMethod && "Não informado"}
                 </p>
               </div>
             </div>

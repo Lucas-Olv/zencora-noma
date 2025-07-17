@@ -37,6 +37,7 @@ import { useTenantStorage } from "@/storage/tenant";
 import { Order } from "@/lib/types";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { getNomaApi, patchNomaApi } from "@/lib/apiHelpers";
+import { useSettingsStorage } from "@/storage/settings";
 
 const OrdersView = () => {
   const { toast } = useToast();
@@ -48,6 +49,8 @@ const OrdersView = () => {
   const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
   const [dialogOrderId, setDialogOrderId] = useState<string | undefined>();
   const printRef = useRef<HTMLDivElement>(null);
+  const {settings} = useSettingsStorage();
+
   const {
     mutate: updateOrder,
     error: updateOrderError,
@@ -328,6 +331,8 @@ const OrdersView = () => {
                       <TableHead>Data de Entrega</TableHead>
                       <TableHead>Preço</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead>Estado do Pagamento</TableHead>
+                      <TableHead>Método de Pagamento</TableHead>
                       <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -343,7 +348,7 @@ const OrdersView = () => {
                           <TableCell className="font-mono text-sm text-muted-foreground">
                             {getOrderCode(order.id)}
                           </TableCell>
-                          <TableCell className="font-medium truncate max-w-[20dvw]">
+                          <TableCell className="font-medium truncate max-w-[10dvw]">
                             {order.clientName}
                           </TableCell>
                           <TableCell>{formatDate(order.dueDate)}</TableCell>
@@ -370,6 +375,33 @@ const OrdersView = () => {
                               {status === "production" && "Produção"}
                               {status === "done" && "Concluído"}
                             </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {/* Estado do Pagamento como Badge colorida */}
+                            <Badge
+                              variant="outline"
+                              className={cn(
+                                "w-fit",
+                                order.paymentStatus === "pending" &&
+                                  "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50",
+                                order.paymentStatus === "partially_paid" &&
+                                  "bg-purple-100/80 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200 hover:bg-purple-200 dark:hover:bg-purple-900/50",
+                                order.paymentStatus === "paid" &&
+                                  "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50",
+                              )}
+                            >
+                              {order.paymentStatus === "pending" && "Pagamento Pendente"}
+                              {order.paymentStatus === "paid" && "Pagamento Efetuado"}
+                              {order.paymentStatus === "partially_paid" && "Parcialmente Pago"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {/* Método de Pagamento traduzido ou Não informado */}
+                            {order.paymentMethod === "credit_card" && "Cartão de Crédito"}
+                            {order.paymentMethod === "debit_card" && "Cartão de Débito"}
+                            {order.paymentMethod === "pix" && "Pix"}
+                            {order.paymentMethod === "cash" && "Dinheiro"}
+                            {!order.paymentMethod && "Não informado"}
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-2">
@@ -477,13 +509,28 @@ const OrdersView = () => {
                                 <p className="font-mono text-sm text-muted-foreground">
                                   {getOrderCode(order.id)}
                                 </p>
-                                <h3 className="font-medium truncate max-w-[40dvw]">
+                                <h3 className="font-medium truncate max-w-[32dvw]">
                                   {order.clientName}
                                 </h3>
                               </div>
                               <p className="text-sm text-muted-foreground">
                                 {formatDate(order.dueDate)}
                               </p>
+                              {/* Estado do Pagamento e Método de Pagamento */}
+                              <div className="flex flex-col mt-1 text-xs text-muted-foreground gap-0.5">
+                                <span>
+                                  <strong>Pagamento:</strong> {order.paymentStatus === "pending" && "Pagamento Pendente"}
+                                  {order.paymentStatus === "paid" && "Pagamento Efetuado"}
+                                  {order.paymentStatus === "partially_paid" && "Parcialmente Pago"}
+                                </span>
+                                <span>
+                                  <strong>Método:</strong> {order.paymentMethod === "credit_card" && "Cartão de Crédito"}
+                                  {order.paymentMethod === "debit_card" && "Cartão de Débito"}
+                                  {order.paymentMethod === "pix" && "Pix"}
+                                  {order.paymentMethod === "cash" && "Dinheiro"}
+                                  {!order.paymentMethod && "Não informado"}
+                                </span>
+                              </div>
                             </div>
                             <Badge
                               variant="outline"

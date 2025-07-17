@@ -65,6 +65,8 @@ export type Settings = {
   lockReportsByPassword: boolean;
   requirePasswordToSwitchRole: boolean;
   lockSettingsByPassword: boolean;
+  enablePartialPaymentAmount: boolean;
+  partialPaymentPercentage: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -110,12 +112,15 @@ export type Order = {
   description: string;
   dueDate: string;
   price: string;
-  status: string;
+  status: "pending" | "production" | "done" | "canceled" | "delivered";
   tenantId: string;
   clientPhone?: string;
   createdAt?: string;
   updatedAt?: string;
-  completedAt?: string;
+  deliveredAt?: string;
+  paymentStatus: "pending" | "paid" | "partially_paid";
+  paymentMethod?: "credit_card" | "debit_card" | "pix" | "cash";
+  amountPaid?: string;
 };
 
 export type Reminder = {

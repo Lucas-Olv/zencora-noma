@@ -4,12 +4,15 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/components/ui/use-toast";
+import { Input } from "@/components/ui/input";
 
 import { useSettingsStorage } from "@/storage/settings";
 import { Settings } from "@/lib/types";
 import { useMutation } from "@tanstack/react-query";
 import { patchNomaApi } from "@/lib/apiHelpers";
 import { useTenantStorage } from "@/storage/tenant";
+import { useDebouncedCallback } from "use-debounce";
+import { useState, useEffect } from "react";
 
 export default function SettingsView() {
   const { settings, setSettings } = useSettingsStorage();
@@ -47,17 +50,30 @@ export default function SettingsView() {
     },
   });
 
-  const handleUpdateSettings = async (
-    field: keyof Settings,
-    value: boolean,
-  ) => {
+  // Sobrecarga para aceitar string para partialPaymentPercentage
+  function handleUpdateSettings(field: "partialPaymentPercentage", value: string): void;
+  function handleUpdateSettings(field: keyof Settings, value: boolean): void;
+  function handleUpdateSettings(field: keyof Settings, value: boolean | string) {
     if (!settings) return;
     const updatedSettings: Settings = {
       ...settings,
       [field]: value,
     };
     updateSettings({ settingsData: updatedSettings });
-  };
+  }
+
+  // Estado local para o input de porcentagem
+  const [partialPercent, setPartialPercent] = useState(settings?.partialPaymentPercentage || "");
+
+  // Sincronizar valor local com settings ao abrir/atualizar
+  useEffect(() => {
+    setPartialPercent(settings?.partialPaymentPercentage || "");
+  }, [settings?.partialPaymentPercentage]);
+
+  // Debounce para salvar porcentagem do pagamento parcial
+  const debouncedUpdatePartialPayment = useDebouncedCallback((value: string) => {
+    handleUpdateSettings("partialPaymentPercentage", value);
+  }, 800);
 
   return (
     <div className="space-y-6">
@@ -104,6 +120,52 @@ export default function SettingsView() {
                   handleUpdateSettings("lockSettingsByPassword", checked)
                 }
               />
+            </div>
+            <Separator />
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Habilitar pagamento parcial</Label>
+                <p className="text-sm text-muted-foreground">
+                  Habilita funcionalidade de pagamento parcial ao cadastrar uma encomenda.
+                </p>
+              </div>
+              <Switch
+                checked={settings?.enablePartialPaymentAmount}
+                onCheckedChange={(checked) =>
+                  handleUpdateSettings("enablePartialPaymentAmount", checked)
+                }
+              />
+            </div>
+            <Separator />
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Porcentagem do pagamento parcial</Label>
+                <p className="text-sm text-muted-foreground">
+                  Porcentagem esperada para o pagamento parcial, é aplicado apenas em encomendas criadas após a alteração.
+                </p>
+              </div>
+              <div className="relative w-24">
+                <Input
+                  type="number"
+                  disabled={!settings?.enablePartialPaymentAmount}
+                  min={0}
+                  max={100}
+                  step={1}
+                  className="text-center leading-10"
+                  value={partialPercent}
+                  onChange={e => {
+                    let value = e.target.value.replace(/[^0-9]/g, "");
+                    if (value !== "") {
+                      let num = Math.max(0, Math.min(100, parseInt(value)));
+                      value = num.toString();
+                    }
+                    setPartialPercent(value);
+                    debouncedUpdatePartialPayment(value);
+                  }}
+                  inputMode="numeric"
+                />
+                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none select-none">%</span>
+              </div>
             </div>
           </CardContent>
         </Card>

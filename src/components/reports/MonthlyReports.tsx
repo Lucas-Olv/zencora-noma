@@ -69,27 +69,8 @@ interface ReportData {
   pendingOrders: number;
   dailyRevenue: { day: string; Total: number; Encomendas: number }[];
   categoryData: { name: string; value: number }[];
+  // paymentMethodData removido, agora é calculado localmente
 }
-
-const ReportItem = ({
-  title,
-  value,
-  icon,
-  className,
-}: {
-  title: string;
-  value: string | number;
-  icon: React.ReactNode;
-  className?: string;
-}) => (
-  <div className={cn("flex items-center p-4 rounded-lg", className)}>
-    <div className="rounded-full p-2 mr-4 bg-primary/10">{icon}</div>
-    <div>
-      <p className="text-sm font-medium text-muted-foreground">{title}</p>
-      <h4 className="text-2xl font-bold">{value}</h4>
-    </div>
-  </div>
-);
 
 const MonthlyReports = () => {
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
@@ -104,6 +85,7 @@ const MonthlyReports = () => {
     pendingOrders: 0,
     dailyRevenue: [],
     categoryData: [],
+    // paymentMethodData: [] // não usado, manter vazio
   });
   const isMobile = useIsMobile();
   const { tenant } = useTenantStorage();
@@ -115,6 +97,47 @@ const MonthlyReports = () => {
       currency: "BRL",
     });
   };
+
+  // Função utilitária para contar métodos de pagamento
+  const getPaymentMethodData = (orders: Order[]) => {
+    const counts: Record<string, number> = {};
+    orders.forEach((order) => {
+      if (order.paymentMethod) {
+        counts[order.paymentMethod] = (counts[order.paymentMethod] || 0) + 1;
+      }
+    });
+    // Traduzir os labels
+    const labelMap: Record<string, string> = {
+      credit_card: "Cartão de Crédito",
+      debit_card: "Cartão de Débito",
+      pix: "Pix",
+      cash: "Dinheiro",
+    };
+    return Object.entries(counts).map(([method, count]) => ({
+      metodo: labelMap[method] || method,
+      quantidade: count,
+    }));
+  };
+
+  const paymentMethodData = getPaymentMethodData(orders);
+
+  // Função para traduzir estado do pagamento
+  const translatePaymentStatus = (status?: string) => {
+    if (status === "pending") return "Pendente";
+    if (status === "paid") return "Efetuado";
+    if (status === "partially_paid") return "Parcial";
+    return "Não informado";
+  };
+
+  // Função para traduzir método de pagamento
+  const translatePaymentMethod = (method?: string) => {
+    if (method === "credit_card") return "Cartão de Crédito";
+    if (method === "debit_card") return "Cartão de Débito";
+    if (method === "pix") return "Pix";
+    if (method === "cash") return "Dinheiro";
+    return "Não informado";
+  };
+
 
   const {
     data: ordersData,
@@ -178,6 +201,7 @@ const MonthlyReports = () => {
           ).length,
           dailyRevenue: [],
           categoryData: [],
+          // paymentMethodData: [] // não usado, manter vazio
         };
 
         // Process daily revenue
@@ -203,15 +227,6 @@ const MonthlyReports = () => {
             };
           });
         }
-
-        // Process category data (placeholder - you might want to add categories to your orders)
-        processedData.categoryData = [
-          { name: "Bolos", value: Math.floor(Math.random() * 30) + 10 },
-          { name: "Doces", value: Math.floor(Math.random() * 20) + 5 },
-          { name: "Salgados", value: Math.floor(Math.random() * 15) + 5 },
-          { name: "Kits", value: Math.floor(Math.random() * 10) + 2 },
-        ];
-
         setReportData(processedData);
       }
     }
@@ -269,7 +284,7 @@ const MonthlyReports = () => {
         ],
         ["Encomendas Pendentes", reportData.pendingOrders.toString()],
       ],
-      theme: "grid",
+      theme: "plain",
       headStyles: {
         fillColor: primaryColor,
         textColor: [255, 255, 255],
@@ -279,11 +294,44 @@ const MonthlyReports = () => {
       bodyStyles: {
         textColor: [50, 50, 50],
         halign: "center",
+        fontSize: 11,
+        cellPadding: 3,
       },
       alternateRowStyles: {
-        fillColor: [245, 245, 245],
+        fillColor: [250, 250, 255],
       },
       margin: { left: 14, right: 14 },
+      styles: { lineWidth: 0.2, lineColor: [220, 220, 220] },
+      tableLineColor: [240, 240, 240],
+    });
+
+    // Payment Methods section
+    doc.setFontSize(14);
+    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    doc.text("Relação de Pagamentos", 14, (doc as any).lastAutoTable.finalY + 15);
+    autoTable(doc, {
+      startY: (doc as any).lastAutoTable.finalY + 20,
+      head: [["Método de Pagamento", "Quantidade"]],
+      body: paymentMethodData.map((item) => [item.metodo, item.quantidade]),
+      theme: "plain",
+      headStyles: {
+        fillColor: primaryColor,
+        textColor: [255, 255, 255],
+        fontStyle: "bold",
+        halign: "center",
+      },
+      bodyStyles: {
+        textColor: [50, 50, 50],
+        halign: "center",
+        fontSize: 11,
+        cellPadding: 3,
+      },
+      alternateRowStyles: {
+        fillColor: [250, 250, 255],
+      },
+      margin: { left: 14, right: 14 },
+      styles: { lineWidth: 0.2, lineColor: [220, 220, 220] },
+      tableLineColor: [240, 240, 240],
     });
 
     // Daily Revenue section
@@ -299,7 +347,7 @@ const MonthlyReports = () => {
         item.day,
         formatCurrency(item.Total),
       ]),
-      theme: "grid",
+      theme: "plain",
       headStyles: {
         fillColor: primaryColor,
         textColor: [255, 255, 255],
@@ -309,11 +357,15 @@ const MonthlyReports = () => {
       bodyStyles: {
         textColor: [50, 50, 50],
         halign: "center",
+        fontSize: 11,
+        cellPadding: 3,
       },
       alternateRowStyles: {
-        fillColor: [245, 245, 245],
+        fillColor: [250, 250, 255],
       },
       margin: { left: 14, right: 14 },
+      styles: { lineWidth: 0.2, lineColor: [220, 220, 220] },
+      tableLineColor: [240, 240, 240],
     });
 
     // Orders List section
@@ -328,7 +380,16 @@ const MonthlyReports = () => {
     // Orders table with custom styling
     autoTable(doc, {
       startY: (doc as any).lastAutoTable.finalY + 20,
-      head: [["Cliente", "Descrição", "Valor", "Data", "Status"]],
+      head: [[
+        "Cliente",
+        "Descrição",
+        "Valor",
+        "Valor Pago",
+        "Pagamento",
+        "Método",
+        "Data",
+        "Status"
+      ]],
       body: orders.map((order) => {
         const isOverdue = new Date(order.dueDate) < new Date();
         const status =
@@ -339,17 +400,25 @@ const MonthlyReports = () => {
               ? "Pendente"
               : order.status === "production"
                 ? "Produção"
-                : "Concluído";
-
+                : order.status === "done"
+                  ? "Concluído"
+                  : order.status === "canceled"
+                    ? "Cancelado"
+                    : order.status === "delivered"
+                      ? "Entregue"
+                      : order.status;
         return [
           order.clientName,
           order.description || "Sem descrição",
           formatCurrency(parseFloat(order.price)),
+          order.amountPaid ? formatCurrency(parseFloat(order.amountPaid)) : "-",
+          translatePaymentStatus(order.paymentStatus),
+          translatePaymentMethod(order.paymentMethod),
           formatDate(order.dueDate),
           status,
         ];
       }),
-      theme: "grid",
+      theme: "plain",
       headStyles: {
         fillColor: primaryColor,
         textColor: [255, 255, 255],
@@ -359,17 +428,24 @@ const MonthlyReports = () => {
       bodyStyles: {
         textColor: [50, 50, 50],
         halign: "center",
+        fontSize: 10,
+        cellPadding: 2.5,
       },
       alternateRowStyles: {
-        fillColor: [245, 245, 245],
+        fillColor: [250, 250, 255],
       },
       margin: { left: 14, right: 14 },
+      styles: { lineWidth: 0.2, lineColor: [220, 220, 220] },
+      tableLineColor: [240, 240, 240],
       columnStyles: {
-        0: { cellWidth: 40 }, // Cliente
-        1: { cellWidth: 60 }, // Descrição
-        2: { cellWidth: 30 }, // Valor
-        3: { cellWidth: 25 }, // Data
-        4: { cellWidth: 25 }, // Status
+        0: { cellWidth: 32 }, // Cliente
+        1: { cellWidth: 50 }, // Descrição
+        2: { cellWidth: 22 }, // Valor
+        3: { cellWidth: 22 }, // Valor Pago
+        4: { cellWidth: 22 }, // Pagamento
+        5: { cellWidth: 32 }, // Método
+        6: { cellWidth: 22 }, // Data
+        7: { cellWidth: 22 }, // Status
       },
     });
 
@@ -640,25 +716,39 @@ const MonthlyReports = () => {
                     </ResponsiveContainer>
                   </div>
                 </div>
+                <div className="flex flex-col gap-4">
+                <div className="flex flex-col items-start justify-start">
+                  <h3 className="text-lg font-medium">Relação de Pagamentos</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Relação das formas de pagamento utilizadas no período
+                  </p>
+                </div>
+                {paymentMethodData.length > 0 &&               <div className="h-[30dvh] md:h-[36dvh]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={paymentMethodData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="metodo" />
+                    <Tooltip formatter={(value) => `${value} encomenda(s)`} />
+                    <Bar dataKey="quantidade" fill="hsl(var(--primary))" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div> }
+                {paymentMethodData.length == 0 &&               <div className="flex flex-column items-center justify-center h-[30dvh] md:h-[36dvh]">
+            <p className="text-center text-muted-foreground">Nenhuma relação de pagamento encontrada ou informada nas encomendas.</p>
+              </div> }
+              </div>
               </div>
             </CardContent>
           </Card>
         </div>
       </div>
-      <LoadingState
-        loading={isOrdersLoading}
-        empty={!orders.length}
-        emptyText="Nenhuma encomenda encontrada"
-        emptyIcon={<FileText className="h-12 w-12 text-muted-foreground" />}
-      >
-        <div className="space-y-6">
+      <div className="space-y-6">
           <ReportOrdersList
             orders={orders}
             title="Encomendas do Mês"
             description="Lista de todas as encomendas do mês atual"
           />
         </div>
-      </LoadingState>
     </div>
   );
 };

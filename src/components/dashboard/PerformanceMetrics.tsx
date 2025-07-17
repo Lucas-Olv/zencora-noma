@@ -36,16 +36,6 @@ const formatCurrency = (value: number) => {
   }).format(value);
 };
 
-// Utilitário para normalizar uma data para o início do dia (00:00:00)
-function startOfDay(date: Date) {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-}
-
-// Utilitário para normalizar uma data para o fim do dia (23:59:59.999)
-function endOfDay(date: Date) {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999);
-}
-
 const calculateRevenueVariation = (orders: Order[]) => {
   const today = dayjs().startOf("day");
   const endToday = dayjs().endOf("day");
@@ -136,6 +126,27 @@ const getDailyData = (orders: Order[]) => {
   return dailyData.map(({ _date, ...rest }) => rest);
 };
 
+// Função utilitária para contar métodos de pagamento
+const getPaymentMethodData = (orders: Order[]) => {
+  const counts: Record<string, number> = {};
+  orders.forEach((order) => {
+    if (order.paymentMethod) {
+      counts[order.paymentMethod] = (counts[order.paymentMethod] || 0) + 1;
+    }
+  });
+  // Traduzir os labels
+  const labelMap: Record<string, string> = {
+    credit_card: "Cartão de Crédito",
+    debit_card: "Cartão de Débito",
+    pix: "Pix",
+    cash: "Dinheiro",
+  };
+  return Object.entries(counts).map(([method, count]) => ({
+    metodo: labelMap[method] || method,
+    quantidade: count,
+  }));
+};
+
 export default function PerformanceMetrics({
   orders,
   loading,
@@ -158,6 +169,14 @@ export default function PerformanceMetrics({
   const revenueData = calculateRevenueVariation(orders);
   const ordersData = calculateOrdersVariation(orders);
   const dailyData = getDailyData(orders);
+  // Filtrar encomendas dos últimos 7 dias
+  const today = dayjs().endOf("day").toDate();
+  const sevenDaysAgo = dayjs().subtract(6, "day").startOf("day").toDate();
+  const last7DaysOrders = orders.filter(order => {
+    const orderDate = parseDate(order.dueDate);
+    return orderDate && orderDate >= sevenDaysAgo && orderDate <= today;
+  });
+  const paymentMethodData = getPaymentMethodData(last7DaysOrders);
 
   return (
     <Card>
@@ -176,7 +195,7 @@ export default function PerformanceMetrics({
             <ChartBarIcon className="h-12 w-12 text-muted-foreground" />
           }
         >
-          <section className="flex flex-col gap-4">
+          <section className="flex flex-col gap-10">
             <div className="flex flex-col gap-4">
               <div className="flex flex-col items-start justify-start">
                 <h3 className="text-lg font-medium">Faturamento Semanal</h3>
@@ -199,7 +218,7 @@ export default function PerformanceMetrics({
                     <Tooltip
                       formatter={(value) => formatCurrency(Number(value))}
                     />
-                    <Line type="monotone" dataKey="Receita" stroke="#8884d8" />
+                    <Line type="monotone" dataKey="Receita" stroke="hsl(var(--primary))" />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -223,10 +242,28 @@ export default function PerformanceMetrics({
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="date" />
                     <Tooltip />
-                    <Bar dataKey="Encomendas" fill="#82ca9d" />
+                    <Bar dataKey="Encomendas" fill="hsl(var(--primary))" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
+            </div>
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col items-start justify-start">
+                <h3 className="text-lg font-medium">Relação de Pagamentos</h3>
+              </div>
+          {paymentMethodData.length > 0 &&               <div className="h-[30dvh] md:h-[36dvh]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={paymentMethodData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="metodo" />
+                    <Tooltip formatter={(value) => `${value} encomenda(s)`} />
+                    <Bar dataKey="quantidade" fill="hsl(var(--primary))" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div> }
+          {paymentMethodData.length == 0 &&               <div className="flex flex-column items-center justify-center h-[30dvh] md:h-[36dvh]">
+            <p className="text-center text-muted-foreground">Nenhuma relação de pagamento encontrada ou informada nas encomendas.</p>
+              </div> }
             </div>
           </section>
         </LoadingState>

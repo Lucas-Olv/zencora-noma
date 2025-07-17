@@ -9,11 +9,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { format } from "date-fns";
-import { id, ptBR } from "date-fns/locale";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -27,8 +24,11 @@ import {
 } from "@/components/ui/form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTenantStorage } from "@/storage/tenant";
+import { useSettingsStorage } from "@/storage/settings";
 import { Order } from "@/lib/types";
 import { patchNomaApi, postNomaApi } from "@/lib/apiHelpers";
+import dayjs from "dayjs";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 
 interface OrderDialogProps {
   open: boolean;
@@ -61,6 +61,9 @@ const formSchema = z.object({
       return selectedDate.getTime() >= today.getTime();
     }, "A data de entrega não pode ser anterior a hoje"),
   dueTime: z.string().min(1, "Por favor, selecione a hora de entrega"),
+  paymentStatus: z.string().min(1, "Por favor, selecione o estado do pagamento"),
+  paymentMethod: z.string().optional(),
+  amountPaid: z.string().optional(),
   price: z
     .string()
     .min(1, "Por favor, informe um valor válido")
@@ -83,6 +86,8 @@ const OrderDialog = ({
   const { toast } = useToast();
   const { tenant } = useTenantStorage();
   const queryClient = useQueryClient();
+  const {settings} = useSettingsStorage();
+
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -93,6 +98,9 @@ const OrderDialog = ({
       dueDate: "",
       dueTime: "12:00",
       price: "",
+      paymentStatus: "",
+      paymentMethod: "",
+      amountPaid: "",
     },
   });
   const {
@@ -182,6 +190,8 @@ const OrderDialog = ({
           dueDate: format(date, "yyyy-MM-dd"),
           dueTime: format(date, "HH:mm"),
           price: orderData.price.replace(".", ","),
+          paymentStatus: orderData.paymentStatus || "",
+          paymentMethod: orderData.paymentMethod || "",
         });
       } else {
         form.reset({
@@ -191,6 +201,8 @@ const OrderDialog = ({
           dueDate: "",
           dueTime: "12:00",
           price: "",
+          paymentStatus: "",
+          paymentMethod: "",
         });
       }
     }
@@ -241,12 +253,27 @@ const OrderDialog = ({
       dueDate: dueDate.toISOString(),
       price: data.price.replace(".", "").replace(",", "."),
       status: "pending" as const,
+      paymentStatus: data.paymentStatus as "pending" | "paid" | "partially_paid",
+      paymentMethod: data.paymentMethod as "credit_card" | "debit_card" | "pix" | "cash" | undefined,
       id: mode === "edit" && orderId ? orderId : undefined,
+      amountPaid: data.amountPaid
     };
 
     if (mode === "create") {
+      if (settings?.enablePartialPaymentAmount && orderData.paymentStatus === "partially_paid") {
+        const amountPaid = (parseInt(settings?.partialPaymentPercentage) / 100) * parseFloat(orderData.price);
+        orderData.amountPaid = amountPaid.toFixed(2);
+      } else if (orderData.paymentStatus === "paid") {
+        orderData.amountPaid = orderData.price;
+      }
       createOrder({ orderData });
     } else {
+      if (settings?.enablePartialPaymentAmount && orderData.paymentStatus === "partially_paid" && !orderData.amountPaid) {
+        const amountPaid = (parseInt(settings?.partialPaymentPercentage) / 100) * parseFloat(orderData.price);
+        orderData.amountPaid = amountPaid.toFixed(2);
+      } else if (orderData.paymentStatus === "paid") {
+        orderData.amountPaid = orderData.price;
+      }
       updateOrder({ orderData });
     }
   };
@@ -331,7 +358,7 @@ const OrderDialog = ({
                       <Input
                         {...field}
                         type="date"
-                        min={new Date().toISOString().split("T")[0]}
+                        min={dayjs().toISOString().split("T")[0]}
                       />
                     </FormControl>
                     <FormMessage />
@@ -374,6 +401,66 @@ const OrderDialog = ({
                 </FormItem>
               )}
             />
+
+            {/* Agrupar selects de pagamento em grid para garantir alinhamento lado a lado */}
+            <div className="grid grid-cols-2 gap-4">
+              {/* Estado do Pagamento */}
+              <FormField
+                control={form.control}
+                name="paymentStatus"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Estado do Pagamento</FormLabel>
+                    <FormControl>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione..." />
+                        </SelectTrigger>
+                        <SelectContent className="z-[200]">
+                          <SelectItem value="pending">Pagamento Pendente</SelectItem>
+                          <SelectItem value="paid">Pagamento Efetuado</SelectItem>
+                          {settings?.enablePartialPaymentAmount && <SelectItem value="partially_paid">{`Parcialmente Pago - ${settings?.partialPaymentPercentage}%`}</SelectItem>}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Tipo de Pagamento */}
+              <FormField
+                control={form.control}
+                name="paymentMethod"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tipo de Pagamento</FormLabel>
+                    <FormControl>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione..." />
+                        </SelectTrigger>
+                        <SelectContent className="z-[200]">
+                          <SelectItem value="credit_card">Cartão de Crédito</SelectItem>
+                          <SelectItem value="debit_card">Cartão de Débito</SelectItem>
+                          <SelectItem value="pix">Pix</SelectItem>
+                          <SelectItem value="cash">Dinheiro</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <div className="flex flex-col sm:flex-row justify-end gap-2 border-t pt-8 mt-6">
               <Button

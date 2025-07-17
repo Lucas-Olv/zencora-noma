@@ -8,9 +8,8 @@ import {
   Settings,
   FileText,
   Lock,
-  NotepadTextDashedIcon,
+  PackageCheck,
   NotepadText,
-  ArrowLeft,
 } from "lucide-react";
 import { cleanWorkspaceData, cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -73,6 +72,11 @@ const mainNavItems: NavItem[] = [
     href: "/production",
     icon: Users,
     proOnly: true,
+  },
+  {
+    title: "Entregas",
+    href: "/delivery",
+    icon: PackageCheck,
   },
   {
     title: "Relatórios",
