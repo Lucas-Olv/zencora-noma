@@ -21,6 +21,16 @@ export const postCoreApiPublic = <T = any>(
     .then((res) => res.data);
 };
 
+export const patchCoreApiPublic = <T = any>(
+  url: string,
+  data?: any,
+  config: CustomAxiosConfig = {},
+): Promise<T> => {
+  return coreApi
+    .patch<T>(url, data, { withAuth: false, ...config })
+    .then((res) => res.data);
+};
+
 export const postCoreApi = <T = any>(
   url: string,
   data?: any,

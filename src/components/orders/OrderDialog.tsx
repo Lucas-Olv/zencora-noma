@@ -253,7 +253,7 @@ const OrderDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="z-[160]">
+      <DialogContent className="z-[160] overflow-y-auto max-h-full scroll">
         <DialogHeader>
           <DialogTitle>
             {mode === "create" ? "Nova Encomenda" : "Editar Encomenda"}

@@ -18,7 +18,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useSessionStorage } from "@/storage/session";
 import { verifyToken } from "@/lib/jwt";
 import { Session } from "@/lib/types";
-import { postCoreApiPublic } from "@/lib/apiHelpers";
+import { patchCoreApiPublic, postCoreApiPublic } from "@/lib/apiHelpers";
 import { useProductStore } from "@/storage/product";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import {
@@ -67,7 +67,7 @@ export const LoginForm = () => {
     isPending: isResetPasswordPending,
   } = useMutation({
     mutationFn: () =>
-      postCoreApiPublic("/api/core/v1/forgot-password", { email }),
+      patchCoreApiPublic("/api/core/v1/forgot-password", { email }),
     onSuccess: () => {
       toast({
         title: "Solicitação de recuperação enviada",
