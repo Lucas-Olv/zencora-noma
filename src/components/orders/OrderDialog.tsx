@@ -36,6 +36,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface OrderDialogProps {
   open: boolean;
@@ -96,6 +97,7 @@ const OrderDialog = ({
   const { tenant } = useTenantStorage();
   const queryClient = useQueryClient();
   const { settings } = useSettingsStorage();
+  const isMobile = useIsMobile();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -295,7 +297,7 @@ const OrderDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="z-[160] overflow-y-auto max-h-full scroll">
+      <DialogContent className="z-[160]">
         <DialogHeader>
           <DialogTitle>
             {mode === "create" ? "Nova Encomenda" : "Editar Encomenda"}
@@ -353,6 +355,7 @@ const OrderDialog = ({
                   <FormLabel>Descrição</FormLabel>
                   <FormControl>
                     <Textarea
+                      rows={isMobile ? 2 : 6}
                       {...field}
                       placeholder="Detalhes da encomenda..."
                     />

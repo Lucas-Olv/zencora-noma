@@ -27,8 +27,12 @@ const getStatusClasses = (status: string | null, dueDate: string) => {
       "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200",
     effectiveStatus === "production" &&
       "bg-purple-100/80 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200",
-    effectiveStatus === "done" &&
-      "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200",
+      effectiveStatus === "delivered" &&
+      "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50",
+      effectiveStatus === "done" &&
+      "bg-blue-100/80 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200 hover:bg-blue-200 dark:hover:bg-blue-900/50",
+      effectiveStatus === "canceled" &&
+      "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50",
   );
 };
 
@@ -53,11 +57,21 @@ const getEventColor = (status: string | null, dueDate: string) => {
         backgroundColor: "rgb(233 213 255 / 0.8)",
         borderColor: "rgb(107 33 168)",
       }; // purple-100/80 and purple-800
+    case "delivered":
+      return {
+        backgroundColor: "rgb(187 247 208 / 0.8)", // green-100/80
+        borderColor: "rgb(22 101 52)", // green-800
+      };
+    case "canceled":
+      return {
+        backgroundColor: "rgb(187 247 208 / 0.8)", // green-100/80
+        borderColor: "rgb(22 101 52)", // green-800
+      };
     case "done":
       return {
-        backgroundColor: "rgb(187 247 208 / 0.8)",
-        borderColor: "rgb(22 101 52)",
-      }; // green-100/80 and green-800
+        backgroundColor: "rgb(191 219 254 / 0.8)", // blue-100/80
+        borderColor: "rgb(30 64 175)", // blue-800
+      };
     default:
       return {
         backgroundColor: "rgb(254 240 138 / 0.8)",
@@ -90,7 +104,7 @@ const CalendarPage = () => {
     if (ordersData && !isOrdersLoading) {
       const fetchedOrders = ordersData.data.map((order: Order) => ({
         ...order,
-        status: order.status as "pending" | "production" | "done",
+        status: order.status as "pending" | "production" | "done" | "delivered" | "canceled",
       }));
       setOrders(fetchedOrders);
     }
@@ -141,7 +155,7 @@ const CalendarPage = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">
+        <h2 className="text-2xl font-bold tracking-tight">
           Calendário de Encomendas
         </h2>
         <p className="text-muted-foreground">

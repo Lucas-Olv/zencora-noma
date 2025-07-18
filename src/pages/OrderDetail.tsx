@@ -253,7 +253,123 @@ const OrderDetail = () => {
   }
 
   const statusDisplay = getStatusDisplay(order.status, order.dueDate);
+  const isFinalized = order.status === "canceled" || order.status === "delivered";
 
+  if (isFinalized) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
+          <div className="flex items-center gap-2">
+            <div>
+              <h2 className="text-3xl font-bold tracking-tight">
+                Detalhes da Encomenda
+              </h2>
+              <p className="text-muted-foreground">
+                Visualize os detalhes desta encomenda
+              </p>
+            </div>
+          </div>
+        </div>
+        <Card>
+          <CardHeader className="flex flex-row items-start justify-between">
+            <CardTitle className="text-xl truncate max-w-[50dvw]">
+              {order.clientName}
+            </CardTitle>
+            <Badge variant="outline" className={statusDisplay.className}>
+              {statusDisplay.label}
+            </Badge>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div>
+              <h3 className="font-semibold mb-2">Descrição</h3>
+              <AutoResizeTextarea
+                value={order.description || "Sem descrição"}
+                className="text-muted-foreground w-full px-0 py-1 resize-none overflow-hidden bg-transparent focus:outline-none focus:ring-0"
+              />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-5 gap-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <Calendar className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Data de Entrega</p>
+                  <p className="font-medium">{formatDate(order.dueDate)}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-green-100/80 dark:bg-green-900/30 rounded-lg">
+                  <DollarSign className="h-5 w-5 text-green-600 dark:text-green-400" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Valor</p>
+                  <p className="font-medium">
+                    R$ {order.price.replace(".", ",")}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-complementary/10 rounded-lg">
+                  <Clock className="h-5 w-5 text-complementary" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Criada em</p>
+                  <p className="font-medium">
+                    {formatDate(order.createdAt, "dd/MM/yyyy")}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50 rounded-lg">
+                  <ReceiptText className="h-5 w-5 bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">
+                    Estado do pagamento
+                  </p>
+                  <p className="font-medium">
+                    {order.paymentStatus === "pending" && "Pagamento Pendente"}
+                    {order.paymentStatus === "paid" && "Pagamento Efetuado"}
+                    {order.paymentStatus === "partially_paid" &&
+                      "Parcialmente Pago"}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-destructive/10 rounded-lg">
+                  <CreditCardIcon className="h-5 w-5 text-destructive" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">
+                    Método de pagamento
+                  </p>
+                  <p className="font-medium">
+                    {order.paymentMethod === "credit_card" && "Cartão de Crédito"}
+                    {order.paymentMethod === "debit_card" && "Cartão de Débito"}
+                    {order.paymentMethod === "pix" && "Pix"}
+                    {order.paymentMethod === "cash" && "Dinheiro"}
+                    {!order.paymentMethod && "Não informado"}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+          <CardFooter className="flex flex-col gap-3 pt-6 border-t">
+            <Button
+              onClick={() => navigate(-1)}
+              variant="outline"
+              className="w-full"
+            >
+              <ArrowLeft className="h-4 w-4 mr-1" />
+              Voltar
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
+    );
+  }
+
+  // Caso não seja finalizada, retorna layout completo
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
@@ -271,7 +387,7 @@ const OrderDetail = () => {
 
       <Card>
         <CardHeader className="flex flex-row items-start justify-between">
-          <CardTitle className="text-xl truncate max-w-[60dvw]">
+          <CardTitle className="text-xl truncate max-w-[50dvw]">
             {order.clientName}
           </CardTitle>
           <Badge variant="outline" className={statusDisplay.className}>
@@ -365,37 +481,50 @@ const OrderDetail = () => {
               <h3 className="font-semibold mb-3">Ações</h3>
               <div className="grid grid-rows-2 sm:grid-cols-1 gap-3">
                 <SettingsGate permission="edit">
-                  {order.status !== "pending" && (
+                  {isFinalized ? (
                     <Button
+                      onClick={() => navigate(-1)}
                       variant="outline"
                       className="w-full"
-                      onClick={() => updateOrderStatus({ status: "pending" })}
                     >
-                      <Clock className="h-4 w-4 row-span-full mr-2" />
-                      Marcar como Pendente
+                      <ArrowLeft className="h-4 w-4 mr-1" />
+                      Voltar
                     </Button>
-                  )}
-                  {order.status !== "production" && (
-                    <Button
-                      variant="outline"
-                      className="w-full"
-                      onClick={() =>
-                        updateOrderStatus({ status: "production" })
-                      }
-                    >
-                      <Package className="h-4 w-4 row-span-full mr-2" />
-                      Marcar como Produção
-                    </Button>
-                  )}
-                  {order.status !== "done" && (
-                    <Button
-                      variant="outline"
-                      className="w-full"
-                      onClick={() => updateOrderStatus({ status: "done" })}
-                    >
-                      <CheckCircle className="h-4 w-4 row-span-full mr-2" />
-                      Marcar como Concluída
-                    </Button>
+                  ) : (
+                    <>
+                      {order.status !== "pending" && (
+                        <Button
+                          variant="outline"
+                          className="w-full"
+                          onClick={() => updateOrderStatus({ status: "pending" })}
+                        >
+                          <Clock className="h-4 w-4 row-span-full mr-2" />
+                          Marcar como Pendente
+                        </Button>
+                      )}
+                      {order.status !== "production" && (
+                        <Button
+                          variant="outline"
+                          className="w-full"
+                          onClick={() =>
+                            updateOrderStatus({ status: "production" })
+                          }
+                        >
+                          <Package className="h-4 w-4 row-span-full mr-2" />
+                          Marcar como Produção
+                        </Button>
+                      )}
+                      {order.status !== "done" && (
+                        <Button
+                          variant="outline"
+                          className="w-full"
+                          onClick={() => updateOrderStatus({ status: "done" })}
+                        >
+                          <CheckCircle className="h-4 w-4 row-span-full mr-2" />
+                          Marcar como Concluída
+                        </Button>
+                      )}
+                    </>
                   )}
                 </SettingsGate>
               </div>
@@ -408,44 +537,48 @@ const OrderDetail = () => {
           <CardContent className="flex flex-col gap-3 pt-6">
             <div className="grid grid-rows-2 sm:grid-cols-1 gap-3">
               <SettingsGate permission="edit">
-                <Button
-                  variant="defaultText"
-                  size="sm"
-                  onClick={() => setDialogOpen(true)}
-                >
-                  <Edit className="h-4 w-4 mr-1" />
-                  Editar
-                </Button>
+                {!isFinalized && (
+                  <Button
+                    variant="defaultText"
+                    size="sm"
+                    onClick={() => setDialogOpen(true)}
+                  >
+                    <Edit className="h-4 w-4 mr-1" />
+                    Editar
+                  </Button>
+                )}
               </SettingsGate>
 
               <SettingsGate permission="delete">
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="destructive" size="sm">
-                      <Trash className="h-4 w-4 mr-1" />
-                      Excluir
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Excluir encomenda?</AlertDialogTitle>
-                      <AlertDialogDescription className="line-clamp-3 max-w-[80dvw] md:max-w-[18dvw]">
-                        Esta ação não poderá ser desfeita. Isso excluirá
-                        permanentemente a encomenda do cliente{" "}
-                        {order?.clientName}.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                      <AlertDialogAction
-                        className="bg-red-600 hover:bg-red-700"
-                        onClick={() => deleteOrder()}
-                      >
+                {!isFinalized && (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" size="sm">
+                        <Trash className="h-4 w-4 mr-1" />
                         Excluir
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Excluir encomenda?</AlertDialogTitle>
+                        <AlertDialogDescription className="line-clamp-3 max-w-[80dvw] md:max-w-[18dvw]">
+                          Esta ação não poderá ser desfeita. Isso excluirá
+                          permanentemente a encomenda do cliente{" "}
+                          {order?.clientName}.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction
+                          className="bg-red-600 hover:bg-red-700"
+                          onClick={() => deleteOrder()}
+                        >
+                          Excluir
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                )}
                 <Button
                   onClick={() => navigate(-1)}
                   variant="outline"

@@ -140,7 +140,7 @@ const Dashboard = () => {
       <PWAInstallPrompt />
       <div className="space-y-6">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+          <h2 className="text-2xl font-bold tracking-tight">Dashboard</h2>
           <p className="text-muted-foreground">
             Bem-vindo(a) ao Zencora Noma. Veja um resumo de suas encomendas.
           </p>

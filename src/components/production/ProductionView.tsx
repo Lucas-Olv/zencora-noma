@@ -356,7 +356,7 @@ export function ProductionView() {
                     ? "Iniciar Produção"
                     : order.status === "done"
                       ? "Concluído"
-                      : "Finalizar"}
+                      : "Finalizar Produção"}
                 </Button>
               </SettingsGate>
             </SubscriptionGate>
@@ -443,7 +443,7 @@ export function ProductionView() {
                       ? "Iniciar Produção"
                       : order.status === "done"
                         ? "Concluído"
-                        : "Finalizar"}
+                        : "Finalizar Produção"}
                   </Button>
                 </SettingsGate>
               </SubscriptionGate>
@@ -567,7 +567,7 @@ export function ProductionView() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">
+        <h2 className="text-2xl font-bold tracking-tight">
           Painel de Produção
         </h2>
         <p className="text-muted-foreground">

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -8,7 +8,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { formatDate } from "@/lib/utils";
+import { formatDate, getOrderCode } from "@/lib/utils";
 import { Order } from "@/lib/types";
 import {
   CreditCardIcon,
@@ -17,14 +17,15 @@ import {
   CheckCircle,
   Calendar,
   User,
+  ArrowLeft,
 } from "lucide-react";
-import { Separator } from "../ui/separator";
 
 interface DeliveryDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   order: Order;
   onDelivered: () => void;
+  onClosed: () => void;
   isLoading?: boolean;
 }
 
@@ -43,18 +44,47 @@ const getPaymentMethodLabel = (method?: string) => {
   return "Não informado";
 };
 
+const AutoResizeTextarea = ({
+  value,
+  className,
+}: {
+  value: string;
+  className?: string;
+}) => {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = "auto";
+      textarea.style.height = `${textarea.scrollHeight}px`;
+    }
+  }, [value]);
+
+  return (
+    <textarea
+      ref={textareaRef}
+      className={className}
+      value={value}
+      readOnly
+      rows={1}
+    />
+  );
+};
+
 export const DeliveryDialog: React.FC<DeliveryDialogProps> = ({
   open,
   onOpenChange,
   order,
   onDelivered,
+  onClosed,
   isLoading,
 }) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="space-y-6">
         <DialogHeader>
-          <DialogTitle>Iniciar Entrega</DialogTitle>
+          <DialogTitle>{`Iniciar Entrega - ${getOrderCode(order.id)}`}</DialogTitle>
           <DialogDescription>
             Ao marcar encomenda como entregue, a quantia paga será atualizada e
             ela será finalizada e não será mais possível alterá-la.
@@ -68,7 +98,7 @@ export const DeliveryDialog: React.FC<DeliveryDialogProps> = ({
               </div>
               <div>
                 <span className="text-sm text-muted-foreground">Cliente</span>
-                <div className="font-medium">{order.clientName}</div>
+                <div className="font-medium truncate max-w-[70dvw] md:max-w-[8dvw]">{order.clientName}</div>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -131,27 +161,35 @@ export const DeliveryDialog: React.FC<DeliveryDialogProps> = ({
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 max-w-[70dvw] md:max-w-[8dvw]">
             <div className="p-2 bg-complementary/10 rounded-lg">
               <ReceiptText className="h-5 w-5 text-complementary" />
             </div>
             <div>
               <span className="text-sm text-muted-foreground">Descrição</span>
-              <div className="text-muted-foreground">{order.description}</div>
+              <AutoResizeTextarea value={order.description} className="text-foreground w-[70dvw] p-0 resize-none overflow-hidden bg-transparent focus:outline-none focus:ring-0" />
             </div>
           </div>
         </div>
-        <Separator />
         <DialogFooter>
-          <Button
+                    <div className="flex flex-col md:flex-row gap-2">
+                    <Button
+            onClick={onClosed}
+            disabled={isLoading}
+            className="w-full"
+            variant="outline"
+          >
+            Voltar
+          </Button>
+                    <Button
             onClick={onDelivered}
             disabled={isLoading}
             className="w-full"
             variant="default"
           >
-            <CheckCircle className="h-4 w-4 mr-2" />
             Marcar como entregue
           </Button>
+                    </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

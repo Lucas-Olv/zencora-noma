@@ -23,6 +23,24 @@ import {
   Package,
   Pencil,
   Printer,
+  Clock,
+  SquareCheckBig,
+  FileText,
+  ClockAlert,
+  ConciergeBell,
+  NotebookText,
+  FileClock,
+  ClockArrowUp,
+  List,
+  ListTodo,
+  LayoutList,
+  Square,
+  StretchVertical,
+  PackageX,
+  Ban,
+  Play,
+  CirclePlay,
+  CheckIcon,
 } from "lucide-react";
 import {
   formatDate,
@@ -38,6 +56,8 @@ import { Order } from "@/lib/types";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { getNomaApi, patchNomaApi } from "@/lib/apiHelpers";
 import { useSettingsStorage } from "@/storage/settings";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 const OrdersView = () => {
   const { toast } = useToast();
@@ -50,6 +70,8 @@ const OrdersView = () => {
   const [dialogOrderId, setDialogOrderId] = useState<string | undefined>();
   const printRef = useRef<HTMLDivElement>(null);
   const { settings } = useSettingsStorage();
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [cancelOrderId, setCancelOrderId] = useState<string | null>(null);
 
   const {
     mutate: updateOrder,
@@ -190,7 +212,7 @@ const OrdersView = () => {
 
   const handleStatusChange = async (
     id: string,
-    targetStatus: "pending" | "production" | "done",
+    targetStatus: "pending" | "production" | "done" | "canceled",
   ) => {
     updateOrder(
       {
@@ -230,6 +252,27 @@ const OrdersView = () => {
     refetch();
   };
 
+  // Função para abrir o dialog de cancelamento
+  const handleOpenCancelDialog = (orderId: string) => {
+    setCancelOrderId(orderId);
+    setCancelDialogOpen(true);
+  };
+
+  // Função para confirmar o cancelamento
+  const handleConfirmCancel = () => {
+    if (cancelOrderId) {
+      handleStatusChange(cancelOrderId, "canceled");
+    }
+    setCancelDialogOpen(false);
+    setCancelOrderId(null);
+  };
+
+  // Função para fechar o dialog
+  const handleCloseCancelDialog = () => {
+    setCancelDialogOpen(false);
+    setCancelOrderId(null);
+  };
+
   const filteredOrders =
     searchTerm.trim() === ""
       ? orders
@@ -245,11 +288,22 @@ const OrdersView = () => {
                 .includes(searchTerm.toLowerCase())),
         );
 
+  // Filtragem para as abas
+  const inProgressOrders = filteredOrders.filter(
+    (order) =>
+      order.status === "pending" ||
+      order.status === "production" ||
+      order.status === "done"
+  );
+  const finishedOrders = filteredOrders.filter(
+    (order) => order.status === "canceled" || order.status === "delivered"
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Encomendas</h2>
+          <h2 className="text-2xl font-bold tracking-tight">Encomendas</h2>
           <p className="text-muted-foreground">
             Gerencie todas as suas encomendas em um só lugar
           </p>
@@ -288,234 +342,224 @@ const OrdersView = () => {
           </div>
         </CardHeader>
         <CardContent>
-          {isOrdersLoading ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : filteredOrders.length === 0 ? (
-            <div className="text-center py-6">
-              {searchTerm ? (
-                <>
-                  <p className="text-muted-foreground">
-                    Nenhuma encomenda encontrada para "{searchTerm}"
-                  </p>
-                  <Button
-                    variant="link"
-                    onClick={() => setSearchTerm("")}
-                    className="mt-2"
-                  >
-                    Limpar busca
-                  </Button>
-                </>
-              ) : (
-                <>
+          <Tabs defaultValue="inprogress" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-4">
+              <TabsTrigger value="inprogress">Em progresso</TabsTrigger>
+              <TabsTrigger value="finished">Finalizadas</TabsTrigger>
+            </TabsList>
+            <TabsContent value="inprogress">
+              {isOrdersLoading ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              ) : inProgressOrders.length === 0 ? (
+                <div className="text-center py-6">
                   <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-medium mb-2">
-                    Nenhuma encomenda
-                  </h3>
-                  <p className="text-muted-foreground mb-4">
-                    Comece registrando sua primeira encomenda.
-                  </p>
-                </>
-              )}
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              {/* Desktop Table View */}
-              <div className="hidden md:block">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Código</TableHead>
-                      <TableHead>Cliente</TableHead>
-                      <TableHead>Data de Entrega</TableHead>
-                      <TableHead>Preço</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Estado do Pagamento</TableHead>
-                      <TableHead>Método de Pagamento</TableHead>
-                      <TableHead className="text-right">Ações</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredOrders.map((order) => {
+                  <h3 className="text-lg font-medium mb-2">Nenhuma encomenda em progresso</h3>
+                  <p className="text-muted-foreground mb-4">Nenhuma encomenda nos estados pendente, produção ou concluída.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  {/* Desktop Table View */}
+                  <div className="hidden md:block">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Código</TableHead>
+                          <TableHead>Cliente</TableHead>
+                          <TableHead>Data de Entrega</TableHead>
+                          <TableHead>Preço</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Estado do Pagamento</TableHead>
+                          <TableHead>Método de Pagamento</TableHead>
+                          <TableHead className="text-right">Ações</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {inProgressOrders.map((order) => {
+                          const isOverdue = new Date(order.dueDate) < new Date();
+                          const status =
+                            isOverdue && order.status === "pending"
+                              ? "overdue"
+                              : order.status;
+                          return (
+                            <TableRow key={order.id}>
+                              <TableCell className="font-mono text-sm text-muted-foreground">
+                                {getOrderCode(order.id)}
+                              </TableCell>
+                              <TableCell className="font-medium truncate max-w-[10dvw]">
+                                {order.clientName}
+                              </TableCell>
+                              <TableCell>{formatDate(order.dueDate)}</TableCell>
+                              <TableCell>
+                                R$ {order.price.replace(".", ",")}
+                              </TableCell>
+                              <TableCell className="w-[6dvw]">
+                                <Badge
+                                  variant="outline"
+                                  className={cn(
+                                    "w-fit",
+                                    status === "overdue" &&
+                                      "bg-red-100/80 text-red-800 dark:bg-red-900/30 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-900/50",
+                                    status === "pending" &&
+                                      "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50",
+                                    status === "production" &&
+                                      "bg-purple-100/80 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200 hover:bg-purple-200 dark:hover:bg-purple-900/50",
+                                    status === "delivered" &&
+                                      "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50",
+                                    status === "done" &&
+                                      "bg-blue-100/80 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200 hover:bg-blue-200 dark:hover:bg-blue-900/50",
+                                    status === "canceled" &&
+                                      "bg-red-100/80 text-red-800 dark:bg-red-900/30 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-900/50",
+                                  )}
+                                >
+                                  {status === "overdue" && "Atrasado"}
+                                  {status === "pending" && "Pendente"}
+                                  {status === "production" && "Produção"}
+                                  {status === "done" && "Concluído"}
+                                  {status === "delivered" && "Entregue"}
+                                  {status === "canceled" && "Cancelado"}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <Badge
+                                  variant="outline"
+                                  className={cn(
+                                    "w-fit",
+                                    order.paymentStatus === "pending" &&
+                                      "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50",
+                                    order.paymentStatus === "partially_paid" &&
+                                      "bg-purple-100/80 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200 hover:bg-purple-200 dark:hover:bg-purple-900/50",
+                                    order.paymentStatus === "paid" &&
+                                      "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50",
+                                  )}
+                                >
+                                  {order.paymentStatus === "pending" &&
+                                    "Pagamento Pendente"}
+                                  {order.paymentStatus === "paid" &&
+                                    "Pagamento Efetuado"}
+                                  {order.paymentStatus === "partially_paid" &&
+                                    "Parcialmente Pago"}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                {order.paymentMethod === "credit_card" &&
+                                  "Cartão de Crédito"}
+                                {order.paymentMethod === "debit_card" &&
+                                  "Cartão de Débito"}
+                                {order.paymentMethod === "pix" && "Pix"}
+                                {order.paymentMethod === "cash" && "Dinheiro"}
+                                {!order.paymentMethod && "Não informado"}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex items-center justify-end gap-2">
+                                  <SubscriptionGate blockMode="disable">
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() =>
+                                        handleStatusChange(order.id, "pending")
+                                      }
+                                      title="Marcar como pendente"
+                                      disabled={order.status === "pending"}
+                                      className="flex items-center justify-center"
+                                    >
+                                      <StretchVertical className="h-4 w-4" />
+                                    </Button>
+                                  </SubscriptionGate>
+                                  <SubscriptionGate blockMode="disable">
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() =>
+                                        handleStatusChange(order.id, "production")
+                                      }
+                                      title="Marcar como Produção"
+                                      disabled={order.status === "production"}
+                                      className="flex items-center justify-center"
+                                    >
+                                      <Package className="h-4 w-4" />
+                                    </Button>
+                                  </SubscriptionGate>
+                                  <SubscriptionGate blockMode="disable">
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() =>
+                                        handleStatusChange(order.id, "done")
+                                      }
+                                      title="Marcar como concluída"
+                                      disabled={order.status === "done"}
+                                      className="flex items-center justify-center"
+                                    >
+                                      <CheckIcon className="h-4 w-4" />
+                                    </Button>
+                                  </SubscriptionGate>
+                                  <SubscriptionGate blockMode="disable">
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => handleEditOrder(order)}
+                                      title="Editar encomenda"
+                                      className="flex items-center justify-center"
+                                    >
+                                      <Pencil className="h-4 w-4" />
+                                    </Button>
+                                    <SubscriptionGate blockMode="disable">
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => handleOpenCancelDialog(order.id)}
+                                        title="Marcar como cancelado"
+                                        disabled={order.status === "canceled"}
+                                        className="flex items-center justify-center"
+                                      >
+                                        <X className="h-4 w-4" />
+                                      </Button>
+                                    </SubscriptionGate>
+                                  </SubscriptionGate>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => navigate(`/orders/${order.id}`)}
+                                    title="Ver detalhes"
+                                    className="flex items-center justify-center"
+                                  >
+                                    <Eye className="h-4 w-4" />
+                                  </Button>
+                                  <SubscriptionGate blockMode="disable">
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => {
+                                        setSelectedOrder(order);
+                                        setTimeout(handlePrint, 100);
+                                      }}
+                                      title="Imprimir"
+                                    >
+                                      <Printer className="h-4 w-4" />
+                                    </Button>
+                                  </SubscriptionGate>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                  {/* Mobile Card View */}
+                  <div className="md:hidden space-y-4">
+                    {inProgressOrders.map((order) => {
                       const isOverdue = new Date(order.dueDate) < new Date();
                       const status =
                         isOverdue && order.status === "pending"
                           ? "overdue"
                           : order.status;
                       return (
-                        <TableRow key={order.id}>
-                          <TableCell className="font-mono text-sm text-muted-foreground">
-                            {getOrderCode(order.id)}
-                          </TableCell>
-                          <TableCell className="font-medium truncate max-w-[10dvw]">
-                            {order.clientName}
-                          </TableCell>
-                          <TableCell>{formatDate(order.dueDate)}</TableCell>
-                          <TableCell>
-                            R$ {order.price.replace(".", ",")}
-                          </TableCell>
-                          <TableCell className="w-[6dvw]">
-                            <Badge
-                              variant="outline"
-                              className={cn(
-                                "w-fit",
-                                status === "overdue" &&
-                                  "bg-red-100/80 text-red-800 dark:bg-red-900/30 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-900/50",
-                                status === "pending" &&
-                                  "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50",
-                                status === "production" &&
-                                  "bg-purple-100/80 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200 hover:bg-purple-200 dark:hover:bg-purple-900/50",
-                                status === "delivered" &&
-                                  "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50",
-                                status === "done" &&
-                                  "bg-blue-100/80 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200 hover:bg-blue-200 dark:hover:bg-blue-900/50",
-                                status === "canceled" &&
-                                  "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50",
-                              )}
-                            >
-                              {status === "overdue" && "Atrasado"}
-                              {status === "pending" && "Pendente"}
-                              {status === "production" && "Produção"}
-                              {status === "done" && "Concluído"}
-                              {status === "delivered" && "Entregue"}
-                              {status === "canceled" && "Cancelado"}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            {/* Estado do Pagamento como Badge colorida */}
-                            <Badge
-                              variant="outline"
-                              className={cn(
-                                "w-fit",
-                                order.paymentStatus === "pending" &&
-                                  "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50",
-                                order.paymentStatus === "partially_paid" &&
-                                  "bg-purple-100/80 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200 hover:bg-purple-200 dark:hover:bg-purple-900/50",
-                                order.paymentStatus === "paid" &&
-                                  "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50",
-                              )}
-                            >
-                              {order.paymentStatus === "pending" &&
-                                "Pagamento Pendente"}
-                              {order.paymentStatus === "paid" &&
-                                "Pagamento Efetuado"}
-                              {order.paymentStatus === "partially_paid" &&
-                                "Parcialmente Pago"}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            {/* Método de Pagamento traduzido ou Não informado */}
-                            {order.paymentMethod === "credit_card" &&
-                              "Cartão de Crédito"}
-                            {order.paymentMethod === "debit_card" &&
-                              "Cartão de Débito"}
-                            {order.paymentMethod === "pix" && "Pix"}
-                            {order.paymentMethod === "cash" && "Dinheiro"}
-                            {!order.paymentMethod && "Não informado"}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex items-center justify-end gap-2">
-                              <SubscriptionGate blockMode="disable">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() =>
-                                    handleStatusChange(order.id, "pending")
-                                  }
-                                  title="Marcar como pendente"
-                                  disabled={order.status === "pending"}
-                                  className="flex items-center justify-center"
-                                >
-                                  <X className="h-4 w-4" />
-                                </Button>
-                              </SubscriptionGate>
-                              <SubscriptionGate blockMode="disable">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() =>
-                                    handleStatusChange(order.id, "production")
-                                  }
-                                  title="Marcar como Produção"
-                                  disabled={order.status === "production"}
-                                  className="flex items-center justify-center"
-                                >
-                                  <Package className="h-4 w-4" />
-                                </Button>
-                              </SubscriptionGate>
-                              <SubscriptionGate blockMode="disable">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() =>
-                                    handleStatusChange(order.id, "done")
-                                  }
-                                  title="Marcar como concluída"
-                                  disabled={order.status === "done"}
-                                  className="flex items-center justify-center"
-                                >
-                                  <CheckCircle2 className="h-4 w-4" />
-                                </Button>
-                              </SubscriptionGate>
-                              <SubscriptionGate blockMode="disable">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleEditOrder(order)}
-                                  title="Editar encomenda"
-                                  className="flex items-center justify-center"
-                                >
-                                  <Pencil className="h-4 w-4" />
-                                </Button>
-                              </SubscriptionGate>
-
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => navigate(`/orders/${order.id}`)}
-                                title="Ver detalhes"
-                                className="flex items-center justify-center"
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-
-                              <SubscriptionGate blockMode="disable">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => {
-                                    setSelectedOrder(order);
-                                    setTimeout(handlePrint, 100);
-                                  }}
-                                  title="Imprimir"
-                                >
-                                  <Printer className="h-4 w-4" />
-                                </Button>
-                              </SubscriptionGate>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-
-              {/* Mobile Card View */}
-              <div className="md:hidden space-y-4">
-                {filteredOrders.map((order) => {
-                  const isOverdue = new Date(order.dueDate) < new Date();
-                  const status =
-                    isOverdue && order.status === "pending"
-                      ? "overdue"
-                      : order.status;
-                  return (
-                    <Card key={order.id}>
-                      <CardContent className="p-4">
-                        <div className="flex flex-col gap-3">
-                          <div className="flex items-start justify-between">
-                            <div>
+                        <Card key={order.id}>
+                          <CardContent className="p-4 relative">
+                            <div className="flex flex-col gap-3">
                               <div className="flex items-center gap-2">
                                 <p className="font-mono text-sm text-muted-foreground">
                                   {getOrderCode(order.id)}
@@ -527,7 +571,6 @@ const OrdersView = () => {
                               <p className="text-sm text-muted-foreground">
                                 {formatDate(order.dueDate)}
                               </p>
-                              {/* Estado do Pagamento e Método de Pagamento */}
                               <div className="flex flex-col mt-1 text-xs text-muted-foreground gap-0.5">
                                 <span>
                                   <strong>Pagamento:</strong>{" "}
@@ -549,116 +592,294 @@ const OrdersView = () => {
                                   {!order.paymentMethod && "Não informado"}
                                 </span>
                               </div>
+                              {/* Badge no canto superior direito */}
+                              <Badge
+                                variant="outline"
+                                className={cn(
+                                  "w-fit absolute top-4 right-4 z-10",
+                                  status === "overdue" &&
+                                    "bg-red-100/80 text-red-800 dark:bg-red-900/30 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-900/50",
+                                  status === "pending" &&
+                                    "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50",
+                                  status === "production" &&
+                                    "bg-purple-100/80 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200 hover:bg-purple-200 dark:hover:bg-purple-900/50",
+                                  status === "delivered" &&
+                                    "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50",
+                                  status === "done" &&
+                                    "bg-blue-100/80 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200 hover:bg-blue-200 dark:hover:bg-blue-900/50",
+                                  status === "canceled" &&
+                                    "bg-black-100/80 text-black-800 dark:bg-black-900/30 dark:text-black-200 hover:bg-black-200 dark:hover:bg-black-900/50",
+                                )}
+                              >
+                                {status === "overdue" && "Atrasado"}
+                                {status === "pending" && "Pendente"}
+                                {status === "production" && "Produção"}
+                                {status === "done" && "Concluído"}
+                                {status === "delivered" && "Entregue"}
+                                {status === "canceled" && "Cancelado"}
+                              </Badge>
+                              {/* Fileira de botões de ação (mantida para em progresso) */}
+                              <div className="flex items-center justify-between mt-2">
+                                <SubscriptionGate blockMode="disable">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleStatusChange(order.id, "pending")}
+                                    title="Marcar como pendente"
+                                    disabled={order.status === "pending"}
+                                  >
+                                    <StretchVertical className="h-4 w-4" />
+                                  </Button>
+                                </SubscriptionGate>
+                                <SubscriptionGate blockMode="disable">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleStatusChange(order.id, "production")}
+                                    title="Marcar como Produção"
+                                    disabled={order.status === "production"}
+                                  >
+                                    <Package className="h-4 w-4" />
+                                  </Button>
+                                </SubscriptionGate>
+                                <SubscriptionGate blockMode="disable">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleStatusChange(order.id, "done")}
+                                    title="Marcar como concluída"
+                                    disabled={order.status === "done"}
+                                  >
+                                    <CheckIcon className="h-4 w-4" />
+                                  </Button>
+                                </SubscriptionGate>
+                                <SubscriptionGate blockMode="disable">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleEditOrder(order)}
+                                    title="Editar encomenda"
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                </SubscriptionGate>
+                                <SubscriptionGate blockMode="disable">
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => handleOpenCancelDialog(order.id)}
+                                        title="Marcar como cancelado"
+                                        disabled={order.status === "canceled"}
+                                        className="flex items-center justify-center"
+                                      >
+                                        <X className="h-4 w-4" />
+                                      </Button>
+                                    </SubscriptionGate>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => navigate(`/orders/${order.id}`)}
+                                  title="Ver detalhes"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                <SubscriptionGate blockMode="disable">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => {
+                                      setSelectedOrder(order);
+                                      setTimeout(handlePrint, 100);
+                                    }}
+                                    title="Imprimir"
+                                  >
+                                    <Printer className="h-4 w-4" />
+                                  </Button>
+                                </SubscriptionGate>
+                              </div>
                             </div>
-                            <Badge
-                              variant="outline"
-                              className={cn(
-                                "w-fit",
-                                status === "overdue" &&
-                                  "bg-red-100/80 text-red-800 dark:bg-red-900/30 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-900/50",
-                                status === "pending" &&
-                                  "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50",
-                                status === "production" &&
-                                  "bg-purple-100/80 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200 hover:bg-purple-200 dark:hover:bg-purple-900/50",
-                                status === "delivered" &&
-                                  "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50",
-                                status === "done" &&
-                                  "bg-blue-100/80 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200 hover:bg-blue-200 dark:hover:bg-blue-900/50",
-                                status === "canceled" &&
-                                  "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50",
-                              )}
-                            >
-                              {status === "overdue" && "Atrasado"}
-                              {status === "pending" && "Pendente"}
-                              {status === "production" && "Produção"}
-                              {status === "done" && "Concluído"}
-                              {status === "delivered" && "Entregue"}
-                              {status === "canceled" && "Cancelado"}
-                            </Badge>
-                          </div>
-
-                          <div className="flex items-center justify-between">
-                            <SubscriptionGate blockMode="disable">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() =>
-                                  handleStatusChange(order.id, "pending")
-                                }
-                                title="Marcar como pendente"
-                                disabled={order.status === "pending"}
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </TabsContent>
+            <TabsContent value="finished">
+              {isOrdersLoading ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              ) : finishedOrders.length === 0 ? (
+                <div className="text-center py-6">
+                  <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium mb-2">Nenhuma encomenda finalizada</h3>
+                  <p className="text-muted-foreground mb-4">Nenhuma encomenda nos estados cancelado ou entregue.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  {/* Desktop Table View */}
+                  <div className="hidden md:block">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Código</TableHead>
+                          <TableHead>Cliente</TableHead>
+                          <TableHead>Data de Entrega</TableHead>
+                          <TableHead>Preço</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Estado do Pagamento</TableHead>
+                          <TableHead>Método de Pagamento</TableHead>
+                          <TableHead className="text-right">Ações</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {finishedOrders.map((order) => {
+                          const status = order.status;
+                          return (
+                            <TableRow key={order.id}>
+                              <TableCell className="font-mono text-sm text-muted-foreground">
+                                {getOrderCode(order.id)}
+                              </TableCell>
+                              <TableCell className="font-medium truncate max-w-[10dvw]">
+                                {order.clientName}
+                              </TableCell>
+                              <TableCell>{formatDate(order.dueDate)}</TableCell>
+                              <TableCell>
+                                R$ {order.price.replace(".", ",")}
+                              </TableCell>
+                              <TableCell className="w-[6dvw]">
+                                <Badge
+                                  variant="outline"
+                                  className={cn(
+                                    "w-fit",
+                                    status === "delivered" &&
+                                      "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50",
+                                    status === "canceled" &&
+                                      "bg-red-100/80 text-red-800 dark:bg-red-900/30 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-900/50",
+                                  )}
+                                >
+                                  {status === "delivered" && "Entregue"}
+                                  {status === "canceled" && "Cancelado"}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <Badge
+                                  variant="outline"
+                                  className={cn(
+                                    "w-fit",
+                                    order.paymentStatus === "pending" &&
+                                      "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50",
+                                    order.paymentStatus === "partially_paid" &&
+                                      "bg-purple-100/80 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200 hover:bg-purple-200 dark:hover:bg-purple-900/50",
+                                    order.paymentStatus === "paid" &&
+                                      "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50",
+                                  )}
+                                >
+                                  {order.paymentStatus === "pending" &&
+                                    "Pagamento Pendente"}
+                                  {order.paymentStatus === "paid" &&
+                                    "Pagamento Efetuado"}
+                                  {order.paymentStatus === "partially_paid" &&
+                                    "Parcialmente Pago"}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                {order.paymentMethod === "credit_card" &&
+                                  "Cartão de Crédito"}
+                                {order.paymentMethod === "debit_card" &&
+                                  "Cartão de Débito"}
+                                {order.paymentMethod === "pix" && "Pix"}
+                                {order.paymentMethod === "cash" && "Dinheiro"}
+                                {!order.paymentMethod && "Não informado"}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex items-center justify-end gap-2">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => navigate(`/orders/${order.id}`)}
+                                    title="Ver detalhes"
+                                    className="flex items-center justify-center"
+                                  >
+                                    <Eye className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                  {/* Mobile Card View */}
+                  <div className="md:hidden space-y-4">
+                    {finishedOrders.map((order) => {
+                      const status = order.status;
+                      return (
+                        <Card key={order.id}>
+                          <CardContent
+                            className="p-4 cursor-pointer relative"
+                            onClick={() => navigate(`/orders/${order.id}`)}
+                          >
+                            <div className="flex flex-col gap-3">
+                              <div className="flex items-center gap-2">
+                                <p className="font-mono text-sm text-muted-foreground">
+                                  {getOrderCode(order.id)}
+                                </p>
+                                <h3 className="font-medium truncate max-w-[32dvw]">
+                                  {order.clientName}
+                                </h3>
+                              </div>
+                              <p className="text-sm text-muted-foreground">
+                                {formatDate(order.dueDate)}
+                              </p>
+                              <div className="flex flex-col mt-1 text-xs text-muted-foreground gap-0.5">
+                                <span>
+                                  <strong>Pagamento:</strong>{" "}
+                                  {order.paymentStatus === "pending" &&
+                                    "Pagamento Pendente"}
+                                  {order.paymentStatus === "paid" &&
+                                    "Pagamento Efetuado"}
+                                  {order.paymentStatus === "partially_paid" &&
+                                    "Parcialmente Pago"}
+                                </span>
+                                <span>
+                                  <strong>Método:</strong>{" "}
+                                  {order.paymentMethod === "credit_card" &&
+                                    "Cartão de Crédito"}
+                                  {order.paymentMethod === "debit_card" &&
+                                    "Cartão de Débito"}
+                                  {order.paymentMethod === "pix" && "Pix"}
+                                  {order.paymentMethod === "cash" && "Dinheiro"}
+                                  {!order.paymentMethod && "Não informado"}
+                                </span>
+                              </div>
+                              {/* Badge no canto superior direito */}
+                              <Badge
+                                variant="outline"
+                                className={cn(
+                                  "w-fit absolute top-4 right-4 z-10",
+                                  status === "delivered" &&
+                                    "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50",
+                                  status === "canceled" &&
+                                    "bg-red-100/80 text-red-800 dark:bg-red-900/30 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-900/50",
+                                )}
                               >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </SubscriptionGate>
-                            <SubscriptionGate blockMode="disable">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() =>
-                                  handleStatusChange(order.id, "production")
-                                }
-                                title="Marcar como Produção"
-                                disabled={order.status === "production"}
-                              >
-                                <Package className="h-4 w-4" />
-                              </Button>
-                            </SubscriptionGate>
-                            <SubscriptionGate blockMode="disable">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() =>
-                                  handleStatusChange(order.id, "done")
-                                }
-                                title="Marcar como concluída"
-                                disabled={order.status === "done"}
-                              >
-                                <CheckCircle2 className="h-4 w-4" />
-                              </Button>
-                            </SubscriptionGate>
-                            <SubscriptionGate blockMode="disable">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleEditOrder(order)}
-                                title="Editar encomenda"
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                            </SubscriptionGate>
-
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => navigate(`/orders/${order.id}`)}
-                              title="Ver detalhes"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-
-                            <SubscriptionGate blockMode="disable">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => {
-                                  setSelectedOrder(order);
-                                  setTimeout(handlePrint, 100);
-                                }}
-                                title="Imprimir"
-                              >
-                                <Printer className="h-4 w-4" />
-                              </Button>
-                            </SubscriptionGate>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+                                {status === "delivered" && "Entregue"}
+                                {status === "canceled" && "Cancelado"}
+                              </Badge>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
 
@@ -670,6 +891,22 @@ const OrdersView = () => {
         orderData={selectedOrder}
         onSuccess={handleListUpdate}
       />
+
+      {/* Dialog de confirmação de cancelamento */}
+      <Dialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Deseja cancelar a encomenda?</DialogTitle>
+            <DialogDescription>
+            Após marcar a encomenda como cancelada <span className="font-bold text-destructive">não será mais possível alterá-la</span>.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-2 mt-4">
+            <Button variant="outline" onClick={handleCloseCancelDialog} className="w-full sm:w-auto">Voltar</Button>
+            <Button variant="destructive" onClick={handleConfirmCancel} className="w-full sm:w-auto">Marcar como cancelado</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Hidden print content */}
       <div className="hidden">

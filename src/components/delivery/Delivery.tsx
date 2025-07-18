@@ -300,7 +300,7 @@ const Delivery = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Entregas</h2>
+          <h2 className="text-2xl font-bold tracking-tight">Entregas</h2>
           <p className="text-muted-foreground">
             Gerencie suas encomendas prontas para entrega
           </p>
@@ -518,6 +518,7 @@ const Delivery = () => {
           }}
           order={deliveryOrder}
           isLoading={isDeliveringOrder}
+          onClosed={() => {setDeliveryDialogOpen(false)}}
           onDelivered={() =>
             deliverOrder({
               orderId: deliveryOrder.id,
