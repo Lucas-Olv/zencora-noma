@@ -750,8 +750,7 @@ const MonthlyReports = () => {
                   {paymentMethodData.length == 0 && (
                     <div className="flex flex-column items-center justify-center h-[30dvh] md:h-[36dvh]">
                       <p className="text-center text-muted-foreground">
-                        Nenhuma relação de pagamento encontrada nas
-                        encomendas.
+                        Nenhuma relação de pagamento encontrada nas encomendas.
                       </p>
                     </div>
                   )}

@@ -19,7 +19,6 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { LoadingState } from "@/components/ui/loading-state";
@@ -258,12 +257,6 @@ export function ProductionView() {
       // Se o status for igual, ordena por data de entrega
       return parseDate(a.dueDate).getTime() - parseDate(b.dueDate).getTime();
     });
-
-  const completedOrders = orders
-    .filter((order) => order.status === "done")
-    .sort(
-      (a, b) => parseDate(a.dueDate).getTime() - parseDate(b.dueDate).getTime(),
-    );
 
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const printRef = useRef<HTMLDivElement>(null);
@@ -571,7 +564,7 @@ export function ProductionView() {
           Painel de Produção
         </h2>
         <p className="text-muted-foreground">
-          Acompanhe suas encomendas pendentes e concluídas em tempo real
+          Acompanhe suas encomendas pendentes em tempo real
         </p>
       </div>
       <Card>
@@ -585,60 +578,22 @@ export function ProductionView() {
           />
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="pending" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="pending">
-                Pendentes
-                {pendingOrders.length > 0 && (
-                  <Badge className="ml-2">{pendingOrders.length}</Badge>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="completed">
-                Concluídas
-                {completedOrders.length > 0 && (
-                  <Badge className="ml-2">{completedOrders.length}</Badge>
-                )}
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="pending">
-              <LoadingState
-                loading={isOrdersLoading}
-                empty={!pendingOrders.length}
-                emptyText="Nenhuma encomenda pendente"
-                emptyIcon={
-                  <FileText className="h-12 w-12 text-muted-foreground" />
-                }
-              >
-                <div className="space-y-4">
-                  {pendingOrders.map((order) => {
-                    const statusDisplay = getStatusDisplay(
-                      order.status,
-                      order.dueDate,
-                    );
-                    return <OrderCard key={order.id} order={order} />;
-                  })}
-                </div>
-              </LoadingState>
-            </TabsContent>
-
-            <TabsContent value="completed">
-              <LoadingState
-                loading={isOrdersLoading}
-                empty={!completedOrders.length}
-                emptyText="Nenhuma encomenda concluída"
-                emptyIcon={
-                  <FileText className="h-12 w-12 text-muted-foreground" />
-                }
-              >
-                <div className="space-y-4">
-                  {completedOrders.map((order) => (
-                    <OrderCard key={order.id} order={order} />
-                  ))}
-                </div>
-              </LoadingState>
-            </TabsContent>
-          </Tabs>
+          <LoadingState
+            loading={isOrdersLoading}
+            empty={!pendingOrders.length}
+            emptyText="Nenhuma encomenda pendente"
+            emptyIcon={<FileText className="h-12 w-12 text-muted-foreground" />}
+          >
+            <div className="space-y-4">
+              {pendingOrders.map((order) => {
+                const statusDisplay = getStatusDisplay(
+                  order.status,
+                  order.dueDate,
+                );
+                return <OrderCard key={order.id} order={order} />;
+              })}
+            </div>
+          </LoadingState>
         </CardContent>
       </Card>
 

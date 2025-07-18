@@ -57,7 +57,15 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { getNomaApi, patchNomaApi } from "@/lib/apiHelpers";
 import { useSettingsStorage } from "@/storage/settings";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import dayjs from "dayjs";
 
 const OrdersView = () => {
   const { toast } = useToast();
@@ -293,10 +301,10 @@ const OrdersView = () => {
     (order) =>
       order.status === "pending" ||
       order.status === "production" ||
-      order.status === "done"
+      order.status === "done",
   );
   const finishedOrders = filteredOrders.filter(
-    (order) => order.status === "canceled" || order.status === "delivered"
+    (order) => order.status === "canceled" || order.status === "delivered",
   );
 
   return (
@@ -355,8 +363,13 @@ const OrdersView = () => {
               ) : inProgressOrders.length === 0 ? (
                 <div className="text-center py-6">
                   <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-medium mb-2">Nenhuma encomenda em progresso</h3>
-                  <p className="text-muted-foreground mb-4">Nenhuma encomenda nos estados pendente, produção ou concluída.</p>
+                  <h3 className="text-lg font-medium mb-2">
+                    Nenhuma encomenda em progresso
+                  </h3>
+                  <p className="text-muted-foreground mb-4">
+                    Nenhuma encomenda nos estados pendente, produção ou
+                    concluída.
+                  </p>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
@@ -377,7 +390,8 @@ const OrdersView = () => {
                       </TableHeader>
                       <TableBody>
                         {inProgressOrders.map((order) => {
-                          const isOverdue = new Date(order.dueDate) < new Date();
+                          const isOverdue =
+                            new Date(order.dueDate) < new Date();
                           const status =
                             isOverdue && order.status === "pending"
                               ? "overdue"
@@ -472,7 +486,10 @@ const OrdersView = () => {
                                       variant="ghost"
                                       size="icon"
                                       onClick={() =>
-                                        handleStatusChange(order.id, "production")
+                                        handleStatusChange(
+                                          order.id,
+                                          "production",
+                                        )
                                       }
                                       title="Marcar como Produção"
                                       disabled={order.status === "production"}
@@ -501,6 +518,9 @@ const OrdersView = () => {
                                       size="icon"
                                       onClick={() => handleEditOrder(order)}
                                       title="Editar encomenda"
+                                      disabled={dayjs(order.dueDate).isBefore(
+                                        dayjs(),
+                                      )}
                                       className="flex items-center justify-center"
                                     >
                                       <Pencil className="h-4 w-4" />
@@ -509,7 +529,9 @@ const OrdersView = () => {
                                       <Button
                                         variant="ghost"
                                         size="icon"
-                                        onClick={() => handleOpenCancelDialog(order.id)}
+                                        onClick={() =>
+                                          handleOpenCancelDialog(order.id)
+                                        }
                                         title="Marcar como cancelado"
                                         disabled={order.status === "canceled"}
                                         className="flex items-center justify-center"
@@ -521,7 +543,9 @@ const OrdersView = () => {
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    onClick={() => navigate(`/orders/${order.id}`)}
+                                    onClick={() =>
+                                      navigate(`/orders/${order.id}`)
+                                    }
                                     title="Ver detalhes"
                                     className="flex items-center justify-center"
                                   >
@@ -624,33 +648,42 @@ const OrdersView = () => {
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    onClick={() => handleStatusChange(order.id, "pending")}
+                                    onClick={() =>
+                                      handleStatusChange(order.id, "pending")
+                                    }
                                     title="Marcar como pendente"
+                                    className="h-6 w-6"
                                     disabled={order.status === "pending"}
                                   >
-                                    <StretchVertical className="h-4 w-4" />
+                                    <StretchVertical />
                                   </Button>
                                 </SubscriptionGate>
                                 <SubscriptionGate blockMode="disable">
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    onClick={() => handleStatusChange(order.id, "production")}
+                                    onClick={() =>
+                                      handleStatusChange(order.id, "production")
+                                    }
                                     title="Marcar como Produção"
+                                    className="h-6 w-6"
                                     disabled={order.status === "production"}
                                   >
-                                    <Package className="h-4 w-4" />
+                                    <Package />
                                   </Button>
                                 </SubscriptionGate>
                                 <SubscriptionGate blockMode="disable">
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    onClick={() => handleStatusChange(order.id, "done")}
+                                    onClick={() =>
+                                      handleStatusChange(order.id, "done")
+                                    }
                                     title="Marcar como concluída"
                                     disabled={order.status === "done"}
+                                    className="h-6 w-6"
                                   >
-                                    <CheckIcon className="h-4 w-4" />
+                                    <CheckIcon />
                                   </Button>
                                 </SubscriptionGate>
                                 <SubscriptionGate blockMode="disable">
@@ -658,30 +691,39 @@ const OrdersView = () => {
                                     variant="ghost"
                                     size="icon"
                                     onClick={() => handleEditOrder(order)}
+                                    disabled={dayjs(order.dueDate).isBefore(
+                                      dayjs(),
+                                    )}
                                     title="Editar encomenda"
+                                    className="h-6 w-6"
                                   >
-                                    <Pencil className="h-4 w-4" />
+                                    <Pencil />
                                   </Button>
                                 </SubscriptionGate>
                                 <SubscriptionGate blockMode="disable">
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => handleOpenCancelDialog(order.id)}
-                                        title="Marcar como cancelado"
-                                        disabled={order.status === "canceled"}
-                                        className="flex items-center justify-center"
-                                      >
-                                        <X className="h-4 w-4" />
-                                      </Button>
-                                    </SubscriptionGate>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() =>
+                                      handleOpenCancelDialog(order.id)
+                                    }
+                                    title="Marcar como cancelado"
+                                    disabled={order.status === "canceled"}
+                                    className="flex items-center justify-center h-6 w-6"
+                                  >
+                                    <X />
+                                  </Button>
+                                </SubscriptionGate>
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  onClick={() => navigate(`/orders/${order.id}`)}
+                                  onClick={() =>
+                                    navigate(`/orders/${order.id}`)
+                                  }
                                   title="Ver detalhes"
+                                  className="h-6 w-6"
                                 >
-                                  <Eye className="h-4 w-4" />
+                                  <Eye />
                                 </Button>
                                 <SubscriptionGate blockMode="disable">
                                   <Button
@@ -692,8 +734,9 @@ const OrdersView = () => {
                                       setTimeout(handlePrint, 100);
                                     }}
                                     title="Imprimir"
+                                    className="h-6 w-6"
                                   >
-                                    <Printer className="h-4 w-4" />
+                                    <Printer />
                                   </Button>
                                 </SubscriptionGate>
                               </div>
@@ -714,8 +757,12 @@ const OrdersView = () => {
               ) : finishedOrders.length === 0 ? (
                 <div className="text-center py-6">
                   <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-medium mb-2">Nenhuma encomenda finalizada</h3>
-                  <p className="text-muted-foreground mb-4">Nenhuma encomenda nos estados cancelado ou entregue.</p>
+                  <h3 className="text-lg font-medium mb-2">
+                    Nenhuma encomenda finalizada
+                  </h3>
+                  <p className="text-muted-foreground mb-4">
+                    Nenhuma encomenda nos estados cancelado ou entregue.
+                  </p>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
@@ -799,7 +846,9 @@ const OrdersView = () => {
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    onClick={() => navigate(`/orders/${order.id}`)}
+                                    onClick={() =>
+                                      navigate(`/orders/${order.id}`)
+                                    }
                                     title="Ver detalhes"
                                     className="flex items-center justify-center"
                                   >
@@ -898,12 +947,28 @@ const OrdersView = () => {
           <DialogHeader>
             <DialogTitle>Deseja cancelar a encomenda?</DialogTitle>
             <DialogDescription>
-            Após marcar a encomenda como cancelada <span className="font-bold text-destructive">não será mais possível alterá-la</span>.
+              Após marcar a encomenda como cancelada{" "}
+              <span className="font-bold text-destructive">
+                não será mais possível alterá-la
+              </span>
+              .
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-2 mt-4">
-            <Button variant="outline" onClick={handleCloseCancelDialog} className="w-full sm:w-auto">Voltar</Button>
-            <Button variant="destructive" onClick={handleConfirmCancel} className="w-full sm:w-auto">Marcar como cancelado</Button>
+            <Button
+              variant="outline"
+              onClick={handleCloseCancelDialog}
+              className="w-full sm:w-auto"
+            >
+              Voltar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmCancel}
+              className="w-full sm:w-auto"
+            >
+              Marcar como cancelado
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

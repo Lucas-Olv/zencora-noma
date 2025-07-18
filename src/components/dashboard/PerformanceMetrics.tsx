@@ -298,8 +298,8 @@ export default function PerformanceMetrics({
               {paymentMethodData.length == 0 && (
                 <div className="flex flex-column items-center justify-center h-[30dvh] md:h-[36dvh]">
                   <p className="text-center text-muted-foreground">
-                    Nenhuma relação de pagamento encontrada nas
-                    encomendas do período.
+                    Nenhuma relação de pagamento encontrada nas encomendas do
+                    período
                   </p>
                 </div>
               )}

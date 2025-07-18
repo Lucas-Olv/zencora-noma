@@ -98,7 +98,9 @@ export const DeliveryDialog: React.FC<DeliveryDialogProps> = ({
               </div>
               <div>
                 <span className="text-sm text-muted-foreground">Cliente</span>
-                <div className="font-medium truncate max-w-[70dvw] md:max-w-[8dvw]">{order.clientName}</div>
+                <div className="font-medium truncate max-w-[70dvw] md:max-w-[8dvw]">
+                  {order.clientName}
+                </div>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -167,29 +169,32 @@ export const DeliveryDialog: React.FC<DeliveryDialogProps> = ({
             </div>
             <div>
               <span className="text-sm text-muted-foreground">Descrição</span>
-              <AutoResizeTextarea value={order.description} className="text-foreground w-[70dvw] p-0 resize-none overflow-hidden bg-transparent focus:outline-none focus:ring-0" />
+              <AutoResizeTextarea
+                value={order.description}
+                className="text-foreground w-[70dvw] p-0 resize-none overflow-hidden bg-transparent focus:outline-none focus:ring-0"
+              />
             </div>
           </div>
         </div>
         <DialogFooter>
-                    <div className="flex flex-col md:flex-row gap-2">
-                    <Button
-            onClick={onClosed}
-            disabled={isLoading}
-            className="w-full"
-            variant="outline"
-          >
-            Voltar
-          </Button>
-                    <Button
-            onClick={onDelivered}
-            disabled={isLoading}
-            className="w-full"
-            variant="default"
-          >
-            Marcar como entregue
-          </Button>
-                    </div>
+          <div className="flex flex-col md:flex-row gap-2">
+            <Button
+              onClick={onClosed}
+              disabled={isLoading}
+              className="w-full"
+              variant="outline"
+            >
+              Voltar
+            </Button>
+            <Button
+              onClick={onDelivered}
+              disabled={isLoading}
+              className="w-full"
+              variant="default"
+            >
+              Marcar como entregue
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

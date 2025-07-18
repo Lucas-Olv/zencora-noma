@@ -27,12 +27,12 @@ const getStatusClasses = (status: string | null, dueDate: string) => {
       "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200",
     effectiveStatus === "production" &&
       "bg-purple-100/80 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200",
-      effectiveStatus === "delivered" &&
+    effectiveStatus === "delivered" &&
       "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50",
-      effectiveStatus === "done" &&
+    effectiveStatus === "done" &&
       "bg-blue-100/80 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200 hover:bg-blue-200 dark:hover:bg-blue-900/50",
-      effectiveStatus === "canceled" &&
-      "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50",
+    effectiveStatus === "canceled" &&
+      "bg-red-100/80 text-red-800 dark:bg-red-900/30 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-900/50",
   );
 };
 
@@ -64,9 +64,9 @@ const getEventColor = (status: string | null, dueDate: string) => {
       };
     case "canceled":
       return {
-        backgroundColor: "rgb(187 247 208 / 0.8)", // green-100/80
-        borderColor: "rgb(22 101 52)", // green-800
-      };
+        backgroundColor: "rgb(254 226 226 / 0.8)",
+        borderColor: "rgb(153 27 27)",
+      }; //
     case "done":
       return {
         backgroundColor: "rgb(191 219 254 / 0.8)", // blue-100/80
@@ -104,7 +104,12 @@ const CalendarPage = () => {
     if (ordersData && !isOrdersLoading) {
       const fetchedOrders = ordersData.data.map((order: Order) => ({
         ...order,
-        status: order.status as "pending" | "production" | "done" | "delivered" | "canceled",
+        status: order.status as
+          | "pending"
+          | "production"
+          | "done"
+          | "delivered"
+          | "canceled",
       }));
       setOrders(fetchedOrders);
     }

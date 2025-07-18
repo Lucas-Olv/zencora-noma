@@ -518,7 +518,9 @@ const Delivery = () => {
           }}
           order={deliveryOrder}
           isLoading={isDeliveringOrder}
-          onClosed={() => {setDeliveryDialogOpen(false)}}
+          onClosed={() => {
+            setDeliveryDialogOpen(false);
+          }}
           onDelivered={() =>
             deliverOrder({
               orderId: deliveryOrder.id,

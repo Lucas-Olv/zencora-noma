@@ -90,7 +90,7 @@ const getStatusDisplay = (status: string | null, dueDate?: string | null) => {
       return {
         label: "Cancelado",
         className:
-          "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50",
+          "bg-red-100/80 text-red-800 dark:bg-red-900/30 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-900/50",
       };
     default:
       return {
@@ -253,7 +253,8 @@ const OrderDetail = () => {
   }
 
   const statusDisplay = getStatusDisplay(order.status, order.dueDate);
-  const isFinalized = order.status === "canceled" || order.status === "delivered";
+  const isFinalized =
+    order.status === "canceled" || order.status === "delivered";
 
   if (isFinalized) {
     return (
@@ -293,7 +294,9 @@ const OrderDetail = () => {
                   <Calendar className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Data de Entrega</p>
+                  <p className="text-sm text-muted-foreground">
+                    Data de Entrega
+                  </p>
                   <p className="font-medium">{formatDate(order.dueDate)}</p>
                 </div>
               </div>
@@ -344,7 +347,8 @@ const OrderDetail = () => {
                     Método de pagamento
                   </p>
                   <p className="font-medium">
-                    {order.paymentMethod === "credit_card" && "Cartão de Crédito"}
+                    {order.paymentMethod === "credit_card" &&
+                      "Cartão de Crédito"}
                     {order.paymentMethod === "debit_card" && "Cartão de Débito"}
                     {order.paymentMethod === "pix" && "Pix"}
                     {order.paymentMethod === "cash" && "Dinheiro"}
@@ -496,7 +500,9 @@ const OrderDetail = () => {
                         <Button
                           variant="outline"
                           className="w-full"
-                          onClick={() => updateOrderStatus({ status: "pending" })}
+                          onClick={() =>
+                            updateOrderStatus({ status: "pending" })
+                          }
                         >
                           <Clock className="h-4 w-4 row-span-full mr-2" />
                           Marcar como Pendente
