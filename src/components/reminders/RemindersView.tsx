@@ -274,7 +274,9 @@ const RemindersView = () => {
                 onChange={(e) => setNewReminderTitle(e.target.value)}
                 className="flex-1"
               />
-              <Button disabled={newReminderTitle.length <= 0} type="submit">Adicionar</Button>
+              <Button disabled={newReminderTitle.length <= 0} type="submit">
+                Adicionar
+              </Button>
             </div>
           </form>
 

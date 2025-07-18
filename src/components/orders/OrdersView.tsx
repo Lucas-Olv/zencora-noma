@@ -49,7 +49,7 @@ const OrdersView = () => {
   const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
   const [dialogOrderId, setDialogOrderId] = useState<string | undefined>();
   const printRef = useRef<HTMLDivElement>(null);
-  const {settings} = useSettingsStorage();
+  const { settings } = useSettingsStorage();
 
   const {
     mutate: updateOrder,
@@ -355,7 +355,7 @@ const OrdersView = () => {
                           <TableCell>
                             R$ {order.price.replace(".", ",")}
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="w-[6dvw]">
                             <Badge
                               variant="outline"
                               className={cn(
@@ -366,7 +366,11 @@ const OrdersView = () => {
                                   "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50",
                                 status === "production" &&
                                   "bg-purple-100/80 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200 hover:bg-purple-200 dark:hover:bg-purple-900/50",
+                                status === "delivered" &&
+                                  "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50",
                                 status === "done" &&
+                                  "bg-blue-100/80 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200 hover:bg-blue-200 dark:hover:bg-blue-900/50",
+                                status === "canceled" &&
                                   "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50",
                               )}
                             >
@@ -374,6 +378,8 @@ const OrdersView = () => {
                               {status === "pending" && "Pendente"}
                               {status === "production" && "Produção"}
                               {status === "done" && "Concluído"}
+                              {status === "delivered" && "Entregue"}
+                              {status === "canceled" && "Cancelado"}
                             </Badge>
                           </TableCell>
                           <TableCell>
@@ -390,15 +396,20 @@ const OrdersView = () => {
                                   "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50",
                               )}
                             >
-                              {order.paymentStatus === "pending" && "Pagamento Pendente"}
-                              {order.paymentStatus === "paid" && "Pagamento Efetuado"}
-                              {order.paymentStatus === "partially_paid" && "Parcialmente Pago"}
+                              {order.paymentStatus === "pending" &&
+                                "Pagamento Pendente"}
+                              {order.paymentStatus === "paid" &&
+                                "Pagamento Efetuado"}
+                              {order.paymentStatus === "partially_paid" &&
+                                "Parcialmente Pago"}
                             </Badge>
                           </TableCell>
                           <TableCell>
                             {/* Método de Pagamento traduzido ou Não informado */}
-                            {order.paymentMethod === "credit_card" && "Cartão de Crédito"}
-                            {order.paymentMethod === "debit_card" && "Cartão de Débito"}
+                            {order.paymentMethod === "credit_card" &&
+                              "Cartão de Crédito"}
+                            {order.paymentMethod === "debit_card" &&
+                              "Cartão de Débito"}
                             {order.paymentMethod === "pix" && "Pix"}
                             {order.paymentMethod === "cash" && "Dinheiro"}
                             {!order.paymentMethod && "Não informado"}
@@ -519,13 +530,20 @@ const OrdersView = () => {
                               {/* Estado do Pagamento e Método de Pagamento */}
                               <div className="flex flex-col mt-1 text-xs text-muted-foreground gap-0.5">
                                 <span>
-                                  <strong>Pagamento:</strong> {order.paymentStatus === "pending" && "Pagamento Pendente"}
-                                  {order.paymentStatus === "paid" && "Pagamento Efetuado"}
-                                  {order.paymentStatus === "partially_paid" && "Parcialmente Pago"}
+                                  <strong>Pagamento:</strong>{" "}
+                                  {order.paymentStatus === "pending" &&
+                                    "Pagamento Pendente"}
+                                  {order.paymentStatus === "paid" &&
+                                    "Pagamento Efetuado"}
+                                  {order.paymentStatus === "partially_paid" &&
+                                    "Parcialmente Pago"}
                                 </span>
                                 <span>
-                                  <strong>Método:</strong> {order.paymentMethod === "credit_card" && "Cartão de Crédito"}
-                                  {order.paymentMethod === "debit_card" && "Cartão de Débito"}
+                                  <strong>Método:</strong>{" "}
+                                  {order.paymentMethod === "credit_card" &&
+                                    "Cartão de Crédito"}
+                                  {order.paymentMethod === "debit_card" &&
+                                    "Cartão de Débito"}
                                   {order.paymentMethod === "pix" && "Pix"}
                                   {order.paymentMethod === "cash" && "Dinheiro"}
                                   {!order.paymentMethod && "Não informado"}

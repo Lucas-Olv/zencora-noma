@@ -138,7 +138,6 @@ const MonthlyReports = () => {
     return "Não informado";
   };
 
-
   const {
     data: ordersData,
     isLoading: isOrdersLoading,
@@ -308,7 +307,11 @@ const MonthlyReports = () => {
     // Payment Methods section
     doc.setFontSize(14);
     doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-    doc.text("Relação de Pagamentos", 14, (doc as any).lastAutoTable.finalY + 15);
+    doc.text(
+      "Relação de Pagamentos",
+      14,
+      (doc as any).lastAutoTable.finalY + 15,
+    );
     autoTable(doc, {
       startY: (doc as any).lastAutoTable.finalY + 20,
       head: [["Método de Pagamento", "Quantidade"]],
@@ -380,16 +383,18 @@ const MonthlyReports = () => {
     // Orders table with custom styling
     autoTable(doc, {
       startY: (doc as any).lastAutoTable.finalY + 20,
-      head: [[
-        "Cliente",
-        "Descrição",
-        "Valor",
-        "Valor Pago",
-        "Pagamento",
-        "Método",
-        "Data",
-        "Status"
-      ]],
+      head: [
+        [
+          "Cliente",
+          "Descrição",
+          "Valor",
+          "Valor Pago",
+          "Pagamento",
+          "Método",
+          "Data",
+          "Status",
+        ],
+      ],
       body: orders.map((order) => {
         const isOverdue = new Date(order.dueDate) < new Date();
         const status =
@@ -717,38 +722,52 @@ const MonthlyReports = () => {
                   </div>
                 </div>
                 <div className="flex flex-col gap-4">
-                <div className="flex flex-col items-start justify-start">
-                  <h3 className="text-lg font-medium">Relação de Pagamentos</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Relação das formas de pagamento utilizadas no período
-                  </p>
+                  <div className="flex flex-col items-start justify-start">
+                    <h3 className="text-lg font-medium">
+                      Relação de Pagamentos
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Relação das formas de pagamento utilizadas no período
+                    </p>
+                  </div>
+                  {paymentMethodData.length > 0 && (
+                    <div className="h-[30dvh] md:h-[36dvh]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={paymentMethodData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="metodo" />
+                          <Tooltip
+                            formatter={(value) => `${value} encomenda(s)`}
+                          />
+                          <Bar
+                            dataKey="quantidade"
+                            fill="hsl(var(--primary))"
+                          />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
+                  {paymentMethodData.length == 0 && (
+                    <div className="flex flex-column items-center justify-center h-[30dvh] md:h-[36dvh]">
+                      <p className="text-center text-muted-foreground">
+                        Nenhuma relação de pagamento encontrada ou informada nas
+                        encomendas.
+                      </p>
+                    </div>
+                  )}
                 </div>
-                {paymentMethodData.length > 0 &&               <div className="h-[30dvh] md:h-[36dvh]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={paymentMethodData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="metodo" />
-                    <Tooltip formatter={(value) => `${value} encomenda(s)`} />
-                    <Bar dataKey="quantidade" fill="hsl(var(--primary))" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div> }
-                {paymentMethodData.length == 0 &&               <div className="flex flex-column items-center justify-center h-[30dvh] md:h-[36dvh]">
-            <p className="text-center text-muted-foreground">Nenhuma relação de pagamento encontrada ou informada nas encomendas.</p>
-              </div> }
-              </div>
               </div>
             </CardContent>
           </Card>
         </div>
       </div>
       <div className="space-y-6">
-          <ReportOrdersList
-            orders={orders}
-            title="Encomendas do Mês"
-            description="Lista de todas as encomendas do mês atual"
-          />
-        </div>
+        <ReportOrdersList
+          orders={orders}
+          title="Encomendas do Mês"
+          description="Lista de todas as encomendas do mês atual"
+        />
+      </div>
     </div>
   );
 };

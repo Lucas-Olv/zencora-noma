@@ -46,21 +46,38 @@ const calculateRevenueVariation = (orders: Order[]) => {
   const currentWeekRevenue = orders
     .filter((order) => {
       const orderDate = dayjs(parseDate(order.dueDate)).startOf("day");
-      return (orderDate.isAfter(lastWeekStart) || orderDate.isSame(lastWeekStart)) && (orderDate.isBefore(endToday) || orderDate.isSame(endToday));
+      return (
+        (orderDate.isAfter(lastWeekStart) || orderDate.isSame(lastWeekStart)) &&
+        (orderDate.isBefore(endToday) || orderDate.isSame(endToday))
+      );
     })
-    .reduce((sum: number, order: Order) => sum + (parseFloat(order.price) || 0), 0);
+    .reduce(
+      (sum: number, order: Order) => sum + (parseFloat(order.price) || 0),
+      0,
+    );
 
   const previousWeekRevenue = orders
     .filter((order) => {
       const orderDate = dayjs(parseDate(order.dueDate)).startOf("day");
-      return (orderDate.isAfter(previousWeekStart) || orderDate.isSame(previousWeekStart)) && (orderDate.isBefore(previousWeekEnd) || orderDate.isSame(previousWeekEnd));
+      return (
+        (orderDate.isAfter(previousWeekStart) ||
+          orderDate.isSame(previousWeekStart)) &&
+        (orderDate.isBefore(previousWeekEnd) ||
+          orderDate.isSame(previousWeekEnd))
+      );
     })
-    .reduce((sum: number, order: Order) => sum + (parseFloat(order.price) || 0), 0);
+    .reduce(
+      (sum: number, order: Order) => sum + (parseFloat(order.price) || 0),
+      0,
+    );
 
   const variation =
     previousWeekRevenue === 0
-      ? currentWeekRevenue > 0 ? 100 : 0
-      : ((currentWeekRevenue - previousWeekRevenue) / previousWeekRevenue) * 100;
+      ? currentWeekRevenue > 0
+        ? 100
+        : 0
+      : ((currentWeekRevenue - previousWeekRevenue) / previousWeekRevenue) *
+        100;
 
   return {
     currentWeekRevenue,
@@ -78,17 +95,26 @@ const calculateOrdersVariation = (orders: Order[]) => {
 
   const currentWeekOrders = orders.filter((order) => {
     const orderDate = dayjs(parseDate(order.dueDate)).startOf("day");
-    return (orderDate.isAfter(lastWeekStart) || orderDate.isSame(lastWeekStart)) && (orderDate.isBefore(endToday) || orderDate.isSame(endToday));
+    return (
+      (orderDate.isAfter(lastWeekStart) || orderDate.isSame(lastWeekStart)) &&
+      (orderDate.isBefore(endToday) || orderDate.isSame(endToday))
+    );
   }).length;
 
   const previousWeekOrders = orders.filter((order) => {
     const orderDate = dayjs(parseDate(order.dueDate)).startOf("day");
-    return (orderDate.isAfter(previousWeekStart) || orderDate.isSame(previousWeekStart)) && (orderDate.isBefore(previousWeekEnd) || orderDate.isSame(previousWeekEnd));
+    return (
+      (orderDate.isAfter(previousWeekStart) ||
+        orderDate.isSame(previousWeekStart)) &&
+      (orderDate.isBefore(previousWeekEnd) || orderDate.isSame(previousWeekEnd))
+    );
   }).length;
 
   const variation =
     previousWeekOrders === 0
-      ? currentWeekOrders > 0 ? 100 : 0
+      ? currentWeekOrders > 0
+        ? 100
+        : 0
       : ((currentWeekOrders - previousWeekOrders) / previousWeekOrders) * 100;
 
   return {
@@ -115,7 +141,9 @@ const getDailyData = (orders: Order[]) => {
 
   orders.forEach((order) => {
     const orderDate = dayjs(parseDate(order.dueDate)).startOf("day");
-    const dayIndex = dailyData.findIndex((d) => d._date.isSame(orderDate, "day"));
+    const dayIndex = dailyData.findIndex((d) =>
+      d._date.isSame(orderDate, "day"),
+    );
     if (dayIndex !== -1) {
       dailyData[dayIndex].Receita += parseFloat(order.price) || 0;
       dailyData[dayIndex].Encomendas += 1;
@@ -172,7 +200,7 @@ export default function PerformanceMetrics({
   // Filtrar encomendas dos últimos 7 dias
   const today = dayjs().endOf("day").toDate();
   const sevenDaysAgo = dayjs().subtract(6, "day").startOf("day").toDate();
-  const last7DaysOrders = orders.filter(order => {
+  const last7DaysOrders = orders.filter((order) => {
     const orderDate = parseDate(order.dueDate);
     return orderDate && orderDate >= sevenDaysAgo && orderDate <= today;
   });
@@ -218,7 +246,11 @@ export default function PerformanceMetrics({
                     <Tooltip
                       formatter={(value) => formatCurrency(Number(value))}
                     />
-                    <Line type="monotone" dataKey="Receita" stroke="hsl(var(--primary))" />
+                    <Line
+                      type="monotone"
+                      dataKey="Receita"
+                      stroke="hsl(var(--primary))"
+                    />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -251,19 +283,26 @@ export default function PerformanceMetrics({
               <div className="flex flex-col items-start justify-start">
                 <h3 className="text-lg font-medium">Relação de Pagamentos</h3>
               </div>
-          {paymentMethodData.length > 0 &&               <div className="h-[30dvh] md:h-[36dvh]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={paymentMethodData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="metodo" />
-                    <Tooltip formatter={(value) => `${value} encomenda(s)`} />
-                    <Bar dataKey="quantidade" fill="hsl(var(--primary))" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div> }
-          {paymentMethodData.length == 0 &&               <div className="flex flex-column items-center justify-center h-[30dvh] md:h-[36dvh]">
-            <p className="text-center text-muted-foreground">Nenhuma relação de pagamento encontrada ou informada nas encomendas.</p>
-              </div> }
+              {paymentMethodData.length > 0 && (
+                <div className="h-[30dvh] md:h-[36dvh]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={paymentMethodData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="metodo" />
+                      <Tooltip formatter={(value) => `${value} encomenda(s)`} />
+                      <Bar dataKey="quantidade" fill="hsl(var(--primary))" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+              {paymentMethodData.length == 0 && (
+                <div className="flex flex-column items-center justify-center h-[30dvh] md:h-[36dvh]">
+                  <p className="text-center text-muted-foreground">
+                    Nenhuma relação de pagamento encontrada ou informada nas
+                    encomendas do período.
+                  </p>
+                </div>
+              )}
             </div>
           </section>
         </LoadingState>

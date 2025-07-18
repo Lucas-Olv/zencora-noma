@@ -51,9 +51,15 @@ export default function SettingsView() {
   });
 
   // Sobrecarga para aceitar string para partialPaymentPercentage
-  function handleUpdateSettings(field: "partialPaymentPercentage", value: string): void;
+  function handleUpdateSettings(
+    field: "partialPaymentPercentage",
+    value: string,
+  ): void;
   function handleUpdateSettings(field: keyof Settings, value: boolean): void;
-  function handleUpdateSettings(field: keyof Settings, value: boolean | string) {
+  function handleUpdateSettings(
+    field: keyof Settings,
+    value: boolean | string,
+  ) {
     if (!settings) return;
     const updatedSettings: Settings = {
       ...settings,
@@ -63,7 +69,9 @@ export default function SettingsView() {
   }
 
   // Estado local para o input de porcentagem
-  const [partialPercent, setPartialPercent] = useState(settings?.partialPaymentPercentage || "");
+  const [partialPercent, setPartialPercent] = useState(
+    settings?.partialPaymentPercentage || "",
+  );
 
   // Sincronizar valor local com settings ao abrir/atualizar
   useEffect(() => {
@@ -71,9 +79,12 @@ export default function SettingsView() {
   }, [settings?.partialPaymentPercentage]);
 
   // Debounce para salvar porcentagem do pagamento parcial
-  const debouncedUpdatePartialPayment = useDebouncedCallback((value: string) => {
-    handleUpdateSettings("partialPaymentPercentage", value);
-  }, 800);
+  const debouncedUpdatePartialPayment = useDebouncedCallback(
+    (value: string) => {
+      handleUpdateSettings("partialPaymentPercentage", value);
+    },
+    800,
+  );
 
   return (
     <div className="space-y-6">
@@ -126,7 +137,8 @@ export default function SettingsView() {
               <div className="space-y-0.5">
                 <Label>Habilitar pagamento parcial</Label>
                 <p className="text-sm text-muted-foreground">
-                  Habilita funcionalidade de pagamento parcial ao cadastrar uma encomenda.
+                  Habilita funcionalidade de pagamento parcial ao cadastrar uma
+                  encomenda.
                 </p>
               </div>
               <Switch
@@ -141,19 +153,20 @@ export default function SettingsView() {
               <div className="space-y-0.5">
                 <Label>Porcentagem do pagamento parcial</Label>
                 <p className="text-sm text-muted-foreground">
-                  Porcentagem esperada para o pagamento parcial, é aplicado apenas em encomendas criadas após a alteração.
+                  Porcentagem esperada para o pagamento parcial, é aplicado
+                  apenas em encomendas criadas após a alteração.
                 </p>
               </div>
-              <div className="relative w-24">
+              <div className="relative">
                 <Input
                   type="number"
                   disabled={!settings?.enablePartialPaymentAmount}
                   min={0}
                   max={100}
                   step={1}
-                  className="text-center leading-10"
+                  className="text-start leading-10 w-18"
                   value={partialPercent}
-                  onChange={e => {
+                  onChange={(e) => {
                     let value = e.target.value.replace(/[^0-9]/g, "");
                     if (value !== "") {
                       let num = Math.max(0, Math.min(100, parseInt(value)));
@@ -164,7 +177,9 @@ export default function SettingsView() {
                   }}
                   inputMode="numeric"
                 />
-                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none select-none">%</span>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none select-none">
+                  %
+                </span>
               </div>
             </div>
           </CardContent>

@@ -38,6 +38,7 @@ import { Order } from "@/lib/types";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { getNomaApi, patchNomaApi } from "@/lib/apiHelpers";
 import { useSettingsStorage } from "@/storage/settings";
+import { DeliveryDialog } from "./DeliveryDialog";
 
 const Delivery = () => {
   const { toast } = useToast();
@@ -49,7 +50,10 @@ const Delivery = () => {
   const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
   const [dialogOrderId, setDialogOrderId] = useState<string | undefined>();
   const printRef = useRef<HTMLDivElement>(null);
-  const {settings} = useSettingsStorage();
+  const { settings } = useSettingsStorage();
+  const [deliveryDialogOpen, setDeliveryDialogOpen] = useState(false);
+  const [deliveryOrder, setDeliveryOrder] = useState<Order | null>(null);
+  const [isDelivering, setIsDelivering] = useState(false);
 
   const {
     mutate: updateOrder,
@@ -111,6 +115,51 @@ const Delivery = () => {
     `,
   });
   const { tenant } = useTenantStorage();
+
+  // Mutation para marcar como entregue
+  const { mutate: deliverOrder, isPending: isDeliveringOrder } = useMutation({
+    mutationFn: ({
+      orderId,
+      price,
+      paymentStatus,
+    }: {
+      orderId: string;
+      price: string;
+      paymentStatus: string;
+    }) =>
+      patchNomaApi(
+        "/api/noma/v1/orders/update",
+        {
+          tenantId: tenant?.id,
+          orderData: {
+            id: orderId,
+            status: "delivered",
+            amountPaid: price,
+            paymentStatus,
+          },
+        },
+        {
+          params: { orderId },
+        },
+      ),
+    onSuccess: () => {
+      toast({
+        title: "Encomenda marcada como entregue!",
+        description:
+          "A encomenda foi finalizada e não poderá mais ser alterada.",
+      });
+      setDeliveryDialogOpen(false);
+      setDeliveryOrder(null);
+      refetch();
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao marcar como entregue",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
   const OrderLabel = ({ order }: { order: Order }) => {
     const isOverdue = new Date(order.dueDate) < new Date();
@@ -231,18 +280,21 @@ const Delivery = () => {
   };
 
   // Filtrar apenas encomendas marcadas como 'done' e aplicar busca
-  const doneOrders = orders.filter(order => order.status === "done");
-  const filteredOrders = searchTerm.trim() === ""
-    ? doneOrders
-    : doneOrders.filter(
-        (order) =>
-          getOrderCode(order.id)
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase()) ||
-          order.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (order.description &&
-            order.description.toLowerCase().includes(searchTerm.toLowerCase())),
-      );
+  const doneOrders = orders.filter((order) => order.status === "done");
+  const filteredOrders =
+    searchTerm.trim() === ""
+      ? doneOrders
+      : doneOrders.filter(
+          (order) =>
+            getOrderCode(order.id)
+              .toLowerCase()
+              .includes(searchTerm.toLowerCase()) ||
+            order.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (order.description &&
+              order.description
+                .toLowerCase()
+                .includes(searchTerm.toLowerCase())),
+        );
 
   return (
     <div className="space-y-6">
@@ -343,7 +395,9 @@ const Delivery = () => {
                             R$ {order.price.replace(".", ",")}
                           </TableCell>
                           <TableCell>
-                            {order.amountPaid ? `R$ ${order.amountPaid.replace(".", ",")}` : "-"}
+                            {order.amountPaid
+                              ? `R$ ${order.amountPaid.replace(".", ",")}`
+                              : "-"}
                           </TableCell>
                           <TableCell>
                             <Badge
@@ -358,17 +412,23 @@ const Delivery = () => {
                                   "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50",
                               )}
                             >
-                              {order.paymentStatus === "pending" && "Pagamento Pendente"}
-                              {order.paymentStatus === "paid" && "Pagamento Efetuado"}
-                              {order.paymentStatus === "partially_paid" && "Parcialmente Pago"}
+                              {order.paymentStatus === "pending" &&
+                                "Pagamento Pendente"}
+                              {order.paymentStatus === "paid" &&
+                                "Pagamento Efetuado"}
+                              {order.paymentStatus === "partially_paid" &&
+                                "Parcialmente Pago"}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-2">
-                            <Button
+                              <Button
                                 variant="default"
                                 size="sm"
-                                onClick={() => {/* lógica de iniciar entrega */}}
+                                onClick={() => {
+                                  setDeliveryOrder(order);
+                                  setDeliveryDialogOpen(true);
+                                }}
                                 title="Iniciar entrega"
                               >
                                 Iniciar Entrega
@@ -400,28 +460,35 @@ const Delivery = () => {
                           {formatDate(order.dueDate)}
                         </span>
                         <span className="text-sm">
-                          <strong>Preço:</strong> R$ {order.price.replace(".", ",")}
+                          <strong>Preço:</strong> R${" "}
+                          {order.price.replace(".", ",")}
                         </span>
                         <span className="text-sm">
-                          <strong>Quantia Paga:</strong> {order.amountPaid ? `R$ ${order.amountPaid.replace(".", ",")}` : "-"}
+                          <strong>Quantia Paga:</strong>{" "}
+                          {order.amountPaid
+                            ? `R$ ${order.amountPaid.replace(".", ",")}`
+                            : "-"}
                         </span>
                         <span className="text-sm">
-                          <strong>Pagamento:</strong> {order.paymentStatus === "pending" && "Pagamento Pendente"}
-                          {order.paymentStatus === "paid" && "Pagamento Efetuado"}
-                          {order.paymentStatus === "partially_paid" && "Parcialmente Pago"}
+                          <strong>Pagamento:</strong>{" "}
+                          {order.paymentStatus === "pending" &&
+                            "Pagamento Pendente"}
+                          {order.paymentStatus === "paid" &&
+                            "Pagamento Efetuado"}
+                          {order.paymentStatus === "partially_paid" &&
+                            "Parcialmente Pago"}
                         </span>
-                        <div className="flex flex-col gap-2 mt-2">
                         <Button
-                            variant="default"
-                            size="sm"
-                            onClick={() => {/* lógica de iniciar entrega */}}
-                            title="Iniciar entrega"
-                          >
-                            Iniciar Entrega
-                          </Button>
-
-    
-                        </div>
+                          variant="default"
+                          size="sm"
+                          onClick={() => {
+                            setDeliveryOrder(order);
+                            setDeliveryDialogOpen(true);
+                          }}
+                          title="Iniciar entrega"
+                        >
+                          Iniciar Entrega
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>
@@ -440,6 +507,26 @@ const Delivery = () => {
         orderData={selectedOrder}
         onSuccess={handleListUpdate}
       />
+
+      {/* Delivery Dialog */}
+      {deliveryOrder && (
+        <DeliveryDialog
+          open={deliveryDialogOpen}
+          onOpenChange={(open) => {
+            setDeliveryDialogOpen(open);
+            if (!open) setDeliveryOrder(null);
+          }}
+          order={deliveryOrder}
+          isLoading={isDeliveringOrder}
+          onDelivered={() =>
+            deliverOrder({
+              orderId: deliveryOrder.id,
+              price: deliveryOrder.price,
+              paymentStatus: "paid",
+            })
+          }
+        />
+      )}
 
       {/* Hidden print content */}
       <div className="hidden">

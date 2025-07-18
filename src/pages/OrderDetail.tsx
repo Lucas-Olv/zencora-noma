@@ -78,6 +78,18 @@ const getStatusDisplay = (status: string | null, dueDate?: string | null) => {
       return {
         label: "Concluído",
         className:
+          "bg-blue-100/80 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200 hover:bg-blue-200 dark:hover:bg-blue-900/50",
+      };
+    case "delivered":
+      return {
+        label: "Entregue",
+        className:
+          "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50",
+      };
+    case "canceled":
+      return {
+        label: "Cancelado",
+        className:
           "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50",
       };
     default:
@@ -151,7 +163,11 @@ const OrderDetail = () => {
     isPending: isUpdateOrderStatus,
     error: isUpdateOrderStatusError,
   } = useMutation({
-    mutationFn: ({ status }: { status: "pending" | "production" | "done" | "canceled" | "delivered" }) =>
+    mutationFn: ({
+      status,
+    }: {
+      status: "pending" | "production" | "done" | "canceled" | "delivered";
+    }) =>
       patchNomaApi(
         `/api/noma/v1/orders/update`,
         { tenantId: tenant?.id, orderData: { status } },
@@ -312,11 +328,14 @@ const OrderDetail = () => {
                 <ReceiptText className="h-5 w-5 bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Estado do pagamento</p>
+                <p className="text-sm text-muted-foreground">
+                  Estado do pagamento
+                </p>
                 <p className="font-medium">
-                {order.paymentStatus === "pending" && "Pagamento Pendente"}
-                                  {order.paymentStatus === "paid" && "Pagamento Efetuado"}
-                                  {order.paymentStatus === "partially_paid" && "Parcialmente Pago"}
+                  {order.paymentStatus === "pending" && "Pagamento Pendente"}
+                  {order.paymentStatus === "paid" && "Pagamento Efetuado"}
+                  {order.paymentStatus === "partially_paid" &&
+                    "Parcialmente Pago"}
                 </p>
               </div>
             </div>
@@ -325,13 +344,15 @@ const OrderDetail = () => {
                 <CreditCardIcon className="h-5 w-5 text-destructive" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Método de pagamento</p>
+                <p className="text-sm text-muted-foreground">
+                  Método de pagamento
+                </p>
                 <p className="font-medium">
-                {order.paymentMethod === "credit_card" && "Cartão de Crédito"}
-                                  {order.paymentMethod === "debit_card" && "Cartão de Débito"}
-                                  {order.paymentMethod === "pix" && "Pix"}
-                                  {order.paymentMethod === "cash" && "Dinheiro"}
-                                  {!order.paymentMethod && "Não informado"}
+                  {order.paymentMethod === "credit_card" && "Cartão de Crédito"}
+                  {order.paymentMethod === "debit_card" && "Cartão de Débito"}
+                  {order.paymentMethod === "pix" && "Pix"}
+                  {order.paymentMethod === "cash" && "Dinheiro"}
+                  {!order.paymentMethod && "Não informado"}
                 </p>
               </div>
             </div>

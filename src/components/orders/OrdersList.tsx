@@ -49,7 +49,7 @@ const OrdersView = () => {
   const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
   const [dialogOrderId, setDialogOrderId] = useState<string | undefined>();
   const printRef = useRef<HTMLDivElement>(null);
-  const {settings} = useSettingsStorage();
+  const { settings } = useSettingsStorage();
 
   const {
     mutate: updateOrder,
@@ -390,15 +390,20 @@ const OrdersView = () => {
                                   "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50",
                               )}
                             >
-                              {order.paymentStatus === "pending" && "Pagamento Pendente"}
-                              {order.paymentStatus === "paid" && "Pagamento Efetuado"}
-                              {order.paymentStatus === "partially_paid" && "Parcialmente Pago"}
+                              {order.paymentStatus === "pending" &&
+                                "Pagamento Pendente"}
+                              {order.paymentStatus === "paid" &&
+                                "Pagamento Efetuado"}
+                              {order.paymentStatus === "partially_paid" &&
+                                "Parcialmente Pago"}
                             </Badge>
                           </TableCell>
                           <TableCell>
                             {/* Método de Pagamento traduzido ou Não informado */}
-                            {order.paymentMethod === "credit_card" && "Cartão de Crédito"}
-                            {order.paymentMethod === "debit_card" && "Cartão de Débito"}
+                            {order.paymentMethod === "credit_card" &&
+                              "Cartão de Crédito"}
+                            {order.paymentMethod === "debit_card" &&
+                              "Cartão de Débito"}
                             {order.paymentMethod === "pix" && "Pix"}
                             {order.paymentMethod === "cash" && "Dinheiro"}
                             {!order.paymentMethod && "Não informado"}
@@ -519,13 +524,20 @@ const OrdersView = () => {
                               {/* Estado do Pagamento e Método de Pagamento */}
                               <div className="flex flex-col mt-1 text-xs text-muted-foreground gap-0.5">
                                 <span>
-                                  <strong>Pagamento:</strong> {order.paymentStatus === "pending" && "Pagamento Pendente"}
-                                  {order.paymentStatus === "paid" && "Pagamento Efetuado"}
-                                  {order.paymentStatus === "partially_paid" && "Parcialmente Pago"}
+                                  <strong>Pagamento:</strong>{" "}
+                                  {order.paymentStatus === "pending" &&
+                                    "Pagamento Pendente"}
+                                  {order.paymentStatus === "paid" &&
+                                    "Pagamento Efetuado"}
+                                  {order.paymentStatus === "partially_paid" &&
+                                    "Parcialmente Pago"}
                                 </span>
                                 <span>
-                                  <strong>Método:</strong> {order.paymentMethod === "credit_card" && "Cartão de Crédito"}
-                                  {order.paymentMethod === "debit_card" && "Cartão de Débito"}
+                                  <strong>Método:</strong>{" "}
+                                  {order.paymentMethod === "credit_card" &&
+                                    "Cartão de Crédito"}
+                                  {order.paymentMethod === "debit_card" &&
+                                    "Cartão de Débito"}
                                   {order.paymentMethod === "pix" && "Pix"}
                                   {order.paymentMethod === "cash" && "Dinheiro"}
                                   {!order.paymentMethod && "Não informado"}
