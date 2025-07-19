@@ -32,7 +32,6 @@ import {
   cn,
 } from "@/lib/utils";
 import OrderDialog from "./OrderDialog";
-import { SubscriptionGate } from "../subscription/SubscriptionGate";
 import { useTenantStorage } from "@/storage/tenant";
 import { Order } from "@/lib/types";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -255,11 +254,9 @@ const OrdersView = () => {
           </p>
         </div>
 
-        <SubscriptionGate>
           <Button onClick={handleNewOrder} className="shrink-0">
             <Plus className="mr-2 h-4 w-4" /> Nova Encomenda
           </Button>
-        </SubscriptionGate>
       </div>
 
       <Card>
@@ -410,7 +407,6 @@ const OrdersView = () => {
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-2">
-                              <SubscriptionGate blockMode="disable">
                                 <Button
                                   variant="ghost"
                                   size="icon"
@@ -423,8 +419,6 @@ const OrdersView = () => {
                                 >
                                   <X className="h-4 w-4" />
                                 </Button>
-                              </SubscriptionGate>
-                              <SubscriptionGate blockMode="disable">
                                 <Button
                                   variant="ghost"
                                   size="icon"
@@ -437,8 +431,6 @@ const OrdersView = () => {
                                 >
                                   <Package className="h-4 w-4" />
                                 </Button>
-                              </SubscriptionGate>
-                              <SubscriptionGate blockMode="disable">
                                 <Button
                                   variant="ghost"
                                   size="icon"
@@ -451,8 +443,6 @@ const OrdersView = () => {
                                 >
                                   <CheckCircle2 className="h-4 w-4" />
                                 </Button>
-                              </SubscriptionGate>
-                              <SubscriptionGate blockMode="disable">
                                 <Button
                                   variant="ghost"
                                   size="icon"
@@ -462,7 +452,6 @@ const OrdersView = () => {
                                 >
                                   <Pencil className="h-4 w-4" />
                                 </Button>
-                              </SubscriptionGate>
 
                               <Button
                                 variant="ghost"
@@ -474,7 +463,6 @@ const OrdersView = () => {
                                 <Eye className="h-4 w-4" />
                               </Button>
 
-                              <SubscriptionGate blockMode="disable">
                                 <Button
                                   variant="ghost"
                                   size="icon"
@@ -486,7 +474,6 @@ const OrdersView = () => {
                                 >
                                   <Printer className="h-4 w-4" />
                                 </Button>
-                              </SubscriptionGate>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -566,7 +553,6 @@ const OrdersView = () => {
                           </div>
 
                           <div className="flex items-center justify-between">
-                            <SubscriptionGate blockMode="disable">
                               <Button
                                 variant="ghost"
                                 size="icon"
@@ -578,8 +564,6 @@ const OrdersView = () => {
                               >
                                 <X className="h-4 w-4" />
                               </Button>
-                            </SubscriptionGate>
-                            <SubscriptionGate blockMode="disable">
                               <Button
                                 variant="ghost"
                                 size="icon"
@@ -591,8 +575,6 @@ const OrdersView = () => {
                               >
                                 <Package className="h-4 w-4" />
                               </Button>
-                            </SubscriptionGate>
-                            <SubscriptionGate blockMode="disable">
                               <Button
                                 variant="ghost"
                                 size="icon"
@@ -604,8 +586,6 @@ const OrdersView = () => {
                               >
                                 <CheckCircle2 className="h-4 w-4" />
                               </Button>
-                            </SubscriptionGate>
-                            <SubscriptionGate blockMode="disable">
                               <Button
                                 variant="ghost"
                                 size="icon"
@@ -614,7 +594,6 @@ const OrdersView = () => {
                               >
                                 <Pencil className="h-4 w-4" />
                               </Button>
-                            </SubscriptionGate>
 
                             <Button
                               variant="ghost"
@@ -625,7 +604,6 @@ const OrdersView = () => {
                               <Eye className="h-4 w-4" />
                             </Button>
 
-                            <SubscriptionGate blockMode="disable">
                               <Button
                                 variant="ghost"
                                 size="icon"
@@ -637,7 +615,6 @@ const OrdersView = () => {
                               >
                                 <Printer className="h-4 w-4" />
                               </Button>
-                            </SubscriptionGate>
                           </div>
                         </div>
                       </CardContent>

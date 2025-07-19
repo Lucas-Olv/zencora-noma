@@ -27,10 +27,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
-  SubscriptionGate,
-  useSubscriptionRoutes,
-} from "@/components/subscription/SubscriptionGate";
-import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -114,7 +110,6 @@ const NavButton = ({
   isBlocked,
   settings,
 }: NavButtonProps) => {
-  const { blockedRoutes, allowedRoutes } = useSubscriptionRoutes();
 
   // Verifica se o usuário tem acesso ao item baseado no plano
   const hasPlanAccess =
@@ -127,14 +122,6 @@ const NavButton = ({
   if (item.proOnly && !hasPlanAccess) {
     return null;
   }
-
-  // Só mostra o cadeado se:
-  // 1. A rota estiver bloqueada E a assinatura estiver bloqueada
-  // 2. A rota não estiver na lista de permitidas E a assinatura estiver bloqueada
-  const isRouteBlocked = blockedRoutes.includes(item.href);
-  const shouldShowLock =
-    (isBlocked && isRouteBlocked) || // Mostra cadeado se estiver bloqueado e a rota estiver na lista de bloqueadas
-    (item.proOnly && !hasPlanAccess); // Mostra cadeado se for item Pro e não tiver acesso ao plano
 
   // Verifica se a tela requer senha baseado no item
   const requiresPassword = (() => {
@@ -164,7 +151,7 @@ const NavButton = ({
       >
         <item.icon className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
         <span className="flex-1 text-left">{item.title}</span>
-        {(shouldShowLock || requiresPassword) && (
+        {(requiresPassword) && (
           <Lock className="h-4 w-4 ml-auto" />
         )}
       </button>
@@ -178,18 +165,12 @@ const NavButton = ({
         <Tooltip>
           <TooltipTrigger asChild>
             <div>
-              <SubscriptionGate
-                blockedRoutes={blockedRoutes}
-                blockMode="disable"
-                fallback={button}
-              >
                 <SettingsGate
                   requirePanelAccess={item.href.replace("/", "")}
                   fallback={button}
                 >
                   {button}
                 </SettingsGate>
-              </SubscriptionGate>
             </div>
           </TooltipTrigger>
           <TooltipContent>
@@ -201,18 +182,13 @@ const NavButton = ({
   }
 
   return (
-    <SubscriptionGate
-      blockedRoutes={blockedRoutes}
-      blockMode="disable"
-      fallback={button}
-    >
+
       <SettingsGate
         requirePanelAccess={item.href.replace("/", "")}
         fallback={button}
       >
         {button}
       </SettingsGate>
-    </SubscriptionGate>
   );
 };
 

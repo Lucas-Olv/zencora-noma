@@ -33,7 +33,6 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
-import { SubscriptionGate } from "../subscription/SubscriptionGate";
 import { SettingsGate } from "../settings/SettingsGate";
 import { useTenantStorage } from "@/storage/tenant";
 import { Order } from "@/lib/types";
@@ -333,7 +332,6 @@ export function ProductionView() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <SubscriptionGate blockMode="disable">
               <SettingsGate permission="edit">
                 <Button
                   variant={order.status === "pending" ? "outline" : "default"}
@@ -352,8 +350,6 @@ export function ProductionView() {
                       : "Finalizar Produção"}
                 </Button>
               </SettingsGate>
-            </SubscriptionGate>
-            <SubscriptionGate blockMode="disable">
               <Button
                 variant="ghost"
                 size="icon"
@@ -366,7 +362,6 @@ export function ProductionView() {
               >
                 <Printer className="h-4 w-4" />
               </Button>
-            </SubscriptionGate>
           </div>
         </div>
       );
@@ -420,7 +415,6 @@ export function ProductionView() {
               {status === "done" && "Concluído"}
             </Badge>
             <div className="flex items-center gap-2">
-              <SubscriptionGate blockMode="disable">
                 <SettingsGate permission="edit">
                   <Button
                     variant={order.status === "pending" ? "outline" : "default"}
@@ -439,8 +433,6 @@ export function ProductionView() {
                         : "Finalizar Produção"}
                   </Button>
                 </SettingsGate>
-              </SubscriptionGate>
-              <SubscriptionGate blockMode="disable">
                 <Button
                   variant="ghost"
                   size="icon"
@@ -453,7 +445,6 @@ export function ProductionView() {
                 >
                   <Printer className="h-4 w-4" />
                 </Button>
-              </SubscriptionGate>
             </div>
           </div>
         </div>

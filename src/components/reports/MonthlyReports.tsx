@@ -54,7 +54,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
-import { SubscriptionGate } from "../subscription/SubscriptionGate";
 import ReportOrdersList from "./ReportOrdersList";
 import { LoadingState } from "@/components/ui/loading-state";
 import { useTenantStorage } from "@/storage/tenant";
@@ -500,7 +499,6 @@ const MonthlyReports = () => {
       <div className="flex flex-col w-full gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <div className="flex flex-col sm:flex-row gap-4">
-            <SubscriptionGate blockMode="disable">
               <Select
                 value={dateRange?.from ? format(dateRange.from, "yyyy-MM") : ""}
                 onValueChange={(value) => {
@@ -541,16 +539,12 @@ const MonthlyReports = () => {
                   })}
                 </SelectContent>
               </Select>
-            </SubscriptionGate>
             <div className="flex gap-2">
-              <SubscriptionGate>
                 <DateRangePicker
                   value={dateRange}
                   onChange={setDateRange}
                   className="w-full sm:w-[300px]"
                 />
-              </SubscriptionGate>
-              <SubscriptionGate blockMode="disable">
                 <Button
                   variant="outline"
                   size="icon"
@@ -564,7 +558,6 @@ const MonthlyReports = () => {
                     <Download className="h-4 w-4" />
                   )}
                 </Button>
-              </SubscriptionGate>
             </div>
           </div>
         </div>

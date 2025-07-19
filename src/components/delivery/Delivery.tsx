@@ -32,7 +32,6 @@ import {
   cn,
 } from "@/lib/utils";
 import OrderDialog from "../orders/OrderDialog";
-import { SubscriptionGate } from "../subscription/SubscriptionGate";
 import { useTenantStorage } from "@/storage/tenant";
 import { Order } from "@/lib/types";
 import { useMutation, useQuery } from "@tanstack/react-query";

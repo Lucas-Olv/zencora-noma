@@ -28,7 +28,6 @@ import Contact from "./pages/Contact";
 import { SubscriptionExpired } from "./pages/SubscriptionExpired";
 import { SubscriptionSuccess } from "./pages/SubscriptionSuccess";
 import ProtectedRoute from "@/components/routing/ProtectedRoute";
-import { SubscriptionGate } from "./components/subscription/SubscriptionGate";
 import Reminders from "./pages/Reminders";
 import {
   useWorkspaceContext,
@@ -301,12 +300,7 @@ export const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <SubscriptionGate
-              blockedRoutes={BLOCKED_ROUTES}
-              redirectTo="/subscription-expired"
-            >
               <AppRoutes />
-            </SubscriptionGate>
           </BrowserRouter>
         </TooltipProvider>
       </WorkspaceProvider>

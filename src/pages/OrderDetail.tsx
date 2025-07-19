@@ -37,7 +37,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/components/ui/use-toast";
 import OrderDialog from "@/components/orders/OrderDialog";
-import { SubscriptionGate } from "@/components/subscription/SubscriptionGate";
 import { SettingsGate } from "@/components/settings/SettingsGate";
 import { Order } from "@/lib/types";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -479,7 +478,6 @@ const OrderDetail = () => {
           </div>
         </CardContent>
 
-        <SubscriptionGate>
           <CardFooter className="flex flex-col gap-3 pt-6 border-t">
             <div className="w-full">
               <h3 className="font-semibold mb-3">Ações</h3>
@@ -536,9 +534,7 @@ const OrderDetail = () => {
               </div>
             </div>
           </CardFooter>
-        </SubscriptionGate>
       </Card>
-      <SubscriptionGate>
         <Card>
           <CardContent className="flex flex-col gap-3 pt-6">
             <div className="grid grid-rows-2 sm:grid-cols-1 gap-3">
@@ -597,7 +593,6 @@ const OrderDetail = () => {
             </div>
           </CardContent>
         </Card>
-      </SubscriptionGate>
       <OrderDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
