@@ -18,11 +18,10 @@ const ProtectedRoute = ({ children }: { children: ReactNode }) => {
       dayjs(subscription?.gracePeriodUntil).isAfter(dayjs());
 
   useEffect(() => {
-    if (location.pathname === "/login" && session && isActive) {
+    if (location.pathname === "/login" && session) {
       navigate("/", { replace: true });
-    } else {
-      navigate("/subscription-expired", { replace: true });
     }
+
   }, [location.pathname, session]);
 
   if (isLoading)
@@ -33,6 +32,10 @@ const ProtectedRoute = ({ children }: { children: ReactNode }) => {
     );
 
   if (!session) return <Navigate to="/login" />;
+
+  if (!isActive && location.pathname !== "/subscription-expired") {
+    return <Navigate to="/subscription-expired" replace />;
+  }
 
   return <>{children}</>;
 };
