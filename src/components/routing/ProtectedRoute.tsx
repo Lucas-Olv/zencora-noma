@@ -20,6 +20,8 @@ const ProtectedRoute = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (location.pathname === "/login" && session && isActive) {
       navigate("/", { replace: true });
+    } else {
+      navigate("/subscription-expired", { replace: true });
     }
   }, [location.pathname, session]);
 
