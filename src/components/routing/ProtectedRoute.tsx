@@ -2,15 +2,23 @@ import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { ReactNode, useEffect } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useSessionStorage } from "@/storage/session";
+import { useSubscriptionStorage } from "@/storage/subscription";
+import dayjs from "dayjs";
 
 const ProtectedRoute = ({ children }: { children: ReactNode }) => {
   const location = useLocation();
   const { session } = useSessionStorage();
   const { isLoading } = useWorkspaceContext();
+  const { subscription } = useSubscriptionStorage();
   const navigate = useNavigate();
 
+    const isActive =
+      subscription?.status === "active" &&
+      dayjs(subscription?.expiresAt).isAfter(dayjs()) &&
+      dayjs(subscription?.gracePeriodUntil).isAfter(dayjs());
+
   useEffect(() => {
-    if (location.pathname === "/login" && session) {
+    if (location.pathname === "/login" && session && isActive) {
       navigate("/", { replace: true });
     }
   }, [location.pathname, session]);
