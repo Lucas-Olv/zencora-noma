@@ -170,8 +170,8 @@ const getPaymentMethodData = (orders: Order[]) => {
     cash: "Dinheiro",
   };
   return Object.entries(counts).map(([method, count]) => ({
-    metodo: labelMap[method] || method,
-    quantidade: count,
+    method: labelMap[method] || method,
+    quantity: count,
   }));
 };
 
@@ -237,7 +237,7 @@ export default function PerformanceMetrics({
                   {revenueData.variation.toFixed(1)}% vs semana anterior
                 </p>
               </div>
-              <div className="h-[30dvh] md:h-[36dvh]">
+              <div className="w-full h-[30dvh] md:h-[36dvh]">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={dailyData}>
                     <CartesianGrid strokeDasharray="3 3" />
@@ -268,7 +268,7 @@ export default function PerformanceMetrics({
                   {ordersData.variation.toFixed(1)}% vs semana anterior
                 </p>
               </div>
-              <div className="h-[30dvh] md:h-[36dvh]">
+              <div className="w-full h-[30dvh] md:h-[36dvh]">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={dailyData}>
                     <CartesianGrid strokeDasharray="3 3" />
@@ -284,13 +284,13 @@ export default function PerformanceMetrics({
                 <h3 className="text-lg font-medium">Relação de Pagamentos</h3>
               </div>
               {paymentMethodData.length > 0 && (
-                <div className="h-[30dvh] md:h-[36dvh]">
+                <div className="w-full h-[30dvh] md:h-[36dvh]">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={paymentMethodData}>
                       <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="metodo" />
+                      <XAxis dataKey="method" />
                       <Tooltip formatter={(value) => `${value} encomenda(s)`} />
-                      <Bar dataKey="quantidade" fill="hsl(var(--primary))" />
+                      <Bar dataKey="quantity" fill="hsl(var(--primary))" />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>

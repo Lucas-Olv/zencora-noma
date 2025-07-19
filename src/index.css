@@ -3,12 +3,6 @@
 @tailwind utilities;
 
 @layer base {
-  html {
-    scroll-behavior: smooth;
-    ::-webkit-scrollbar {
-      width: 10px;
-    }
-  }
 
   :root {
     --background: 260 25% 98%;
@@ -106,6 +100,7 @@
     --text-secondary: 260 10% 85%;
     --text-muted: 260 10% 70%;
     --text-inverted: 0 0% 100%;
+    
   }
 }
 
