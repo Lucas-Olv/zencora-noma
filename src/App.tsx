@@ -48,8 +48,10 @@ const BLOCKED_ROUTES = [
   "/reports",
   "/calendar",
   "/settings",
-  "/profile",
   "/reminders",
+  "/orders",
+  "/delivery",
+  "/orders/:id",
 ];
 
 const AppRoutes = () => {
