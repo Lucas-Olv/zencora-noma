@@ -499,65 +499,60 @@ const MonthlyReports = () => {
       <div className="flex flex-col w-full gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <div className="flex flex-col sm:flex-row gap-4">
-              <Select
-                value={dateRange?.from ? format(dateRange.from, "yyyy-MM") : ""}
-                onValueChange={(value) => {
-                  const [year, month] = value.split("-");
-                  const start = new Date(
-                    parseInt(year),
-                    parseInt(month) - 1,
-                    1,
+            <Select
+              value={dateRange?.from ? format(dateRange.from, "yyyy-MM") : ""}
+              onValueChange={(value) => {
+                const [year, month] = value.split("-");
+                const start = new Date(parseInt(year), parseInt(month) - 1, 1);
+                const end = new Date(parseInt(year), parseInt(month), 0);
+                setDateRange({ from: start, to: end });
+              }}
+            >
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="Selecione o mês" />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 12 }, (_, i) => {
+                  const date = new Date();
+                  date.setMonth(date.getMonth() - i);
+                  const monthYear = format(date, "yyyy-MM");
+                  return (
+                    <SelectItem key={monthYear} value={monthYear}>
+                      {format(date, "MMMM yyyy", { locale: ptBR }).replace(
+                        /^\w/,
+                        (c) => c.toUpperCase(),
+                      )}
+                    </SelectItem>
                   );
-                  const end = new Date(parseInt(year), parseInt(month), 0);
-                  setDateRange({ from: start, to: end });
-                }}
-              >
-                <SelectTrigger className="w-full sm:w-[180px]">
-                  <SelectValue placeholder="Selecione o mês" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Array.from({ length: 12 }, (_, i) => {
-                    const date = new Date();
-                    date.setMonth(date.getMonth() - i);
-                    const monthYear = format(date, "yyyy-MM");
-                    return (
-                      <SelectItem key={monthYear} value={monthYear}>
-                        {format(date, "MMMM yyyy", { locale: ptBR }).replace(
-                          /^\w/,
-                          (c) => c.toUpperCase(),
-                        )}
-                      </SelectItem>
-                    );
-                  }).filter((_, i, arr) => {
-                    // Remove duplicatas verificando se é a primeira ocorrência do mês/ano
-                    const monthYear = arr[i].props.value;
-                    return (
-                      arr.findIndex(
-                        (item) => item.props.value === monthYear,
-                      ) === i
-                    );
-                  })}
-                </SelectContent>
-              </Select>
+                }).filter((_, i, arr) => {
+                  // Remove duplicatas verificando se é a primeira ocorrência do mês/ano
+                  const monthYear = arr[i].props.value;
+                  return (
+                    arr.findIndex((item) => item.props.value === monthYear) ===
+                    i
+                  );
+                })}
+              </SelectContent>
+            </Select>
             <div className="flex gap-2">
-                <DateRangePicker
-                  value={dateRange}
-                  onChange={setDateRange}
-                  className="w-full sm:w-[300px]"
-                />
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={handleDownloadPDF}
-                  disabled={isOrdersLoading}
-                  className="shrink-0 h-10 w-10"
-                >
-                  {isOrdersLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Download className="h-4 w-4" />
-                  )}
-                </Button>
+              <DateRangePicker
+                value={dateRange}
+                onChange={setDateRange}
+                className="w-full sm:w-[300px]"
+              />
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleDownloadPDF}
+                disabled={isOrdersLoading}
+                className="shrink-0 h-10 w-10"
+              >
+                {isOrdersLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4" />
+                )}
+              </Button>
             </div>
           </div>
         </div>

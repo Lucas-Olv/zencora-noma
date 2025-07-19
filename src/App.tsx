@@ -41,18 +41,6 @@ import PasswordVerification from "./components/auth/PasswordVerification";
 import Delivery from "./components/delivery/Delivery";
 const queryClient = new QueryClient();
 
-const BLOCKED_ROUTES = [
-  "/dashboard",
-  "/production",
-  "/reports",
-  "/calendar",
-  "/settings",
-  "/reminders",
-  "/orders",
-  "/delivery",
-  "/orders/:id",
-];
-
 const AppRoutes = () => {
   const { isLoading } = useWorkspaceContext();
 
@@ -300,7 +288,7 @@ export const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
-              <AppRoutes />
+            <AppRoutes />
           </BrowserRouter>
         </TooltipProvider>
       </WorkspaceProvider>

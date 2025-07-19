@@ -12,16 +12,15 @@ const ProtectedRoute = ({ children }: { children: ReactNode }) => {
   const { subscription } = useSubscriptionStorage();
   const navigate = useNavigate();
 
-    const isActive =
-      subscription?.status === "active" &&
-      dayjs(subscription?.expiresAt).isAfter(dayjs()) &&
-      dayjs(subscription?.gracePeriodUntil).isAfter(dayjs());
+  const isActive =
+    subscription?.status === "active" &&
+    dayjs(subscription?.expiresAt).isAfter(dayjs()) &&
+    dayjs(subscription?.gracePeriodUntil).isAfter(dayjs());
 
   useEffect(() => {
     if (location.pathname === "/login" && session) {
       navigate("/", { replace: true });
     }
-
   }, [location.pathname, session]);
 
   if (isLoading)
@@ -33,7 +32,7 @@ const ProtectedRoute = ({ children }: { children: ReactNode }) => {
 
   if (!session) return <Navigate to="/login" />;
 
-  if (!isActive && location.pathname !== "/subscription-expired") {
+  if (session && !isActive && location.pathname !== "/subscription-expired") {
     return <Navigate to="/subscription-expired" replace />;
   }
 

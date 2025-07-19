@@ -254,9 +254,9 @@ const OrdersView = () => {
           </p>
         </div>
 
-          <Button onClick={handleNewOrder} className="shrink-0">
-            <Plus className="mr-2 h-4 w-4" /> Nova Encomenda
-          </Button>
+        <Button onClick={handleNewOrder} className="shrink-0">
+          <Plus className="mr-2 h-4 w-4" /> Nova Encomenda
+        </Button>
       </div>
 
       <Card>
@@ -407,51 +407,51 @@ const OrdersView = () => {
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-2">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() =>
-                                    handleStatusChange(order.id, "pending")
-                                  }
-                                  title="Marcar como pendente"
-                                  disabled={order.status === "pending"}
-                                  className="flex items-center justify-center"
-                                >
-                                  <X className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() =>
-                                    handleStatusChange(order.id, "production")
-                                  }
-                                  title="Marcar como Produção"
-                                  disabled={order.status === "production"}
-                                  className="flex items-center justify-center"
-                                >
-                                  <Package className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() =>
-                                    handleStatusChange(order.id, "done")
-                                  }
-                                  title="Marcar como concluída"
-                                  disabled={order.status === "done"}
-                                  className="flex items-center justify-center"
-                                >
-                                  <CheckCircle2 className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleEditOrder(order)}
-                                  title="Editar encomenda"
-                                  className="flex items-center justify-center"
-                                >
-                                  <Pencil className="h-4 w-4" />
-                                </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() =>
+                                  handleStatusChange(order.id, "pending")
+                                }
+                                title="Marcar como pendente"
+                                disabled={order.status === "pending"}
+                                className="flex items-center justify-center"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() =>
+                                  handleStatusChange(order.id, "production")
+                                }
+                                title="Marcar como Produção"
+                                disabled={order.status === "production"}
+                                className="flex items-center justify-center"
+                              >
+                                <Package className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() =>
+                                  handleStatusChange(order.id, "done")
+                                }
+                                title="Marcar como concluída"
+                                disabled={order.status === "done"}
+                                className="flex items-center justify-center"
+                              >
+                                <CheckCircle2 className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleEditOrder(order)}
+                                title="Editar encomenda"
+                                className="flex items-center justify-center"
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
 
                               <Button
                                 variant="ghost"
@@ -463,17 +463,17 @@ const OrdersView = () => {
                                 <Eye className="h-4 w-4" />
                               </Button>
 
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => {
-                                    setSelectedOrder(order);
-                                    setTimeout(handlePrint, 100);
-                                  }}
-                                  title="Imprimir"
-                                >
-                                  <Printer className="h-4 w-4" />
-                                </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  setSelectedOrder(order);
+                                  setTimeout(handlePrint, 100);
+                                }}
+                                title="Imprimir"
+                              >
+                                <Printer className="h-4 w-4" />
+                              </Button>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -553,47 +553,47 @@ const OrdersView = () => {
                           </div>
 
                           <div className="flex items-center justify-between">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() =>
-                                  handleStatusChange(order.id, "pending")
-                                }
-                                title="Marcar como pendente"
-                                disabled={order.status === "pending"}
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() =>
-                                  handleStatusChange(order.id, "production")
-                                }
-                                title="Marcar como Produção"
-                                disabled={order.status === "production"}
-                              >
-                                <Package className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() =>
-                                  handleStatusChange(order.id, "done")
-                                }
-                                title="Marcar como concluída"
-                                disabled={order.status === "done"}
-                              >
-                                <CheckCircle2 className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleEditOrder(order)}
-                                title="Editar encomenda"
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() =>
+                                handleStatusChange(order.id, "pending")
+                              }
+                              title="Marcar como pendente"
+                              disabled={order.status === "pending"}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() =>
+                                handleStatusChange(order.id, "production")
+                              }
+                              title="Marcar como Produção"
+                              disabled={order.status === "production"}
+                            >
+                              <Package className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() =>
+                                handleStatusChange(order.id, "done")
+                              }
+                              title="Marcar como concluída"
+                              disabled={order.status === "done"}
+                            >
+                              <CheckCircle2 className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEditOrder(order)}
+                              title="Editar encomenda"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
 
                             <Button
                               variant="ghost"
@@ -604,17 +604,17 @@ const OrdersView = () => {
                               <Eye className="h-4 w-4" />
                             </Button>
 
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => {
-                                  setSelectedOrder(order);
-                                  setTimeout(handlePrint, 100);
-                                }}
-                                title="Imprimir"
-                              >
-                                <Printer className="h-4 w-4" />
-                              </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                setSelectedOrder(order);
+                                setTimeout(handlePrint, 100);
+                              }}
+                              title="Imprimir"
+                            >
+                              <Printer className="h-4 w-4" />
+                            </Button>
                           </div>
                         </div>
                       </CardContent>

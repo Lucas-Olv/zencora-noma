@@ -332,36 +332,36 @@ export function ProductionView() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-              <SettingsGate permission="edit">
-                <Button
-                  variant={order.status === "pending" ? "outline" : "default"}
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleChangeOrderStatus(order.id, order.status);
-                  }}
-                  className="flex-1"
-                  disabled={order.status === "done"}
-                >
-                  {order.status === "pending"
-                    ? "Iniciar Produção"
-                    : order.status === "done"
-                      ? "Concluído"
-                      : "Finalizar Produção"}
-                </Button>
-              </SettingsGate>
+            <SettingsGate permission="edit">
               <Button
-                variant="ghost"
-                size="icon"
+                variant={order.status === "pending" ? "outline" : "default"}
+                size="sm"
                 onClick={(e) => {
                   e.stopPropagation();
-                  setSelectedOrder(order);
-                  setTimeout(handlePrint, 100);
+                  handleChangeOrderStatus(order.id, order.status);
                 }}
-                title="Imprimir"
+                className="flex-1"
+                disabled={order.status === "done"}
               >
-                <Printer className="h-4 w-4" />
+                {order.status === "pending"
+                  ? "Iniciar Produção"
+                  : order.status === "done"
+                    ? "Concluído"
+                    : "Finalizar Produção"}
               </Button>
+            </SettingsGate>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedOrder(order);
+                setTimeout(handlePrint, 100);
+              }}
+              title="Imprimir"
+            >
+              <Printer className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       );
@@ -415,36 +415,36 @@ export function ProductionView() {
               {status === "done" && "Concluído"}
             </Badge>
             <div className="flex items-center gap-2">
-                <SettingsGate permission="edit">
-                  <Button
-                    variant={order.status === "pending" ? "outline" : "default"}
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleChangeOrderStatus(order.id, order.status);
-                    }}
-                    className="flex-1 sm:flex-none"
-                    disabled={order.status === "done"}
-                  >
-                    {order.status === "pending"
-                      ? "Iniciar Produção"
-                      : order.status === "done"
-                        ? "Concluído"
-                        : "Finalizar Produção"}
-                  </Button>
-                </SettingsGate>
+              <SettingsGate permission="edit">
                 <Button
-                  variant="ghost"
-                  size="icon"
+                  variant={order.status === "pending" ? "outline" : "default"}
+                  size="sm"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setSelectedOrder(order);
-                    setTimeout(handlePrint, 100);
+                    handleChangeOrderStatus(order.id, order.status);
                   }}
-                  title="Imprimir"
+                  className="flex-1 sm:flex-none"
+                  disabled={order.status === "done"}
                 >
-                  <Printer className="h-4 w-4" />
+                  {order.status === "pending"
+                    ? "Iniciar Produção"
+                    : order.status === "done"
+                      ? "Concluído"
+                      : "Finalizar Produção"}
                 </Button>
+              </SettingsGate>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedOrder(order);
+                  setTimeout(handlePrint, 100);
+                }}
+                title="Imprimir"
+              >
+                <Printer className="h-4 w-4" />
+              </Button>
             </div>
           </div>
         </div>

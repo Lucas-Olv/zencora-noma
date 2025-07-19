@@ -478,121 +478,115 @@ const OrderDetail = () => {
           </div>
         </CardContent>
 
-          <CardFooter className="flex flex-col gap-3 pt-6 border-t">
-            <div className="w-full">
-              <h3 className="font-semibold mb-3">Ações</h3>
-              <div className="grid grid-rows-2 sm:grid-cols-1 gap-3">
-                <SettingsGate permission="edit">
-                  {isFinalized ? (
-                    <Button
-                      onClick={() => navigate(-1)}
-                      variant="outline"
-                      className="w-full"
-                    >
-                      <ArrowLeft className="h-4 w-4 mr-1" />
-                      Voltar
-                    </Button>
-                  ) : (
-                    <>
-                      {order.status !== "pending" && (
-                        <Button
-                          variant="outline"
-                          className="w-full"
-                          onClick={() =>
-                            updateOrderStatus({ status: "pending" })
-                          }
-                        >
-                          <Clock className="h-4 w-4 row-span-full mr-2" />
-                          Marcar como Pendente
-                        </Button>
-                      )}
-                      {order.status !== "production" && (
-                        <Button
-                          variant="outline"
-                          className="w-full"
-                          onClick={() =>
-                            updateOrderStatus({ status: "production" })
-                          }
-                        >
-                          <Package className="h-4 w-4 row-span-full mr-2" />
-                          Marcar como Produção
-                        </Button>
-                      )}
-                      {order.status !== "done" && (
-                        <Button
-                          variant="outline"
-                          className="w-full"
-                          onClick={() => updateOrderStatus({ status: "done" })}
-                        >
-                          <CheckCircle className="h-4 w-4 row-span-full mr-2" />
-                          Marcar como Concluída
-                        </Button>
-                      )}
-                    </>
-                  )}
-                </SettingsGate>
-              </div>
-            </div>
-          </CardFooter>
-      </Card>
-        <Card>
-          <CardContent className="flex flex-col gap-3 pt-6">
+        <CardFooter className="flex flex-col gap-3 pt-6 border-t">
+          <div className="w-full">
+            <h3 className="font-semibold mb-3">Ações</h3>
             <div className="grid grid-rows-2 sm:grid-cols-1 gap-3">
               <SettingsGate permission="edit">
-                {!isFinalized && (
+                {isFinalized ? (
                   <Button
-                    variant="defaultText"
-                    size="sm"
-                    onClick={() => setDialogOpen(true)}
+                    onClick={() => navigate(-1)}
+                    variant="outline"
+                    className="w-full"
                   >
-                    <Edit className="h-4 w-4 mr-1" />
-                    Editar
+                    <ArrowLeft className="h-4 w-4 mr-1" />
+                    Voltar
                   </Button>
-                )}
-              </SettingsGate>
-
-              <SettingsGate permission="delete">
-                {!isFinalized && (
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="destructive" size="sm">
-                        <Trash className="h-4 w-4 mr-1" />
-                        Excluir
+                ) : (
+                  <>
+                    {order.status !== "pending" && (
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => updateOrderStatus({ status: "pending" })}
+                      >
+                        <Clock className="h-4 w-4 row-span-full mr-2" />
+                        Marcar como Pendente
                       </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Excluir encomenda?</AlertDialogTitle>
-                        <AlertDialogDescription className="line-clamp-3 max-w-[80dvw] md:max-w-[18dvw]">
-                          Esta ação não poderá ser desfeita. Isso excluirá
-                          permanentemente a encomenda do cliente{" "}
-                          {order?.clientName}.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction
-                          className="bg-red-600 hover:bg-red-700"
-                          onClick={() => deleteOrder()}
-                        >
-                          Excluir
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                    )}
+                    {order.status !== "production" && (
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        onClick={() =>
+                          updateOrderStatus({ status: "production" })
+                        }
+                      >
+                        <Package className="h-4 w-4 row-span-full mr-2" />
+                        Marcar como Produção
+                      </Button>
+                    )}
+                    {order.status !== "done" && (
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => updateOrderStatus({ status: "done" })}
+                      >
+                        <CheckCircle className="h-4 w-4 row-span-full mr-2" />
+                        Marcar como Concluída
+                      </Button>
+                    )}
+                  </>
                 )}
-                <Button
-                  onClick={() => navigate(-1)}
-                  variant="outline"
-                  size="sm"
-                >
-                  <ArrowLeft className="h-4 w-4 mr-1" />
-                  Voltar
-                </Button>
               </SettingsGate>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </CardFooter>
+      </Card>
+      <Card>
+        <CardContent className="flex flex-col gap-3 pt-6">
+          <div className="grid grid-rows-2 sm:grid-cols-1 gap-3">
+            <SettingsGate permission="edit">
+              {!isFinalized && (
+                <Button
+                  variant="defaultText"
+                  size="sm"
+                  onClick={() => setDialogOpen(true)}
+                >
+                  <Edit className="h-4 w-4 mr-1" />
+                  Editar
+                </Button>
+              )}
+            </SettingsGate>
+
+            <SettingsGate permission="delete">
+              {!isFinalized && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" size="sm">
+                      <Trash className="h-4 w-4 mr-1" />
+                      Excluir
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Excluir encomenda?</AlertDialogTitle>
+                      <AlertDialogDescription className="line-clamp-3 max-w-[80dvw] md:max-w-[18dvw]">
+                        Esta ação não poderá ser desfeita. Isso excluirá
+                        permanentemente a encomenda do cliente{" "}
+                        {order?.clientName}.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction
+                        className="bg-red-600 hover:bg-red-700"
+                        onClick={() => deleteOrder()}
+                      >
+                        Excluir
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+              <Button onClick={() => navigate(-1)} variant="outline" size="sm">
+                <ArrowLeft className="h-4 w-4 mr-1" />
+                Voltar
+              </Button>
+            </SettingsGate>
+          </div>
+        </CardContent>
+      </Card>
       <OrderDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}

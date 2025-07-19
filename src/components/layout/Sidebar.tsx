@@ -39,6 +39,7 @@ import { useSubscriptionStorage } from "@/storage/subscription";
 import { useSettingsStorage } from "@/storage/settings";
 import { useMutation } from "@tanstack/react-query";
 import { postCoreApi } from "@/lib/apiHelpers";
+import dayjs from "dayjs";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -107,10 +108,9 @@ const NavButton = ({
   onClick,
   isTrial,
   subscription,
-  isBlocked,
   settings,
+  isBlocked,
 }: NavButtonProps) => {
-
   // Verifica se o usuário tem acesso ao item baseado no plano
   const hasPlanAccess =
     !item.proOnly ||
@@ -137,7 +137,10 @@ const NavButton = ({
 
   const button = (
     <div className="px-2 py-1">
-      <button
+      <Button
+        variant="ghost"
+        disabled={requiresPassword || isBlocked}
+        aria-label={item.title}
         onClick={onClick}
         className={cn(
           "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium",
@@ -151,10 +154,10 @@ const NavButton = ({
       >
         <item.icon className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
         <span className="flex-1 text-left">{item.title}</span>
-        {(requiresPassword) && (
+        {(requiresPassword || isBlocked) && (
           <Lock className="h-4 w-4 ml-auto" />
         )}
-      </button>
+      </Button>
     </div>
   );
 
@@ -165,12 +168,12 @@ const NavButton = ({
         <Tooltip>
           <TooltipTrigger asChild>
             <div>
-                <SettingsGate
-                  requirePanelAccess={item.href.replace("/", "")}
-                  fallback={button}
-                >
-                  {button}
-                </SettingsGate>
+              <SettingsGate
+                requirePanelAccess={item.href.replace("/", "")}
+                fallback={button}
+              >
+                {button}
+              </SettingsGate>
             </div>
           </TooltipTrigger>
           <TooltipContent>
@@ -182,13 +185,12 @@ const NavButton = ({
   }
 
   return (
-
-      <SettingsGate
-        requirePanelAccess={item.href.replace("/", "")}
-        fallback={button}
-      >
-        {button}
-      </SettingsGate>
+    <SettingsGate
+      requirePanelAccess={item.href.replace("/", "")}
+      fallback={button}
+    >
+      {button}
+    </SettingsGate>
   );
 };
 
@@ -221,8 +223,10 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
   // Derivações
   const isLoading = false; // zustand é síncrono, pode-se adicionar loading se necessário
   const isTrial = !!subscription?.isTrial;
-  const subscriptionActive = subscription?.status === "active";
-  const isBlocked = subscription?.status !== "active" && !isTrial;
+  const isActive =
+    subscription?.status === "active" &&
+    dayjs(subscription?.expiresAt).isAfter(dayjs()) &&
+    dayjs(subscription?.gracePeriodUntil).isAfter(dayjs());
 
   // Se o app não estiver pronto, mostra um loader
   if (isLoading) {
@@ -240,11 +244,7 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
 
   // Lógica para mostrar o cadeado nas configurações
   const isSettingsLocked = settings?.lockSettingsByPassword;
-  const isSettingsBlocked =
-    !isTrial &&
-    !subscriptionActive &&
-    subscription?.plan !== "pro" &&
-    subscription?.plan !== "enterprise";
+  const isSettingsBlocked = !isTrial && !isActive;
 
   const handleProfileClick = async () => {
     try {
@@ -317,7 +317,7 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
               onClick={() => handleNavigation(item.href)}
               isTrial={isTrial}
               subscription={subscription}
-              isBlocked={isBlocked}
+              isBlocked={!isActive}
               settings={settings}
             />
           ))}
@@ -331,6 +331,7 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
             isTrial) && (
             <Button
               variant="ghost"
+              disabled={isSettingsLocked || isSettingsBlocked || !isActive}
               className={cn(
                 "w-full flex gap-3 justify-start h-10",
                 location.pathname === "/settings"
@@ -341,7 +342,7 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
             >
               <Settings className="h-4 w-4" />
               Configurações
-              {(isSettingsLocked || isSettingsBlocked || isBlocked) && (
+              {(isSettingsLocked || isSettingsBlocked || !isActive) && (
                 <Lock className="h-4 w-4 ml-auto" />
               )}
             </Button>

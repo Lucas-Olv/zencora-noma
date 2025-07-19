@@ -14,7 +14,6 @@ import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 
 const SubscriptionInfo = () => {
   const { subscription } = useSubscriptionStorage();
-  const { isLoading } = useWorkspaceContext();
 
   // Verifica se a assinatura está próxima de expirar (3 dias)
   const isAboutToExpire =
