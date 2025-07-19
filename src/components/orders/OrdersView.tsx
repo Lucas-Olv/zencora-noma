@@ -313,7 +313,7 @@ const OrdersView = () => {
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Encomendas</h2>
           <p className="text-muted-foreground">
-            Gerencie todas as suas encomendas em um só lugar
+            Gerencie todas as suas encomendas aqui.
           </p>
         </div>
 
@@ -327,8 +327,7 @@ const OrdersView = () => {
       <Card>
         <CardHeader className="pb-3">
           <div className="flex flex-col sm:flex-row justify-between gap-4">
-            <CardTitle>Lista de Encomendas</CardTitle>
-            <div className="relative w-full sm:w-64">
+            <div className="relative w-full">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Buscar encomendas..."

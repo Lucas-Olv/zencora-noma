@@ -560,18 +560,13 @@ export function ProductionView() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">
-          Painel de Produção
-        </h2>
+        <h2 className="text-2xl font-bold tracking-tight">Produção</h2>
         <p className="text-muted-foreground">
-          Acompanhe suas encomendas pendentes em tempo real
+          Acompanhe suas encomendas pendentes em tempo real.
         </p>
       </div>
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>Encomendas</CardTitle>
-          </div>
+        <CardHeader className="flex flex-row items-center justify-end">
           <ConnectionStatus
             isConnected={isConnected}
             onReconnect={handleReconnect}

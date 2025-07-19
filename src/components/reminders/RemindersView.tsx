@@ -255,17 +255,14 @@ const RemindersView = () => {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">Painel de Lembretes</h1>
+        <h1 className="text-2xl font-bold">Lembretes</h1>
         <p className="text-muted-foreground">
           Aqui você pode adicionar quantos lembretes quiser.
         </p>
       </div>
       <Card>
         <CardHeader>
-          <CardTitle>Lembretes</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleCreateReminder} className="mb-6">
+          <form onSubmit={handleCreateReminder}>
             <div className="flex gap-2">
               <Input
                 type="text"
@@ -279,7 +276,8 @@ const RemindersView = () => {
               </Button>
             </div>
           </form>
-
+        </CardHeader>
+        <CardContent>
           <Tabs defaultValue="pending" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="pending">

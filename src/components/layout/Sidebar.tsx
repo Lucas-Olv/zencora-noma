@@ -324,9 +324,9 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
             <img
               src="/zencora-noma-logo.png"
               alt="Zencora Noma Logo"
-              className="h-8 mr-2"
+              className="h-6 mr-2"
             />
-            <span className="text-xl font-bold zencora-gradient-text">
+            <span className="text-lg font-bold zencora-gradient-text">
               Zencora Noma
             </span>
           </div>

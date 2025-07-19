@@ -493,7 +493,7 @@ const MonthlyReports = () => {
       <div>
         <h2 className="text-2xl font-bold tracking-tight">Relatórios</h2>
         <p className="text-muted-foreground">
-          Acompanhe o desempenho do seu negócio através de gráficos e análises
+          Acompanhe o desempenho do seu negócio através de gráficos e análises.
         </p>
       </div>
 

@@ -99,7 +99,7 @@ export default function SettingsView() {
         {/* Card de Configurações */}
         <Card>
           <CardHeader>
-            <CardTitle>Configurações Gerais</CardTitle>
+            <CardTitle className="text-xl">Configurações Gerais</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <Separator />
