@@ -71,9 +71,9 @@ export function Footer() {
                 <img
                   src="zencora-noma-logo.png"
                   alt="Zencora Noma Logo"
-                  className="w-10 h-10 center"
+                  className="w-6 h-6 center"
                 />
-                <p className="text-2xl w-full text-center md:text-left font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                <p className="text-lg w-full text-center md:text-left font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                   Noma
                 </p>
               </div>

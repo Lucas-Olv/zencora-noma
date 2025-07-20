@@ -94,9 +94,9 @@ export const Nav = () => {
             <img
               src="zencora-noma-logo.png"
               alt="Zencora Noma Logo"
-              className="h-8 mr-2"
+              className="h-6 mr-2"
             />
-            <Link to="/" className="text-2xl font-bold zencora-gradient-text">
+            <Link to="/" className="text-lg font-bold zencora-gradient-text">
               Zencora Noma
             </Link>
           </div>
