@@ -119,20 +119,14 @@ function DeliveryCalendar({ orders, loading = false }: DeliveryCalendarProps) {
                         "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50",
                       status === "production" &&
                         "bg-purple-100/80 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200 hover:bg-purple-200 dark:hover:bg-purple-900/50",
-                      status === "delivered" &&
-                        "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50",
                       status === "done" &&
                         "bg-blue-100/80 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200 hover:bg-blue-200 dark:hover:bg-blue-900/50",
-                      status === "canceled" &&
-                        "bg-red-100/80 text-red-800 dark:bg-red-900/30 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-900/50",
                     )}
                   >
                     {status === "overdue" && "Atrasado"}
                     {status === "pending" && "Pendente"}
                     {status === "production" && "Produção"}
                     {status === "done" && "Concluído"}
-                    {status === "delivered" && "Entregue"}
-                    {status === "canceled" && "Cancelado"}
                   </Badge>
                 </div>
               </div>

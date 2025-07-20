@@ -171,7 +171,7 @@ export const DeliveryDialog: React.FC<DeliveryDialogProps> = ({
               <span className="text-sm text-muted-foreground">Descrição</span>
               <AutoResizeTextarea
                 value={order.description}
-                className="text-foreground w-[70dvw] p-0 resize-none overflow-hidden bg-transparent focus:outline-none focus:ring-0"
+                className="text-foreground w-[70dvw] md:w-[30dvw] p-0 resize-none overflow-hidden bg-transparent focus:outline-none focus:ring-0"
               />
             </div>
           </div>
