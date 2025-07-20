@@ -22,6 +22,7 @@ import { Reminder } from "@/lib/types";
 import { useMutation } from "@tanstack/react-query";
 import { patchNomaApi } from "@/lib/apiHelpers";
 import { useTenantStorage } from "@/storage/tenant";
+import { useAnalytics } from "@/contexts/AnalyticsProviderContext";
 
 interface RecentRemindersProps {
   reminders: Reminder[];
@@ -39,6 +40,7 @@ function RecentReminders({
   const { tenant } = useTenantStorage();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [reminders, setReminders] = useState<Reminder[]>(initialReminders);
+  const { trackEvent } = useAnalytics();
 
   const { mutate: updateReminderStatus } = useMutation({
     mutationFn: ({
@@ -114,6 +116,9 @@ function RecentReminders({
               r.id === reminder.id ? { ...r, isDone: !reminder.isDone } : r,
             ),
           );
+          trackEvent("dashboard_reminder_status_updated", {
+            status: reminder.isDone ? "done" : "pending",
+          });
           toast({
             title: "Status do lembrete atualizado com sucesso!",
             description: `O lembrete foi marcado como ${!reminder.isDone ? "concluído" : "pendente"}`,

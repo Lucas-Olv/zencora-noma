@@ -37,6 +37,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAnalytics } from "@/contexts/AnalyticsProviderContext";
 
 interface OrderDialogProps {
   open: boolean;
@@ -98,6 +99,7 @@ const OrderDialog = ({
   const queryClient = useQueryClient();
   const { settings } = useSettingsStorage();
   const isMobile = useIsMobile();
+  const { trackEvent } = useAnalytics();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -138,6 +140,8 @@ const OrderDialog = ({
         description:
           "Sua encomenda foi criada com sucesso! Você pode visualizá-la na lista de encomendas.",
       });
+
+      trackEvent("order_created");
     },
     onError: (error) => {
       toast({
@@ -177,6 +181,7 @@ const OrderDialog = ({
       toast({
         title: "Encomenda atualizada com sucesso",
       });
+      trackEvent("order_updated");
     },
     onError: (error) => {
       toast({

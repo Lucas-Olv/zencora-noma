@@ -40,6 +40,7 @@ import { useSettingsStorage } from "@/storage/settings";
 import { useMutation } from "@tanstack/react-query";
 import { postCoreApi } from "@/lib/apiHelpers";
 import dayjs from "dayjs";
+import { useAnalytics } from "@/contexts/AnalyticsProviderContext";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -198,6 +199,7 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { trackEvent } = useAnalytics();
 
   // Zustand stores
   const { subscription } = useSubscriptionStorage();
@@ -211,6 +213,7 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
         title: "Sessão encerrada",
         description: "Sua sessão foi encerrada com sucesso. Até breve!",
       });
+      trackEvent("user_signout");
     },
     onError: (error) => {
       toast({
@@ -260,6 +263,7 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
       const accessToken = useSessionStorage.getState().session.token;
       const redirectUrl = `${websiteUrl}/account?access_token=${accessToken}`;
       window.location.href = redirectUrl;
+      trackEvent("user_profile_access");
     } catch (error: any) {
       toast({
         title: "Erro ao acessar perfil",

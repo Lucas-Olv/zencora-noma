@@ -39,11 +39,11 @@ import { useTenantStorage } from "./storage/tenant";
 import { useSettingsStorage } from "./storage/settings";
 import PasswordVerification from "./components/auth/PasswordVerification";
 import Delivery from "./components/delivery/Delivery";
+import { AnalyticsProvider } from "./contexts/AnalyticsProviderContext";
 const queryClient = new QueryClient();
 
 const AppRoutes = () => {
   const { isLoading } = useWorkspaceContext();
-
   const { session } = useSessionStorage();
   const { tenant } = useTenantStorage();
   const { settings } = useSettingsStorage();
@@ -62,221 +62,223 @@ const AppRoutes = () => {
     session && tenant && tenant.userAcceptedTerms === false;
 
   return (
-    <Routes>
-      {/* Public Routes */}
-      <Route
-        path="/"
-        element={
-          session ? (
-            shouldAcceptTerms ? (
-              <Navigate to="/terms-acceptance" />
+    <AnalyticsProvider>
+      <Routes>
+        {/* Public Routes */}
+        <Route
+          path="/"
+          element={
+            session ? (
+              shouldAcceptTerms ? (
+                <Navigate to="/terms-acceptance" />
+              ) : (
+                <Navigate to="/dashboard" />
+              )
             ) : (
-              <Navigate to="/dashboard" />
+              <Landing />
             )
-          ) : (
-            <Landing />
-          )
-        }
-      />
-      <Route path="/about" element={<About />} />
-      <Route path="/terms" element={<Terms />} />
-      <Route path="/privacy" element={<Privacy />} />
-      <Route path="/contact" element={<Contact />} />
-      <Route
-        path="/login"
-        element={
-          session ? (
-            shouldAcceptTerms ? (
-              <Navigate to="/terms-acceptance" />
+          }
+        />
+        <Route path="/about" element={<About />} />
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route
+          path="/login"
+          element={
+            session ? (
+              shouldAcceptTerms ? (
+                <Navigate to="/terms-acceptance" />
+              ) : (
+                <Navigate to="/dashboard" />
+              )
             ) : (
-              <Navigate to="/dashboard" />
+              <Login />
             )
-          ) : (
-            <Login />
-          )
-        }
-      />
+          }
+        />
 
-      {/* Protected Routes */}
-      {session && (
-        <>
-          <Route path="/" element={<Layout />}>
+        {/* Protected Routes */}
+        {session && (
+          <>
+            <Route path="/" element={<Layout />}>
+              <Route
+                path="dashboard"
+                element={
+                  <ProtectedRoute>
+                    {shouldAcceptTerms ? (
+                      <Navigate to="/terms-acceptance" replace />
+                    ) : (
+                      <Dashboard />
+                    )}
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="orders"
+                element={
+                  <ProtectedRoute>
+                    {shouldAcceptTerms ? (
+                      <Navigate to="/terms-acceptance" replace />
+                    ) : (
+                      <Orders />
+                    )}
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="orders/:id"
+                element={
+                  <ProtectedRoute>
+                    {shouldAcceptTerms ? (
+                      <Navigate to="/terms-acceptance" replace />
+                    ) : (
+                      <OrderDetail />
+                    )}
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="production"
+                element={
+                  <ProtectedRoute>
+                    {shouldAcceptTerms ? (
+                      <Navigate to="/terms-acceptance" replace />
+                    ) : (
+                      <Production />
+                    )}
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="delivery"
+                element={
+                  <ProtectedRoute>
+                    {shouldAcceptTerms ? (
+                      <Navigate to="/terms-acceptance" replace />
+                    ) : (
+                      <Delivery />
+                    )}
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="reports"
+                element={
+                  <ProtectedRoute>
+                    {shouldAcceptTerms ? (
+                      <Navigate to="/terms-acceptance" replace />
+                    ) : settings?.lockReportsByPassword &&
+                      !location.state?.verified ? (
+                      <Navigate
+                        to="/verify-password"
+                        state={{
+                          redirect: "/reports",
+                          name: "os relatórios",
+                          fromRoleSwitch: false,
+                        }}
+                        replace
+                      />
+                    ) : (
+                      <Reports />
+                    )}
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="calendar"
+                element={
+                  <ProtectedRoute>
+                    {shouldAcceptTerms ? (
+                      <Navigate to="/terms-acceptance" replace />
+                    ) : (
+                      <Calendar />
+                    )}
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="reminders"
+                element={
+                  <ProtectedRoute>
+                    {shouldAcceptTerms ? (
+                      <Navigate to="/terms-acceptance" replace />
+                    ) : (
+                      <Reminders />
+                    )}
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="settings"
+                element={
+                  <ProtectedRoute>
+                    {shouldAcceptTerms ? (
+                      <Navigate to="/terms-acceptance" replace />
+                    ) : settings?.lockSettingsByPassword &&
+                      !location.state?.verified ? (
+                      <Navigate
+                        to="/verify-password"
+                        state={{
+                          redirect: "/settings",
+                          name: "as configurações",
+                          fromRoleSwitch: false,
+                        }}
+                        replace
+                      />
+                    ) : (
+                      <Settings />
+                    )}
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="subscription-expired"
+                element={
+                  <ProtectedRoute>
+                    <SubscriptionExpired />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="verify-password"
+                element={
+                  <ProtectedRoute>
+                    <PasswordVerification />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="success"
+                element={
+                  <ProtectedRoute>
+                    {shouldAcceptTerms ? (
+                      <Navigate to="/terms-acceptance" replace />
+                    ) : (
+                      <SubscriptionSuccess />
+                    )}
+                  </ProtectedRoute>
+                }
+              />
+            </Route>
             <Route
-              path="dashboard"
+              path="/terms-acceptance"
               element={
                 <ProtectedRoute>
-                  {shouldAcceptTerms ? (
-                    <Navigate to="/terms-acceptance" replace />
-                  ) : (
-                    <Dashboard />
-                  )}
+                  <TermsAcceptance />
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="orders"
-              element={
-                <ProtectedRoute>
-                  {shouldAcceptTerms ? (
-                    <Navigate to="/terms-acceptance" replace />
-                  ) : (
-                    <Orders />
-                  )}
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="orders/:id"
-              element={
-                <ProtectedRoute>
-                  {shouldAcceptTerms ? (
-                    <Navigate to="/terms-acceptance" replace />
-                  ) : (
-                    <OrderDetail />
-                  )}
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="production"
-              element={
-                <ProtectedRoute>
-                  {shouldAcceptTerms ? (
-                    <Navigate to="/terms-acceptance" replace />
-                  ) : (
-                    <Production />
-                  )}
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="delivery"
-              element={
-                <ProtectedRoute>
-                  {shouldAcceptTerms ? (
-                    <Navigate to="/terms-acceptance" replace />
-                  ) : (
-                    <Delivery />
-                  )}
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="reports"
-              element={
-                <ProtectedRoute>
-                  {shouldAcceptTerms ? (
-                    <Navigate to="/terms-acceptance" replace />
-                  ) : settings?.lockReportsByPassword &&
-                    !location.state?.verified ? (
-                    <Navigate
-                      to="/verify-password"
-                      state={{
-                        redirect: "/reports",
-                        name: "os relatórios",
-                        fromRoleSwitch: false,
-                      }}
-                      replace
-                    />
-                  ) : (
-                    <Reports />
-                  )}
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="calendar"
-              element={
-                <ProtectedRoute>
-                  {shouldAcceptTerms ? (
-                    <Navigate to="/terms-acceptance" replace />
-                  ) : (
-                    <Calendar />
-                  )}
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="reminders"
-              element={
-                <ProtectedRoute>
-                  {shouldAcceptTerms ? (
-                    <Navigate to="/terms-acceptance" replace />
-                  ) : (
-                    <Reminders />
-                  )}
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="settings"
-              element={
-                <ProtectedRoute>
-                  {shouldAcceptTerms ? (
-                    <Navigate to="/terms-acceptance" replace />
-                  ) : settings?.lockSettingsByPassword &&
-                    !location.state?.verified ? (
-                    <Navigate
-                      to="/verify-password"
-                      state={{
-                        redirect: "/settings",
-                        name: "as configurações",
-                        fromRoleSwitch: false,
-                      }}
-                      replace
-                    />
-                  ) : (
-                    <Settings />
-                  )}
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="subscription-expired"
-              element={
-                <ProtectedRoute>
-                  <SubscriptionExpired />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="verify-password"
-              element={
-                <ProtectedRoute>
-                  <PasswordVerification />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="success"
-              element={
-                <ProtectedRoute>
-                  {shouldAcceptTerms ? (
-                    <Navigate to="/terms-acceptance" replace />
-                  ) : (
-                    <SubscriptionSuccess />
-                  )}
-                </ProtectedRoute>
-              }
-            />
-          </Route>
-          <Route
-            path="/terms-acceptance"
-            element={
-              <ProtectedRoute>
-                <TermsAcceptance />
-              </ProtectedRoute>
-            }
-          />
-        </>
-      )}
+          </>
+        )}
 
-      {!session && (
-        <Route path="*" element={<Navigate to="/login" replace />} />
-      )}
+        {!session && (
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        )}
 
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </AnalyticsProvider>
   );
 };
 

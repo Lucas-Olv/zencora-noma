@@ -65,6 +65,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import dayjs from "dayjs";
+import { useAnalytics } from "@/contexts/AnalyticsProviderContext";
 
 const OrdersView = () => {
   const { toast } = useToast();
@@ -79,6 +80,7 @@ const OrdersView = () => {
   const { settings } = useSettingsStorage();
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [cancelOrderId, setCancelOrderId] = useState<string | null>(null);
+  const { trackEvent } = useAnalytics();
 
   const {
     mutate: updateOrder,
@@ -230,13 +232,20 @@ const OrdersView = () => {
         onSuccess: () => {
           toast({
             title: "Status atualizado!",
-            description: `A encomenda foi marcada como ${targetStatus === "pending" ? "pendente" : targetStatus === "production" ? "Produção" : "concluída"}.`,
+            description: `A encomenda foi marcada como ${targetStatus === "pending" ? "pendente" : targetStatus === "production" ? "produção" : targetStatus === "canceled" ? "cancelado" : "concluída"}.`,
           });
           setOrders((prevOrders) =>
             prevOrders.map((order) =>
               order.id === id ? { ...order, status: targetStatus } : order,
             ),
           );
+          if (targetStatus === "canceled") {
+            trackEvent("order_canceled");
+          } else {
+            trackEvent("order_status_updated", {
+              status: targetStatus,
+            });
+          }
         },
       },
     );

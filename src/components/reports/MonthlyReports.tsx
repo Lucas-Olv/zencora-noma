@@ -60,6 +60,7 @@ import { useTenantStorage } from "@/storage/tenant";
 import { Order } from "@/lib/types";
 import { getNomaApi } from "@/lib/apiHelpers";
 import { useQuery } from "@tanstack/react-query";
+import { useAnalytics } from "@/contexts/AnalyticsProviderContext";
 
 interface ReportData {
   totalOrders: number;
@@ -77,6 +78,8 @@ const MonthlyReports = () => {
     to: endOfMonth(new Date()),
   });
   const [orders, setOrders] = useState<Order[]>([]);
+  const { trackEvent } = useAnalytics();
+
   const [reportData, setReportData] = useState<ReportData>({
     totalOrders: 0,
     totalRevenue: 0,
@@ -88,7 +91,6 @@ const MonthlyReports = () => {
   });
   const isMobile = useIsMobile();
   const { tenant } = useTenantStorage();
-  const navigate = useNavigate();
 
   const formatCurrency = (value: number) => {
     return value.toLocaleString("pt-BR", {
@@ -477,6 +479,14 @@ const MonthlyReports = () => {
     doc.save(
       `relatorio-zencora-${formatDate(new Date().toISOString(), "yyyy-MM-dd")}.pdf`,
     );
+
+    trackEvent("pdf_report_download", {
+      report_type: "monthly",
+      date_range: {
+        from: dateRange?.from ? dateRange.from.toISOString() : "",
+        to: dateRange?.to ? dateRange.to.toISOString() : "",
+      },
+    });
   };
 
   if (isOrdersLoading) {
@@ -506,6 +516,13 @@ const MonthlyReports = () => {
                 const start = new Date(parseInt(year), parseInt(month) - 1, 1);
                 const end = new Date(parseInt(year), parseInt(month), 0);
                 setDateRange({ from: start, to: end });
+                trackEvent("date_range_change", {
+                  report_type: "monthly",
+                  date_range: {
+                    from: start.toISOString(),
+                    to: end.toISOString(),
+                  },
+                });
               }}
             >
               <SelectTrigger className="w-full sm:w-[180px]">
@@ -537,7 +554,16 @@ const MonthlyReports = () => {
             <div className="flex gap-2">
               <DateRangePicker
                 value={dateRange}
-                onChange={setDateRange}
+                onChange={() => {
+                  setDateRange;
+                  trackEvent("date_range_change", {
+                    report_type: "custom_date",
+                    date_range: {
+                      from: dateRange?.from ? dateRange.from.toISOString() : "",
+                      to: dateRange?.to ? dateRange.to.toISOString() : "",
+                    },
+                  });
+                }}
                 className="w-full sm:w-[300px]"
               />
               <Button

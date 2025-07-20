@@ -13,11 +13,13 @@ import { patchNomaApi } from "@/lib/apiHelpers";
 import { useTenantStorage } from "@/storage/tenant";
 import { useDebouncedCallback } from "use-debounce";
 import { useState, useEffect } from "react";
+import { useAnalytics } from "@/contexts/AnalyticsProviderContext";
 
 export default function SettingsView() {
   const { settings, setSettings } = useSettingsStorage();
   const { tenant } = useTenantStorage();
   const { toast } = useToast();
+  const { trackEvent } = useAnalytics();
 
   const {
     mutate: updateSettings,
@@ -55,7 +57,9 @@ export default function SettingsView() {
     field: "partialPaymentPercentage",
     value: string,
   ): void;
+
   function handleUpdateSettings(field: keyof Settings, value: boolean): void;
+
   function handleUpdateSettings(
     field: keyof Settings,
     value: boolean | string,
@@ -65,6 +69,10 @@ export default function SettingsView() {
       ...settings,
       [field]: value,
     };
+    trackEvent("settings_updated", {
+      field: field,
+      value: value.toString(),
+    });
     updateSettings({ settingsData: updatedSettings });
   }
 

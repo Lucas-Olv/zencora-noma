@@ -39,6 +39,7 @@ import { Order } from "@/lib/types";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { getNomaApi, patchNomaApi } from "@/lib/apiHelpers";
 import { useSessionStorage } from "@/storage/session";
+import { useAnalytics } from "@/contexts/AnalyticsProviderContext";
 
 function ConnectionStatus({
   isConnected,
@@ -98,6 +99,7 @@ export function ProductionView() {
   );
   const socketRef = useRef<Socket | null>(null);
   const navigate = useNavigate();
+  const { trackEvent } = useAnalytics();
 
   const {
     data: ordersData,
@@ -178,10 +180,6 @@ export function ProductionView() {
     socket.on("connect", () => {
       console.log("[SocketIO] Conectado!");
       setIsConnected(true);
-      toast({
-        title: "Conexão estabelecida",
-        description: "Recebendo atualizações em tempo real",
-      });
     });
 
     socket.on("disconnect", (reason) => {
@@ -531,6 +529,9 @@ export function ProductionView() {
           toast({
             title: "Status atualizado!",
             description: `A encomenda foi marcada como ${status === "pending" ? "em produção" : "concluída"}.`,
+          });
+          trackEvent("order_status_updated", {
+            status: status === "pending" ? "production" : "done",
           });
         },
       },

@@ -5,11 +5,14 @@ import { useSessionStorage } from "@/storage/session";
 import { useSubscriptionStorage } from "@/storage/subscription";
 import { useTenantStorage } from "@/storage/tenant";
 import { useSettingsStorage } from "@/storage/settings";
+import { initializeApp } from "firebase/app";
+import { Analytics, getAnalytics } from "firebase/analytics";
 import { postNomaApi } from "@/lib/apiHelpers";
 
 interface WorkspaceContextType {
   loadWorkspace: () => Promise<void>;
   isLoading: boolean;
+  firebaseAnalytics: Analytics;
 }
 
 const WorkspaceContext = createContext<WorkspaceContextType | undefined>(
@@ -22,9 +25,25 @@ export const WorkspaceProvider = ({
   children: React.ReactNode;
 }) => {
   const [isLoading, setIsLoading] = useState(true);
+  const [firebaseAnalytics, setFirebaseAnalytics] = useState<Analytics | null>(
+    null,
+  );
 
   useEffect(() => {
     loadWorkspace();
+
+    const firebaseConfig = {
+      apiKey: `${import.meta.env.VITE_FIREBASE_API_KEY}`,
+      authDomain: `${import.meta.env.VITE_FIREBASE_AUTH_DOMAIN}`,
+      projectId: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}`,
+      storageBucket: `${import.meta.env.VITE_FIREBASE_STORAGE_BUCKET}`,
+      messagingSenderId: `${import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID}`,
+      appId: `${import.meta.env.VITE_FIREBASE_APP_ID}`,
+      measurementId: `${import.meta.env.VITE_FIREBASE_MEASUREMENT_ID}`,
+    };
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    setFirebaseAnalytics(getAnalytics(app));
   }, []);
 
   const loadWorkspace = async () => {
@@ -68,6 +87,7 @@ export const WorkspaceProvider = ({
       value={{
         loadWorkspace,
         isLoading,
+        firebaseAnalytics,
       }}
     >
       {children}

@@ -36,6 +36,7 @@ import {
   patchNomaApi,
   postNomaApi,
 } from "@/lib/apiHelpers";
+import { useAnalytics } from "@/contexts/AnalyticsProviderContext";
 const RemindersView = () => {
   const { toast } = useToast();
   const { tenant } = useTenantStorage();
@@ -47,6 +48,7 @@ const RemindersView = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [editedContent, setEditedContent] = useState("");
+  const { trackEvent } = useAnalytics();
 
   const {
     data: remindersData,
@@ -76,6 +78,8 @@ const RemindersView = () => {
       toast({
         title: "Lembrete excluído com sucesso!",
       });
+
+      trackEvent("reminder_deleted");
     },
     onError: (error) => {
       toast({
@@ -105,6 +109,8 @@ const RemindersView = () => {
       toast({
         title: "Lembrete criado com sucesso!",
       });
+
+      trackEvent("reminder_created");
     },
     onError: (error) => {
       toast({
@@ -134,6 +140,8 @@ const RemindersView = () => {
       toast({
         title: "Lembrete atualizado com sucesso!",
       });
+
+      trackEvent("reminder_updated");
     },
     onError: (error) => {
       toast({
@@ -214,6 +222,9 @@ const RemindersView = () => {
           toast({
             title: "Status do lembrete atualizado com sucesso!",
             description: `O lembrete foi marcado como ${!reminder.isDone ? "concluído" : "pendente"}`,
+          });
+          trackEvent("reminder_status_updated", {
+            status: !reminder.isDone ? "done" : "pending",
           });
         },
       },

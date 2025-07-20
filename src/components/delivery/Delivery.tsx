@@ -38,6 +38,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { getNomaApi, patchNomaApi } from "@/lib/apiHelpers";
 import { useSettingsStorage } from "@/storage/settings";
 import { DeliveryDialog } from "./DeliveryDialog";
+import { useAnalytics } from "@/contexts/AnalyticsProviderContext";
 
 const Delivery = () => {
   const { toast } = useToast();
@@ -53,6 +54,7 @@ const Delivery = () => {
   const [deliveryDialogOpen, setDeliveryDialogOpen] = useState(false);
   const [deliveryOrder, setDeliveryOrder] = useState<Order | null>(null);
   const [isDelivering, setIsDelivering] = useState(false);
+  const { trackEvent } = useAnalytics();
 
   const {
     mutate: updateOrder,
@@ -150,6 +152,10 @@ const Delivery = () => {
       setDeliveryDialogOpen(false);
       setDeliveryOrder(null);
       refetch();
+      trackEvent("order_delivered", {
+        price: deliveryOrder?.price,
+        payment_status: deliveryOrder?.paymentStatus,
+      });
     },
     onError: (error) => {
       toast({

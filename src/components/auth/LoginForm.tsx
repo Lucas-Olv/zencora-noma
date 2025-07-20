@@ -26,6 +26,8 @@ import {
   getCommonRegisterErrorsMessages,
 } from "@/lib/commonErrors";
 import { AxiosError } from "axios";
+import { useAnalytics } from "@/contexts/AnalyticsProviderContext";
+import dayjs from "dayjs";
 
 export const LoginForm = () => {
   const { toast } = useToast();
@@ -39,6 +41,7 @@ export const LoginForm = () => {
   const [showResetPassword, setShowResetPassword] = useState(false);
   const { setSession } = useSessionStorage();
   const { loadWorkspace } = useWorkspaceContext();
+  const { trackEvent } = useAnalytics();
 
   const { mutate: signUp, isPending: isSignUpPending } = useMutation({
     mutationFn: () =>
@@ -49,6 +52,10 @@ export const LoginForm = () => {
         description: "Verifique seu email para confirmar sua conta.",
       });
       setActiveTab("login");
+
+      trackEvent("user_signup", {
+        signupMethod: "email",
+      });
     },
     onError: (error: AxiosError) => {
       toast({
@@ -76,6 +83,10 @@ export const LoginForm = () => {
       });
       setActiveTab("login");
       setShowResetPassword(false);
+
+      trackEvent("reset_password_request", {
+        requestDate: dayjs(),
+      });
     },
     onError: (error) => {
       toast({
@@ -126,6 +137,10 @@ export const LoginForm = () => {
           description: "Bem vindo de volta!",
         });
         navigate("/");
+
+        trackEvent("user_signin", {
+          loginMethod: "email",
+        });
       } catch (error) {
         console.error("Erro ao verificar token:", error);
         toast({

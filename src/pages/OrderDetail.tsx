@@ -42,6 +42,7 @@ import { Order } from "@/lib/types";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { delNomaAPi, getNomaApi, patchNomaApi } from "@/lib/apiHelpers";
 import { useTenantStorage } from "@/storage/tenant";
+import { useAnalytics } from "@/contexts/AnalyticsProviderContext";
 
 const getStatusDisplay = (status: string | null, dueDate?: string | null) => {
   switch (status) {
@@ -89,7 +90,7 @@ const getStatusDisplay = (status: string | null, dueDate?: string | null) => {
       return {
         label: "Cancelado",
         className:
-          "bg-red-100/80 text-red-800 dark:bg-red-900/30 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-900/50",
+          "bg-gray-100/80 text-gray-800 dark:bg-gray-900/30 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-900/50",
       };
     default:
       return {
@@ -135,6 +136,8 @@ const OrderDetail = () => {
   const [order, setOrder] = useState<Order | null>(null);
   const { tenant } = useTenantStorage();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const { trackEvent } = useAnalytics();
+
   const {
     data: orderData,
     isLoading: isOrderLoading,
@@ -182,6 +185,8 @@ const OrderDetail = () => {
       setOrder((prevOrder) =>
         prevOrder ? { ...prevOrder, status: variables.status } : prevOrder,
       );
+
+      trackEvent("order_updated");
     },
     onError: (error) => {
       toast({
@@ -210,6 +215,7 @@ const OrderDetail = () => {
         description: "A encomenda foi excluÍda com sucesso!",
       });
 
+      trackEvent("order_deleted");
       navigate("/orders");
     },
     onError: (error) => {
