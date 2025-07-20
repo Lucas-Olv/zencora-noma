@@ -140,7 +140,7 @@ const NavButton = ({
     <div className="px-2 py-1">
       <Button
         variant="ghost"
-        disabled={requiresPassword || isBlocked}
+        disabled={isBlocked}
         aria-label={item.title}
         onClick={onClick}
         className={cn(
@@ -335,7 +335,7 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
             isTrial) && (
             <Button
               variant="ghost"
-              disabled={isSettingsLocked || isSettingsBlocked || !isActive}
+              disabled={isSettingsBlocked || !isActive}
               className={cn(
                 "w-full flex gap-3 justify-start h-10",
                 location.pathname === "/settings"
