@@ -116,8 +116,7 @@ const NavButton = ({
   const hasPlanAccess =
     !item.proOnly ||
     isTrial || // Permite acesso durante o trial
-    subscription?.plan === "pro" ||
-    subscription?.plan === "enterprise";
+    subscription?.plan === "pro"
 
   // Se o item requer plano Pro e o usuário não tem acesso, não renderiza o botão
   if (item.proOnly && !hasPlanAccess) {

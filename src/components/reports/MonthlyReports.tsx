@@ -14,6 +14,8 @@ import {
   Loader2,
   Check,
   Clock,
+  File as FileIcon,
+  Sheet,
 } from "lucide-react";
 import {
   LineChart,
@@ -60,7 +62,15 @@ import { useTenantStorage } from "@/storage/tenant";
 import { Order } from "@/lib/types";
 import { getNomaApi } from "@/lib/apiHelpers";
 import { useQuery } from "@tanstack/react-query";
-import { useAnalytics } from "@/contexts/AnalyticsProviderContext";
+import ExcelJS from "exceljs";
+import Papa from "papaparse";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useSubscriptionStorage } from "@/storage/subscription";
 
 interface ReportData {
   totalOrders: number;
@@ -78,8 +88,6 @@ const MonthlyReports = () => {
     to: endOfMonth(new Date()),
   });
   const [orders, setOrders] = useState<Order[]>([]);
-  const { trackEvent } = useAnalytics();
-
   const [reportData, setReportData] = useState<ReportData>({
     totalOrders: 0,
     totalRevenue: 0,
@@ -91,6 +99,8 @@ const MonthlyReports = () => {
   });
   const isMobile = useIsMobile();
   const { tenant } = useTenantStorage();
+  const navigate = useNavigate();
+  const { subscription } = useSubscriptionStorage()
 
   const formatCurrency = (value: number) => {
     return value.toLocaleString("pt-BR", {
@@ -434,7 +444,7 @@ const MonthlyReports = () => {
       bodyStyles: {
         textColor: [50, 50, 50],
         halign: "center",
-        fontSize: 10,
+        fontSize: 9,
         cellPadding: 2.5,
       },
       alternateRowStyles: {
@@ -444,14 +454,14 @@ const MonthlyReports = () => {
       styles: { lineWidth: 0.2, lineColor: [220, 220, 220] },
       tableLineColor: [240, 240, 240],
       columnStyles: {
-        0: { cellWidth: 32 }, // Cliente
-        1: { cellWidth: 50 }, // Descrição
-        2: { cellWidth: 22 }, // Valor
-        3: { cellWidth: 22 }, // Valor Pago
-        4: { cellWidth: 22 }, // Pagamento
-        5: { cellWidth: 32 }, // Método
-        6: { cellWidth: 22 }, // Data
-        7: { cellWidth: 22 }, // Status
+        0: { cellWidth: 28 }, // Cliente
+        1: { cellWidth: 40 }, // Descrição
+        2: { cellWidth: 20 }, // Valor
+        3: { cellWidth: 20 }, // Valor Pago
+        4: { cellWidth: 18 }, // Pagamento
+        5: { cellWidth: 24 }, // Método
+        6: { cellWidth: 16 }, // Data
+        7: { cellWidth: 16 }, // Status
       },
     });
 
@@ -479,14 +489,256 @@ const MonthlyReports = () => {
     doc.save(
       `relatorio-zencora-${formatDate(new Date().toISOString(), "yyyy-MM-dd")}.pdf`,
     );
+  };
 
-    trackEvent("pdf_report_download", {
-      report_type: "monthly",
-      date_range: {
-        from: dateRange?.from ? dateRange.from.toISOString() : "",
-        to: dateRange?.to ? dateRange.to.toISOString() : "",
+  const handleExportCSV = () => {
+    let csvContent = "";
+
+    // 1. Resumo
+    const summaryData = [
+      { Métrica: "Total de Encomendas", Valor: reportData.totalOrders },
+      {
+        Métrica: "Faturamento Total",
+        Valor: formatCurrency(reportData.totalRevenue),
       },
+      {
+        Métrica: "Encomendas Concluídas",
+        Valor: `${reportData.completedOrders} (${completionRate}%)`,
+      },
+      { Métrica: "Encomendas Pendentes", Valor: reportData.pendingOrders },
+    ];
+    csvContent += "Resumo\n";
+    csvContent += Papa.unparse(summaryData);
+    csvContent += "\n\n";
+
+    // 2. Relação de Pagamentos
+    csvContent += "Relação de Pagamentos\n";
+    csvContent += Papa.unparse(
+      paymentMethodData.map((item) => ({
+        "Método de Pagamento": item.metodo,
+        Quantidade: item.quantidade,
+      })),
+    );
+    csvContent += "\n\n";
+
+    // 3. Receita Diária
+    csvContent += "Receita Diária\n";
+    csvContent += Papa.unparse(
+      reportData.dailyRevenue.map((item) => ({
+        Data: item.day,
+        Receita: formatCurrency(item.Total),
+      })),
+    );
+    csvContent += "\n\n";
+
+    // 4. Encomendas
+    csvContent += "Encomendas do Período\n";
+    const ordersData = orders.map((order) => {
+      const isOverdue = new Date(order.dueDate) < new Date();
+      const status =
+        isOverdue &&
+        (order.status === "pending" || order.status === "production")
+          ? "Atrasado"
+          : order.status === "pending"
+            ? "Pendente"
+            : order.status === "production"
+              ? "Produção"
+              : order.status === "done"
+                ? "Concluído"
+                : order.status === "canceled"
+                  ? "Cancelado"
+                  : order.status === "delivered"
+                    ? "Entregue"
+                    : order.status;
+      return {
+        Cliente: order.clientName,
+        Descrição: order.description || "Sem descrição",
+        Valor: formatCurrency(parseFloat(order.price)),
+        "Valor Pago": order.amountPaid
+          ? formatCurrency(parseFloat(order.amountPaid))
+          : "-",
+        Pagamento: translatePaymentStatus(order.paymentStatus),
+        Método: translatePaymentMethod(order.paymentMethod),
+        Data: formatDate(order.dueDate),
+        Status: status,
+      };
     });
+    csvContent += Papa.unparse(ordersData);
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute(
+      "download",
+      `relatorio-zencora-${formatDate(new Date().toISOString(), "yyyy-MM-dd")}.csv`,
+    );
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleExportXLSX = async () => {
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = "Zencora Noma";
+    workbook.created = new Date();
+
+    const headerStyle: Partial<ExcelJS.Style> = {
+      font: { bold: true, color: { argb: "FFFFFFFF" } },
+      fill: {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FF8C52FF" },
+      },
+      alignment: { horizontal: "center", vertical: "middle" },
+      border: {
+        top: { style: "thin", color: { argb: "FF000000" } },
+        left: { style: "thin", color: { argb: "FF000000" } },
+        bottom: { style: "thin", color: { argb: "FF000000" } },
+        right: { style: "thin", color: { argb: "FF000000" } },
+      },
+    };
+
+    const cellBorderStyle: Partial<ExcelJS.Style> = {
+      border: {
+        top: { style: "thin", color: { argb: "FFBDBDBD" } },
+        left: { style: "thin", color: { argb: "FFBDBDBD" } },
+        bottom: { style: "thin", color: { argb: "FFBDBDBD" } },
+        right: { style: "thin", color: { argb: "FFBDBDBD" } },
+      },
+    };
+
+    const evenRowFill: ExcelJS.Fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFFAFAFF" }, // Cor clara para linhas pares
+    };
+
+    const applySheetStyling = (worksheet: ExcelJS.Worksheet) => {
+      worksheet.getRow(1).height = 30; // Aumenta a altura do cabeçalho
+
+      worksheet.eachRow((row, rowNumber) => {
+        if (rowNumber === 1) {
+          row.eachCell((cell) => {
+            cell.style = headerStyle;
+          });
+        } else {
+          row.eachCell((cell) => {
+            cell.border = cellBorderStyle.border;
+            if (rowNumber % 2 === 0) {
+              cell.fill = evenRowFill;
+            }
+          });
+        }
+      });
+    };
+
+    // --- Planilha de Resumo ---
+    const summaryWS = workbook.addWorksheet("Resumo");
+    summaryWS.columns = [
+      { header: "Métrica", key: "metric", width: 25 },
+      { header: "Valor", key: "value", width: 25 },
+    ];
+    summaryWS.addRows([
+      { metric: "Total de Encomendas", value: reportData.totalOrders },
+      {
+        metric: "Faturamento Total",
+        value: reportData.totalRevenue,
+      },
+      {
+        metric: "Encomendas Concluídas",
+        value: `${reportData.completedOrders} (${completionRate}%)`,
+      },
+      {
+        metric: "Encomendas Pendentes",
+        value: reportData.pendingOrders,
+      },
+    ]);
+    summaryWS.getCell("B3").numFmt = '"R$"#,##0.00';
+    applySheetStyling(summaryWS);
+
+    // --- Planilha de Pagamentos ---
+    const paymentsWS = workbook.addWorksheet("Pagamentos");
+    paymentsWS.columns = [
+      { header: "Método de Pagamento", key: "method", width: 25 },
+      { header: "Quantidade", key: "quantity", width: 15 },
+    ];
+    paymentMethodData.forEach((item) => {
+      paymentsWS.addRow({ method: item.metodo, quantity: item.quantidade });
+    });
+    applySheetStyling(paymentsWS);
+
+    // --- Planilha de Receita Diária ---
+    const dailyRevenueWS = workbook.addWorksheet("Receita Diária");
+    dailyRevenueWS.columns = [
+      { header: "Data", key: "day", width: 15 },
+      { header: "Receita", key: "revenue", width: 20 },
+    ];
+    reportData.dailyRevenue.forEach((item) => {
+      dailyRevenueWS.addRow({
+        day: item.day,
+        revenue: item.Total,
+      });
+    });
+    dailyRevenueWS.getColumn("B").numFmt = '"R$"#,##0.00';
+    applySheetStyling(dailyRevenueWS);
+
+    // --- Planilha de Encomendas ---
+    const ordersWS = workbook.addWorksheet("Encomendas");
+    ordersWS.columns = [
+      { header: "Cliente", key: "client", width: 30 },
+      { header: "Descrição", key: "description", width: 40 },
+      { header: "Valor", key: "price", width: 15 },
+      { header: "Valor Pago", key: "amountPaid", width: 15 },
+      { header: "Pagamento", key: "paymentStatus", width: 20 },
+      { header: "Método", key: "paymentMethod", width: 20 },
+      { header: "Data", key: "dueDate", width: 15 },
+      { header: "Status", key: "status", width: 15 },
+    ];
+    orders.forEach((order) => {
+      const isOverdue = new Date(order.dueDate) < new Date();
+      const status =
+        isOverdue &&
+        (order.status === "pending" || order.status === "production")
+          ? "Atrasado"
+          : order.status === "pending"
+            ? "Pendente"
+            : order.status === "production"
+              ? "Produção"
+              : order.status === "done"
+                ? "Concluído"
+                : order.status === "canceled"
+                  ? "Cancelado"
+                  : order.status === "delivered"
+                    ? "Entregue"
+                    : order.status;
+      ordersWS.addRow({
+        client: order.clientName,
+        description: order.description || "Sem descrição",
+        price: parseFloat(order.price),
+        amountPaid: order.amountPaid ? parseFloat(order.amountPaid) : "-",
+        paymentStatus: translatePaymentStatus(order.paymentStatus),
+        paymentMethod: translatePaymentMethod(order.paymentMethod),
+        dueDate: formatDate(order.dueDate),
+        status: status,
+      });
+    });
+    ordersWS.getColumn("C").numFmt = '"R$"#,##0.00';
+    ordersWS.getColumn("D").numFmt = '"R$"#,##0.00';
+    applySheetStyling(ordersWS);
+
+    // Salva o arquivo
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `relatorio-zencora-${formatDate(new Date().toISOString(), "yyyy-MM-dd")}.xlsx`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   if (isOrdersLoading) {
@@ -502,83 +754,107 @@ const MonthlyReports = () => {
       <div>
         <h2 className="text-2xl font-bold tracking-tight">Relatórios</h2>
         <p className="text-muted-foreground">
-          Acompanhe o desempenho do seu negócio através de gráficos e análises.
+          Acompanhe o desempenho do seu negócio através de gráficos e análises
         </p>
       </div>
 
       <div className="flex flex-col w-full gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <div className="flex flex-col sm:flex-row gap-4">
-            <Select
-              value={dateRange?.from ? format(dateRange.from, "yyyy-MM") : ""}
-              onValueChange={(value) => {
-                const [year, month] = value.split("-");
-                const start = new Date(parseInt(year), parseInt(month) - 1, 1);
-                const end = new Date(parseInt(year), parseInt(month), 0);
-                setDateRange({ from: start, to: end });
-                trackEvent("date_range_change", {
-                  report_type: "monthly",
-                  date_range: {
-                    from: start.toISOString(),
-                    to: end.toISOString(),
-                  },
-                });
-              }}
-            >
-              <SelectTrigger className="w-full sm:w-[180px]">
-                <SelectValue placeholder="Selecione o mês" />
-              </SelectTrigger>
-              <SelectContent>
-                {Array.from({ length: 12 }, (_, i) => {
-                  const date = new Date();
-                  date.setMonth(date.getMonth() - i);
-                  const monthYear = format(date, "yyyy-MM");
-                  return (
-                    <SelectItem key={monthYear} value={monthYear}>
-                      {format(date, "MMMM yyyy", { locale: ptBR }).replace(
-                        /^\w/,
-                        (c) => c.toUpperCase(),
-                      )}
-                    </SelectItem>
+              <Select
+                value={dateRange?.from ? format(dateRange.from, "yyyy-MM") : ""}
+                onValueChange={(value) => {
+                  const [year, month] = value.split("-");
+                  const start = new Date(
+                    parseInt(year),
+                    parseInt(month) - 1,
+                    1,
                   );
-                }).filter((_, i, arr) => {
-                  // Remove duplicatas verificando se é a primeira ocorrência do mês/ano
-                  const monthYear = arr[i].props.value;
-                  return (
-                    arr.findIndex((item) => item.props.value === monthYear) ===
-                    i
-                  );
-                })}
-              </SelectContent>
-            </Select>
-            <div className="flex gap-2">
-              <DateRangePicker
-                value={dateRange}
-                onChange={() => {
-                  setDateRange;
-                  trackEvent("date_range_change", {
-                    report_type: "custom_date",
-                    date_range: {
-                      from: dateRange?.from ? dateRange.from.toISOString() : "",
-                      to: dateRange?.to ? dateRange.to.toISOString() : "",
-                    },
-                  });
+                  const end = new Date(parseInt(year), parseInt(month), 0);
+                  setDateRange({ from: start, to: end });
                 }}
-                className="w-full sm:w-[300px]"
-              />
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handleDownloadPDF}
-                disabled={isOrdersLoading}
-                className="shrink-0 h-10 w-10"
               >
-                {isOrdersLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Download className="h-4 w-4" />
-                )}
-              </Button>
+                <SelectTrigger className="w-full sm:w-[180px]">
+                  <SelectValue placeholder="Selecione o mês" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Array.from({ length: 12 }, (_, i) => {
+                    const date = new Date();
+                    date.setMonth(date.getMonth() - i);
+                    const monthYear = format(date, "yyyy-MM");
+                    return (
+                      <SelectItem key={monthYear} value={monthYear}>
+                        {format(date, "MMMM yyyy", { locale: ptBR }).replace(
+                          /^\w/,
+                          (c) => c.toUpperCase(),
+                        )}
+                      </SelectItem>
+                    );
+                  }).filter((_, i, arr) => {
+                    // Remove duplicatas verificando se é a primeira ocorrência do mês/ano
+                    const monthYear = arr[i].props.value;
+                    return (
+                      arr.findIndex(
+                        (item) => item.props.value === monthYear,
+                      ) === i
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            <div className="flex gap-2">
+                <DateRangePicker
+                  value={dateRange}
+                  onChange={setDateRange}
+                  className="w-full sm:w-[300px]"
+                />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      disabled={isOrdersLoading}
+                      className="shrink-0 h-10 w-10"
+                    >
+                      {isOrdersLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Download className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem
+                      onClick={handleDownloadPDF}
+                      className="flex items-center gap-2"
+                    >
+                      <FileIcon className="h-4 w-4 text-red-500" />
+                      <span>Exportar para PDF</span>
+                    </DropdownMenuItem>
+                    
+                      {(subscription?.plan === "pro" || subscription?.isTrial) && (
+                    <DropdownMenuItem
+                      onClick={handleExportCSV}
+                      className="flex items-center gap-2"
+                    >
+                      <Sheet className="h-4 w-4 text-green-500" />
+                      <span>Exportar para CSV</span>
+                    </DropdownMenuItem>
+
+                      ) }
+                      {(subscription?.plan === "pro" || subscription?.isTrial) && (
+                    <DropdownMenuItem
+                    onClick={handleExportXLSX}
+                    className="flex items-center gap-2"
+                  >
+                    <FileText className="h-4 w-4 text-blue-500" />
+                    <span>Exportar para Excel</span>
+                  </DropdownMenuItem>
+                      ) }
+
+
+
+                  </DropdownMenuContent>
+                </DropdownMenu>
             </div>
           </div>
         </div>
