@@ -86,11 +86,11 @@ const mainNavItems: NavItem[] = [
     href: "/reminders",
     icon: NotepadText,
   },
-  // {
-  //   title: "Calendário",
-  //   href: "/calendar",
-  //   icon: Calendar,
-  // },
+  {
+    title: "Calendário",
+    href: "/calendar",
+    icon: Calendar,
+  },
 ];
 
 interface NavButtonProps {

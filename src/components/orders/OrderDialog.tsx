@@ -366,7 +366,7 @@ const OrderDialog = ({
                 control={form.control}
                 name="dueDate"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="w-full">
                     <FormLabel>Data de Entrega *</FormLabel>
                     <FormControl>
                       <Input
@@ -384,7 +384,7 @@ const OrderDialog = ({
                 control={form.control}
                 name="dueTime"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="w-full">
                     <FormLabel>Hora de Entrega *</FormLabel>
                     <FormControl>
                       <Input {...field} type="time" />

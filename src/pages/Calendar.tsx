@@ -31,7 +31,7 @@ const getStatusClasses = (status: string | null, dueDate: string) => {
     effectiveStatus === "done" &&
       "bg-blue-100/80 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200 hover:bg-blue-200 dark:hover:bg-blue-900/50",
     effectiveStatus === "canceled" &&
-      "bg-red-100/80 text-red-800 dark:bg-red-900/30 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-900/50",
+      "bg-gray-100/80 text-stone-800 dark:bg-gray-900/30 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-900/50",
   );
 };
 
@@ -203,9 +203,19 @@ const CalendarPage = () => {
                 const dueDate = eventInfo.event.extendedProps.dueDate;
 
                 return (
-                  <div className={getStatusClasses(status, dueDate)}>
-                    <div className="font-medium truncate">
-                      {eventInfo.event.title}
+                  <div className={`${getStatusClasses(status, dueDate)} px-2`}>
+                    <div className="flex flex-row items-center justify-between">
+                      <div className="font-medium truncate max-w-24">
+                        {eventInfo.event.title}
+                      </div>
+                      <div className="font-medium truncate">
+                        {status === "overdue" && "Atrasado"}
+                        {status === "pending" && "Pendente"}
+                        {status === "production" && "Produção"}
+                        {status === "done" && "Concluído"}
+                        {status === "delivered" && "Entregue"}
+                        {status === "canceled" && "Cancelado"}
+                      </div>
                     </div>
                     <div className="text-xs">
                       R$ {eventInfo.event.extendedProps.price.replace(".", ",")}
