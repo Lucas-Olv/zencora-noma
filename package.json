@@ -11,6 +11,9 @@
     "preview": "vite preview",
     "format": "prettier --write src"
   },
+  "engines": {
+    "node": "22.x"
+  },
   "dependencies": {
     "@fullcalendar/core": "^6.1.17",
     "@fullcalendar/daygrid": "^6.1.17",
