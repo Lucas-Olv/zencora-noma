@@ -30,7 +30,7 @@ import { useSettingsStorage } from "@/storage/settings";
 import { DeliveryDialog } from "./DeliveryDialog";
 import { useAnalytics } from "@/contexts/AnalyticsProviderContext";
 
-const Delivery = () => {
+const DeliveryView = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -223,50 +223,11 @@ const Delivery = () => {
   );
 
   useEffect(() => {
-    document.title = "Entregas | Zencora Noma";
     if (ordersData) {
       const fetchedOrders = ordersData.data as Order[];
       setOrders(fetchedOrders);
     }
   }, [ordersData, isOrdersLoading]);
-
-  const handleStatusChange = async (
-    id: string,
-    targetStatus: "pending" | "production" | "done",
-  ) => {
-    updateOrder(
-      {
-        orderId: id,
-        orderStatus: targetStatus,
-      },
-      {
-        onSuccess: () => {
-          toast({
-            title: "Status atualizado!",
-            description: `A encomenda foi marcada como ${targetStatus === "pending" ? "pendente" : targetStatus === "production" ? "Produção" : "concluída"}.`,
-          });
-          setOrders((prevOrders) =>
-            prevOrders.map((order) =>
-              order.id === id ? { ...order, status: targetStatus } : order,
-            ),
-          );
-        },
-      },
-    );
-  };
-
-  const handleNewOrder = () => {
-    setDialogMode("create");
-    setDialogOrderId(undefined);
-    setDialogOpen(true);
-  };
-
-  const handleEditOrder = (order: Order) => {
-    setDialogMode("edit");
-    setDialogOrderId(order.id);
-    setSelectedOrder(order);
-    setDialogOpen(true);
-  };
 
   const handleListUpdate = async (updatedOrder: Order) => {
     refetch();
@@ -388,7 +349,7 @@ const Delivery = () => {
                           </TableCell>
                           <TableCell>
                             {order.amountPaid
-                              ? `R$ ${order.amountPaid.replace(".", ",")}`
+                              ? `R$ ${parseFloat(order.amountPaid).toFixed(2).replace(".", ",")}`
                               : "-"}
                           </TableCell>
                           <TableCell>
@@ -458,7 +419,7 @@ const Delivery = () => {
                         <span className="text-sm">
                           <strong>Quantia Paga:</strong>{" "}
                           {order.amountPaid
-                            ? `R$ ${order.amountPaid.replace(".", ",")}`
+                            ? `R$ ${parseFloat(order.amountPaid).toFixed(2).replace(".", ",")}`
                             : "-"}
                         </span>
                         <span className="text-sm">
@@ -535,4 +496,4 @@ const Delivery = () => {
   );
 };
 
-export default Delivery;
+export default DeliveryView;

@@ -24,6 +24,7 @@ import Landing from "./pages/Landing";
 import About from "./pages/About";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
+import Delivery from "./pages/Delivery";
 import Contact from "./pages/Contact";
 import { SubscriptionExpired } from "./pages/SubscriptionExpired";
 import { SubscriptionSuccess } from "./pages/SubscriptionSuccess";
@@ -38,7 +39,6 @@ import { useSessionStorage } from "./storage/session";
 import { useTenantStorage } from "./storage/tenant";
 import { useSettingsStorage } from "./storage/settings";
 import PasswordVerification from "./components/auth/PasswordVerification";
-import Delivery from "./components/delivery/Delivery";
 import { AnalyticsProvider } from "./contexts/AnalyticsProviderContext";
 const queryClient = new QueryClient();
 
