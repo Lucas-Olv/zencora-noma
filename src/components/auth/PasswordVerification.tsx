@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
-import { postCoreApi, postCoreApiPublic } from "@/lib/apiHelpers";
+import { postCoreApi } from "@/lib/apiHelpers";
 
 export default function PasswordVerification() {
   const navigate = useNavigate();

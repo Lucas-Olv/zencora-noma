@@ -8,6 +8,7 @@ import { useSettingsStorage } from "@/storage/settings";
 import { initializeApp } from "firebase/app";
 import { Analytics, getAnalytics } from "firebase/analytics";
 import { postNomaApi } from "@/lib/apiHelpers";
+import dayjs from "dayjs";
 
 interface WorkspaceContextType {
   loadWorkspace: () => Promise<void>;
@@ -61,8 +62,10 @@ export const WorkspaceProvider = ({
     const tenant = useTenantStorage.getState().tenant;
     const settings = useSettingsStorage.getState().settings;
 
+    const lastUpdated = localStorage.getItem("last_updated");
+    const lastUpdatedDifference = dayjs(lastUpdated).diff(dayjs(), "h");
     if (session) {
-      if (!subscription || !tenant || !settings) {
+      if (!subscription || !tenant || !settings || lastUpdatedDifference >= 1) {
         const workspaceData = await postNomaApi("/api/noma/v1/workspace/init");
         if (workspaceData?.data) {
           await db.init();
@@ -77,6 +80,7 @@ export const WorkspaceProvider = ({
             .getState()
             .setSettings(workspaceData.data.settings);
         }
+        localStorage.setItem("last_updated", dayjs().toISOString());
       }
     }
     setIsLoading(false);

@@ -1,13 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { useEffect, useRef } from "react";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { useResizeAnimation } from "@/hooks/useResizeAnimation";
 import { Link } from "react-router-dom";
 
 export function Cta() {
-  const isMobile = useIsMobile();
   const sectionRef = useRef<HTMLElement>(null);
-  const resizeRef = useResizeAnimation();
 
   useEffect(() => {
     const observer = new IntersectionObserver(

@@ -1,13 +1,7 @@
-import { Button } from "@/components/ui/button";
 import { useEffect, useRef } from "react";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { useResizeAnimation } from "@/hooks/useResizeAnimation";
 
 export function Faq() {
-  const isMobile = useIsMobile();
   const sectionRef = useRef<HTMLElement>(null);
-  const resizeRef = useResizeAnimation();
-
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {

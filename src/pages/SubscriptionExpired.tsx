@@ -2,7 +2,7 @@ import { PricingSection } from "@/components/layout/PricingSection";
 import { AlertCircle, Clock, CreditCard, Zap } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import {
   Card,
   CardContent,

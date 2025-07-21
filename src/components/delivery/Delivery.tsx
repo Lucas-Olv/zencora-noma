@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -13,17 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import {
-  CheckCircle2,
-  Eye,
-  Plus,
-  Search,
-  X,
-  Loader2,
-  Package,
-  Pencil,
-  Printer,
-} from "lucide-react";
+import { Search, X, Loader2, Package } from "lucide-react";
 import {
   formatDate,
   usePrint,
@@ -50,10 +40,8 @@ const Delivery = () => {
   const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
   const [dialogOrderId, setDialogOrderId] = useState<string | undefined>();
   const printRef = useRef<HTMLDivElement>(null);
-  const { settings } = useSettingsStorage();
   const [deliveryDialogOpen, setDeliveryDialogOpen] = useState(false);
   const [deliveryOrder, setDeliveryOrder] = useState<Order | null>(null);
-  const [isDelivering, setIsDelivering] = useState(false);
   const { trackEvent } = useAnalytics();
 
   const {

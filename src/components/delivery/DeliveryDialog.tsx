@@ -14,10 +14,8 @@ import {
   CreditCardIcon,
   ReceiptText,
   CircleDollarSign,
-  CheckCircle,
   Calendar,
   User,
-  ArrowLeft,
 } from "lucide-react";
 
 interface DeliveryDialogProps {

@@ -1,6 +1,5 @@
 import { format, addDays, isSameDay, isAfter, isBefore } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { Calendar, Printer } from "lucide-react";
+import { Calendar } from "lucide-react";
 import { cn, formatDate, parseDate, getOrderCode } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";

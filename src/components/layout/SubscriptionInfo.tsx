@@ -1,6 +1,5 @@
 import { InfoIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -10,7 +9,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import dayjs from "dayjs";
 import { useSubscriptionStorage } from "@/storage/subscription";
-import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 
 const SubscriptionInfo = () => {
   const { subscription } = useSubscriptionStorage();

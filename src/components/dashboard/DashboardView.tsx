@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import StatsCard from "@/components/dashboard/StatsCard";
 import PerformanceMetrics from "@/components/dashboard/PerformanceMetrics";
 import DeliveryCalendar from "@/components/dashboard/DeliveryCalendar";

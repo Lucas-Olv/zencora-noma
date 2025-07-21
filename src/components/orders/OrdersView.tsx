@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,23 +23,7 @@ import {
   Package,
   Pencil,
   Printer,
-  Clock,
-  SquareCheckBig,
-  FileText,
-  ClockAlert,
-  ConciergeBell,
-  NotebookText,
-  FileClock,
-  ClockArrowUp,
-  List,
-  ListTodo,
-  LayoutList,
-  Square,
   StretchVertical,
-  PackageX,
-  Ban,
-  Play,
-  CirclePlay,
   CheckIcon,
 } from "lucide-react";
 import {

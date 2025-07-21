@@ -1,4 +1,4 @@
-import { Menu, InfoIcon } from "lucide-react";
+import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ThemeToggle from "./ThemeToggle";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -30,14 +30,6 @@ const Navbar = ({ toggleSidebar }: NavbarProps) => {
         <div className="flex items-center justify-center gap-2">
           <SubscriptionInfo />
           <ThemeToggle />
-          {/* <Button variant="ghost" size="icon" className="rounded-full relative">
-            <Bell className="h-5 w-5" />
-            <span className="absolute top-1 right-2 h-2 w-2 rounded-full bg-complementary"></span>
-          </Button>
-          <Avatar className="h-8 w-8 cursor-pointer">
-            <AvatarImage src="" alt="User" />
-            <AvatarFallback className="bg-primary text-primary-foreground">ZN</AvatarFallback>
-          </Avatar> */}
         </div>
       </div>
     </header>

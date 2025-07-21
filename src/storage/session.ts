@@ -2,9 +2,6 @@ import { create } from "zustand";
 import { db } from "@/lib/db";
 import { verifyToken } from "@/lib/jwt";
 import { Session, User } from "@/lib/types";
-import { useSubscriptionStorage } from "./subscription";
-import { useTenantStorage } from "./tenant";
-import { useSettingsStorage } from "./settings";
 import { cleanWorkspaceData } from "@/lib/utils";
 
 interface SessionState {

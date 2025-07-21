@@ -1,26 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { io, Socket } from "socket.io-client";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Check,
-  Clock,
-  FileText,
-  Loader2,
-  Pencil,
-  Printer,
-  RefreshCw,
-} from "lucide-react";
+import { FileText, Loader2, Printer, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { LoadingState } from "@/components/ui/loading-state";
 import {
   cn,
@@ -31,7 +15,6 @@ import {
   getStatusDisplay,
 } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
-import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { SettingsGate } from "../settings/SettingsGate";
 import { useTenantStorage } from "@/storage/tenant";

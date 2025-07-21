@@ -21,23 +21,19 @@ import {
   LineChart,
   Line,
   XAxis,
-  YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
   BarChart,
   Bar,
-  Legend,
 } from "recharts";
-import { cn, formatDate, getOrderCode, parseDate } from "@/lib/utils";
+import { formatDate, parseDate } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
   format,
   startOfMonth,
   endOfMonth,
   eachDayOfInterval,
-  parseISO,
-  isWithinInterval,
   isSameDay,
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -45,9 +41,6 @@ import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { DateRange } from "react-day-picker";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { Badge } from "@/components/ui/badge";
-import { report } from "process";
-import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import {
   Select,
   SelectContent,
@@ -57,7 +50,6 @@ import {
 } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
 import ReportOrdersList from "./ReportOrdersList";
-import { LoadingState } from "@/components/ui/loading-state";
 import { useTenantStorage } from "@/storage/tenant";
 import { Order } from "@/lib/types";
 import { getNomaApi } from "@/lib/apiHelpers";

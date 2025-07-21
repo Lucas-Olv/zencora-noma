@@ -1,9 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Check, Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
-import { useWorkspaceContext } from "@/contexts/WorkspaceContext";
 import { useSubscriptionHandler } from "@/hooks/use-subscription-handler";
 import { useTenantStorage } from "@/storage/tenant";
 

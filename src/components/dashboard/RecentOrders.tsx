@@ -1,8 +1,6 @@
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { Calendar, FileText } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
-import { cn, formatDate, parseDate, getOrderCode } from "@/lib/utils";
+import { FileText } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { cn, formatDate, getOrderCode } from "@/lib/utils";
 import {
   Card,
   CardContent,

@@ -21,6 +21,7 @@ export type Subscription = {
   paymentFailedAt?: string;
   productId?: string;
   userId?: string;
+  lastUpdated?: string;
 };
 
 export type User = {
