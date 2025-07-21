@@ -75,10 +75,6 @@ const RemindersView = () => {
       }),
     onSuccess: () => {
       refetchReminders();
-      toast({
-        title: "Lembrete excluído com sucesso!",
-      });
-
       trackEvent("reminder_deleted");
     },
     onError: (error) => {
@@ -106,10 +102,6 @@ const RemindersView = () => {
       ),
     onSuccess: () => {
       refetchReminders();
-      toast({
-        title: "Lembrete criado com sucesso!",
-      });
-
       trackEvent("reminder_created");
     },
     onError: (error) => {
@@ -137,10 +129,6 @@ const RemindersView = () => {
       ),
     onSuccess: () => {
       refetchReminders();
-      toast({
-        title: "Lembrete atualizado com sucesso!",
-      });
-
       trackEvent("reminder_updated");
     },
     onError: (error) => {
@@ -219,10 +207,6 @@ const RemindersView = () => {
       {
         onSuccess: () => {
           refetchReminders();
-          toast({
-            title: "Status do lembrete atualizado com sucesso!",
-            description: `O lembrete foi marcado como ${!reminder.isDone ? "concluído" : "pendente"}`,
-          });
           trackEvent("reminder_status_updated", {
             status: !reminder.isDone ? "done" : "pending",
           });

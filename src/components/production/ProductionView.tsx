@@ -526,10 +526,6 @@ export function ProductionView() {
       },
       {
         onSuccess: () => {
-          toast({
-            title: "Status atualizado!",
-            description: `A encomenda foi marcada como ${status === "pending" ? "em produção" : "concluída"}.`,
-          });
           trackEvent("order_status_updated", {
             status: status === "pending" ? "production" : "done",
           });

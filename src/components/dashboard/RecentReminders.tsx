@@ -119,10 +119,6 @@ function RecentReminders({
           trackEvent("dashboard_reminder_status_updated", {
             status: reminder.isDone ? "done" : "pending",
           });
-          toast({
-            title: "Status do lembrete atualizado com sucesso!",
-            description: `O lembrete foi marcado como ${!reminder.isDone ? "concluído" : "pendente"}`,
-          });
         },
       },
     );

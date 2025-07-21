@@ -100,7 +100,7 @@ const MonthlyReports = () => {
   const isMobile = useIsMobile();
   const { tenant } = useTenantStorage();
   const navigate = useNavigate();
-  const { subscription } = useSubscriptionStorage()
+  const { subscription } = useSubscriptionStorage();
 
   const formatCurrency = (value: number) => {
     return value.toLocaleString("pt-BR", {
@@ -761,77 +761,72 @@ const MonthlyReports = () => {
       <div className="flex flex-col w-full gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <div className="flex flex-col sm:flex-row gap-4">
-              <Select
-                value={dateRange?.from ? format(dateRange.from, "yyyy-MM") : ""}
-                onValueChange={(value) => {
-                  const [year, month] = value.split("-");
-                  const start = new Date(
-                    parseInt(year),
-                    parseInt(month) - 1,
-                    1,
-                  );
-                  const end = new Date(parseInt(year), parseInt(month), 0);
-                  setDateRange({ from: start, to: end });
-                }}
-              >
-                <SelectTrigger className="w-full sm:w-[180px]">
-                  <SelectValue placeholder="Selecione o mês" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Array.from({ length: 12 }, (_, i) => {
-                    const date = new Date();
-                    date.setMonth(date.getMonth() - i);
-                    const monthYear = format(date, "yyyy-MM");
-                    return (
-                      <SelectItem key={monthYear} value={monthYear}>
-                        {format(date, "MMMM yyyy", { locale: ptBR }).replace(
-                          /^\w/,
-                          (c) => c.toUpperCase(),
-                        )}
-                      </SelectItem>
-                    );
-                  }).filter((_, i, arr) => {
-                    // Remove duplicatas verificando se é a primeira ocorrência do mês/ano
-                    const monthYear = arr[i].props.value;
-                    return (
-                      arr.findIndex(
-                        (item) => item.props.value === monthYear,
-                      ) === i
-                    );
-                  })}
-                </SelectContent>
-              </Select>
-            <div className="flex gap-2">
-                <DateRangePicker
-                  value={dateRange}
-                  onChange={setDateRange}
-                  className="w-full sm:w-[300px]"
-                />
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      disabled={isOrdersLoading}
-                      className="shrink-0 h-10 w-10"
-                    >
-                      {isOrdersLoading ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Download className="h-4 w-4" />
+            <Select
+              value={dateRange?.from ? format(dateRange.from, "yyyy-MM") : ""}
+              onValueChange={(value) => {
+                const [year, month] = value.split("-");
+                const start = new Date(parseInt(year), parseInt(month) - 1, 1);
+                const end = new Date(parseInt(year), parseInt(month), 0);
+                setDateRange({ from: start, to: end });
+              }}
+            >
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="Selecione o mês" />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 12 }, (_, i) => {
+                  const date = new Date();
+                  date.setMonth(date.getMonth() - i);
+                  const monthYear = format(date, "yyyy-MM");
+                  return (
+                    <SelectItem key={monthYear} value={monthYear}>
+                      {format(date, "MMMM yyyy", { locale: ptBR }).replace(
+                        /^\w/,
+                        (c) => c.toUpperCase(),
                       )}
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                      onClick={handleDownloadPDF}
-                      className="flex items-center gap-2"
-                    >
-                      <FileIcon className="h-4 w-4 text-red-500" />
-                      <span>Exportar para PDF</span>
-                    </DropdownMenuItem>
-                    
-                      {(subscription?.plan === "pro" || subscription?.isTrial) && (
+                    </SelectItem>
+                  );
+                }).filter((_, i, arr) => {
+                  // Remove duplicatas verificando se é a primeira ocorrência do mês/ano
+                  const monthYear = arr[i].props.value;
+                  return (
+                    arr.findIndex((item) => item.props.value === monthYear) ===
+                    i
+                  );
+                })}
+              </SelectContent>
+            </Select>
+            <div className="flex gap-2">
+              <DateRangePicker
+                value={dateRange}
+                onChange={setDateRange}
+                className="w-full sm:w-[300px]"
+              />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    disabled={isOrdersLoading}
+                    className="shrink-0 h-10 w-10"
+                  >
+                    {isOrdersLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Download className="h-4 w-4" />
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onClick={handleDownloadPDF}
+                    className="flex items-center gap-2"
+                  >
+                    <FileIcon className="h-4 w-4 text-red-500" />
+                    <span>Exportar para PDF</span>
+                  </DropdownMenuItem>
+
+                  {(subscription?.plan === "pro" || subscription?.isTrial) && (
                     <DropdownMenuItem
                       onClick={handleExportCSV}
                       className="flex items-center gap-2"
@@ -839,22 +834,18 @@ const MonthlyReports = () => {
                       <Sheet className="h-4 w-4 text-green-500" />
                       <span>Exportar para CSV</span>
                     </DropdownMenuItem>
-
-                      ) }
-                      {(subscription?.plan === "pro" || subscription?.isTrial) && (
+                  )}
+                  {(subscription?.plan === "pro" || subscription?.isTrial) && (
                     <DropdownMenuItem
-                    onClick={handleExportXLSX}
-                    className="flex items-center gap-2"
-                  >
-                    <FileText className="h-4 w-4 text-blue-500" />
-                    <span>Exportar para Excel</span>
-                  </DropdownMenuItem>
-                      ) }
-
-
-
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                      onClick={handleExportXLSX}
+                      className="flex items-center gap-2"
+                    >
+                      <FileText className="h-4 w-4 text-blue-500" />
+                      <span>Exportar para Excel</span>
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>

@@ -44,6 +44,11 @@ const getPaymentMethodLabel = (method?: string) => {
   return "Não informado";
 };
 
+const getRemainingPaymentAmount = (price: string, amountPaid: string) => {
+  const result = parseFloat(price) - parseFloat(amountPaid);
+  return result.toFixed(2).replace(".", ",");
+};
+
 const AutoResizeTextarea = ({
   value,
   className,
@@ -91,18 +96,18 @@ export const DeliveryDialog: React.FC<DeliveryDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <User className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <span className="text-sm text-muted-foreground">Cliente</span>
-                <div className="font-medium truncate max-w-[70dvw] md:max-w-[8dvw]">
-                  {order.clientName}
-                </div>
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <User className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <span className="text-sm text-muted-foreground">Cliente</span>
+              <div className="font-medium truncate max-w-[70dvw] md:max-w-[8dvw]">
+                {order.clientName}
               </div>
             </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-primary/10 rounded-lg">
                 <Calendar className="h-5 w-5 text-primary" />
@@ -112,32 +117,6 @@ export const DeliveryDialog: React.FC<DeliveryDialogProps> = ({
                   Data de Entrega
                 </span>
                 <div>{formatDate(order.dueDate)}</div>
-              </div>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-100/80 dark:bg-green-900/30 rounded-lg">
-                <CircleDollarSign className="h-5 w-5 text-green-600 dark:text-green-400" />
-              </div>
-              <div>
-                <span className="text-sm text-muted-foreground">Valor</span>
-                <div>R$ {order.price.replace(".", ",")}</div>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100/80 dark:bg-blue-900/30 rounded-lg">
-                <CircleDollarSign className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-              </div>
-              <div>
-                <span className="text-sm text-muted-foreground">
-                  Quantia Paga
-                </span>
-                <div>
-                  {order.amountPaid
-                    ? `R$ ${order.amountPaid.replace(".", ",")}`
-                    : "-"}
-                </div>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -151,6 +130,55 @@ export const DeliveryDialog: React.FC<DeliveryDialogProps> = ({
                 <div>{getPaymentStatusLabel(order.paymentStatus)}</div>
               </div>
             </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-green-100/80 dark:bg-green-900/30 rounded-lg">
+                <CircleDollarSign className="h-5 w-5 text-green-600 dark:text-green-400" />
+              </div>
+              <div>
+                <span className="text-sm text-muted-foreground">Valor</span>
+                <div>
+                  R$ {parseFloat(order.price).toFixed(2).replace(".", ",")}
+                </div>
+              </div>
+            </div>
+
+            {order.paymentStatus === "partially_paid" && (
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-100/80 dark:bg-blue-900/30 rounded-lg">
+                  <CircleDollarSign className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <span className="text-sm text-muted-foreground">
+                    Quantia Paga
+                  </span>
+                  <div>
+                    {order.amountPaid
+                      ? `R$ ${parseFloat(order.amountPaid).toFixed(2).replace(".", ",")}`
+                      : "-"}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {order.paymentStatus === "partially_paid" && (
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-orange-100/80 dark:bg-orange-900/30 rounded-lg">
+                  <CircleDollarSign className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                </div>
+                <div>
+                  <span className="text-sm text-muted-foreground">
+                    Quantia Restante
+                  </span>
+                  <div>
+                    {order.amountPaid
+                      ? `R$ ${getRemainingPaymentAmount(order.price, order.amountPaid)}`
+                      : "-"}
+                  </div>
+                </div>
+              </div>
+            )}
             <div className="flex items-center gap-3">
               <div className="p-2 bg-destructive/10 rounded-lg">
                 <CreditCardIcon className="h-5 w-5 text-destructive" />

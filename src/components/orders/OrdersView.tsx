@@ -230,10 +230,6 @@ const OrdersView = () => {
       },
       {
         onSuccess: () => {
-          toast({
-            title: "Status atualizado!",
-            description: `A encomenda foi marcada como ${targetStatus === "pending" ? "pendente" : targetStatus === "production" ? "produção" : targetStatus === "canceled" ? "cancelado" : "concluída"}.`,
-          });
           setOrders((prevOrders) =>
             prevOrders.map((order) =>
               order.id === id ? { ...order, status: targetStatus } : order,

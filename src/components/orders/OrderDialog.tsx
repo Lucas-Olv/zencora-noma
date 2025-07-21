@@ -135,12 +135,6 @@ const OrderDialog = ({
     onSuccess: () => {
       onSuccess?.(createOrderData);
       onOpenChange(false);
-      toast({
-        title: "Encomenda criada com sucesso",
-        description:
-          "Sua encomenda foi criada com sucesso! Você pode visualizá-la na lista de encomendas.",
-      });
-
       trackEvent("order_created");
     },
     onError: (error) => {
@@ -178,9 +172,6 @@ const OrderDialog = ({
     onSuccess: () => {
       onSuccess?.(updateOrderData);
       onOpenChange(false);
-      toast({
-        title: "Encomenda atualizada com sucesso",
-      });
       trackEvent("order_updated");
     },
     onError: (error) => {
@@ -321,7 +312,7 @@ const OrderDialog = ({
               name="clientName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nome do Cliente</FormLabel>
+                  <FormLabel>Nome do Cliente *</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
@@ -357,7 +348,7 @@ const OrderDialog = ({
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Descrição</FormLabel>
+                  <FormLabel>Descrição *</FormLabel>
                   <FormControl>
                     <Textarea
                       rows={isMobile ? 2 : 6}
@@ -376,7 +367,7 @@ const OrderDialog = ({
                 name="dueDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Data de Entrega</FormLabel>
+                    <FormLabel>Data de Entrega *</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
@@ -394,7 +385,7 @@ const OrderDialog = ({
                 name="dueTime"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Hora de Entrega</FormLabel>
+                    <FormLabel>Hora de Entrega *</FormLabel>
                     <FormControl>
                       <Input {...field} type="time" />
                     </FormControl>
@@ -409,7 +400,7 @@ const OrderDialog = ({
               name="price"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Preço (R$)</FormLabel>
+                  <FormLabel>Preço (R$) *</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
@@ -440,7 +431,7 @@ const OrderDialog = ({
                   name="paymentStatus"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Estado do Pagamento</FormLabel>
+                      <FormLabel>Pagamento *</FormLabel>
                       <FormControl>
                         <Select
                           value={field.value}

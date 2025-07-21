@@ -37,9 +37,6 @@ export default function SettingsView() {
       ),
     onSuccess: async (updateSettingsData) => {
       await setSettings(updateSettingsData.data);
-      toast({
-        title: "Configurações atualizadas com sucesso!",
-      });
     },
     onError: (error) => {
       toast({

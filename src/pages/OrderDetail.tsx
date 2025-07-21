@@ -178,10 +178,6 @@ const OrderDetail = () => {
         },
       ),
     onSuccess: (_data, variables) => {
-      toast({
-        title: "Encomenda atualizada com sucesso",
-        description: "O status da encomenda foi atualizado com sucesso!",
-      });
       setOrder((prevOrder) =>
         prevOrder ? { ...prevOrder, status: variables.status } : prevOrder,
       );
@@ -210,11 +206,6 @@ const OrderDetail = () => {
         params: { tenantId: tenant?.id, orderId: id },
       }),
     onSuccess: () => {
-      toast({
-        title: "Encomenda excluída com sucesso",
-        description: "A encomenda foi excluÍda com sucesso!",
-      });
-
       trackEvent("order_deleted");
       navigate("/orders");
     },
