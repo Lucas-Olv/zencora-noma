@@ -28,7 +28,11 @@ const SubscriptionInfo = () => {
   // Verifica se a assinatura está ativa e válida
   const isActive =
     subscription?.status === "active" &&
-    dayjs(subscription?.expiresAt).isAfter(dayjs()) &&
+    (dayjs(subscription?.expiresAt).isAfter(dayjs()) ||
+      dayjs(subscription?.gracePeriodUntil).isAfter(dayjs()));
+  const isInGracePeriod =
+    subscription?.status === "active" &&
+    dayjs(subscription?.expiresAt).isBefore(dayjs()) &&
     dayjs(subscription?.gracePeriodUntil).isAfter(dayjs());
   // Verifica se período de teste terminou
   const isTrialExpired =
@@ -43,19 +47,21 @@ const SubscriptionInfo = () => {
     : !isActive
       ? "Sua assinatura expirou"
       : isPaymentFailed
-        ? "Ocorreu um erro no pagamento, por favor, verifique seus meios de pagamento"
+        ? "Ocorreu um erro no pagamento"
         : isActive && isTrial
           ? "Você está em período de teste"
-          : isAboutToExpire
-            ? "Sua assinatura irá expirar em breve"
-            : isAboutToRenew
-              ? "Sua assinatura será renovada em breve"
-              : isActive
-                ? "Sua assinatura está ativa"
-                : "";
+          : isInGracePeriod
+            ? "A renovação não foi concluída"
+            : isActive
+              ? "Sua assinatura está ativa"
+              : isAboutToExpire
+                ? "Sua assinatura irá expirar em breve"
+                : isAboutToRenew
+                  ? "Sua assinatura será renovada em breve"
+                  : "";
 
   const headerSubscriptionStatusWarningColor =
-    isTrialExpired || !isActive || isPaymentFailed
+    isTrialExpired || !isActive || isPaymentFailed || isInGracePeriod
       ? "text-red-500"
       : isTrial
         ? "text-yellow-500"

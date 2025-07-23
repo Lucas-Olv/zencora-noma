@@ -14,10 +14,12 @@ const ProtectedRoute = ({ children }: { children: ReactNode }) => {
 
   const isActive =
     subscription?.status === "active" &&
-    dayjs(subscription?.expiresAt).isAfter(dayjs()) &&
-    dayjs(subscription?.gracePeriodUntil).isAfter(dayjs());
+    (dayjs(subscription?.expiresAt).isAfter(dayjs()) ||
+      dayjs(subscription?.gracePeriodUntil).isAfter(dayjs()));
 
   useEffect(() => {
+    console.log(dayjs(subscription?.gracePeriodUntil).isAfter(dayjs()));
+    console.log(dayjs(subscription?.expiresAt).isAfter(dayjs()));
     if (location.pathname === "/login" && session) {
       navigate("/", { replace: true });
     }

@@ -227,8 +227,8 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
   const isTrial = !!subscription?.isTrial;
   const isActive =
     subscription?.status === "active" &&
-    dayjs(subscription?.expiresAt).isAfter(dayjs()) &&
-    dayjs(subscription?.gracePeriodUntil).isAfter(dayjs());
+    (dayjs(subscription?.expiresAt).isAfter(dayjs()) ||
+      dayjs(subscription?.gracePeriodUntil).isAfter(dayjs()));
 
   // Se o app não estiver pronto, mostra um loader
   if (isLoading) {
