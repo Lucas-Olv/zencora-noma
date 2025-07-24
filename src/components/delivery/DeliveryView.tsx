@@ -132,11 +132,6 @@ const DeliveryView = () => {
         },
       ),
     onSuccess: () => {
-      toast({
-        title: "Encomenda marcada como entregue!",
-        description:
-          "A encomenda foi finalizada e não poderá mais ser alterada.",
-      });
       setDeliveryDialogOpen(false);
       setDeliveryOrder(null);
       refetch();
