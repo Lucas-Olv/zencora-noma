@@ -81,7 +81,18 @@ export const useSessionStorage = create<SessionState>((set) => ({
           productId: payload.productId as string,
         };
 
-        await useSessionStorage.getState().setSession(session, newAccessToken);
+        await db.saveSessionData(session);
+        set({
+          token: payload.token as string,
+          user: {
+            id: payload.sub,
+            email: payload.email as string,
+            name: payload.name as string,
+            sessionId: payload.sessionId as string,
+          },
+          session: session,
+          isAuthenticated: true,
+        });
       } catch (error) {
         await cleanWorkspaceData();
       }
