@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { verifyToken } from "@/lib/jwt";
 import { Session, User } from "@/lib/types";
 import { cleanWorkspaceData } from "@/lib/utils";
-import { postCoreApi } from "@/lib/apiHelpers";
+import { postCoreApiPublic } from "@/lib/apiHelpers";
 
 interface SessionState {
   token: string | null;
@@ -59,7 +59,7 @@ export const useSessionStorage = create<SessionState>((set) => ({
       });
     } catch (error) {
       try {
-        const { refreshData } = await postCoreApi(
+        const { refreshData } = await postCoreApiPublic(
           "/api/core/v1/refresh",
           {},
           {
