@@ -80,8 +80,6 @@ export const useSessionStorage = create<SessionState>((set) => ({
           token: newAccessToken,
           productId: payload.productId as string,
         };
-
-        await db.saveSessionData(session);
         set({
           token: payload.token as string,
           user: {
@@ -93,6 +91,7 @@ export const useSessionStorage = create<SessionState>((set) => ({
           session: session,
           isAuthenticated: true,
         });
+        await db.updateSessionData(session);
       } catch (error) {
         await cleanWorkspaceData();
       }
