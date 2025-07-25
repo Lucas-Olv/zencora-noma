@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { verifyToken } from "@/lib/jwt";
 import { Session, User } from "@/lib/types";
 import { cleanWorkspaceData } from "@/lib/utils";
+import { postCoreApi } from "@/lib/apiHelpers";
 
 interface SessionState {
   token: string | null;
@@ -57,7 +58,33 @@ export const useSessionStorage = create<SessionState>((set) => ({
         isAuthenticated: true,
       });
     } catch (error) {
-      await cleanWorkspaceData();
+      try {
+        const { refreshData } = await postCoreApi(
+          "/api/core/v1/refresh",
+          {},
+          {
+            withCredentials: true,
+          },
+        );
+
+        const newAccessToken = refreshData.data.accessToken;
+        const payload = await verifyToken(newAccessToken);
+        const session: Session = {
+          id: payload.sessionId as string,
+          user: {
+            id: payload.sub as string,
+            name: payload.name as string,
+            email: payload.email as string,
+            sessionId: payload.sessionId as string,
+          },
+          token: newAccessToken,
+          productId: payload.productId as string,
+        };
+
+        await useSessionStorage.getState().setSession(session, newAccessToken);
+      } catch (error) {
+        await cleanWorkspaceData();
+      }
     }
   },
 
