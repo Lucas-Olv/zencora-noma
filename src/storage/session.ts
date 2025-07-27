@@ -1,9 +1,7 @@
 import { create } from "zustand";
 import { db } from "@/lib/db";
-import { verifyToken } from "@/lib/jwt";
 import { Session, User } from "@/lib/types";
 import { cleanWorkspaceData } from "@/lib/utils";
-import { postCoreApi, postCoreApiPublic } from "@/lib/apiHelpers";
 
 interface SessionState {
   token: string | null;
