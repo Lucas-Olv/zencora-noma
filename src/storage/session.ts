@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { verifyToken } from "@/lib/jwt";
 import { Session, User } from "@/lib/types";
 import { cleanWorkspaceData } from "@/lib/utils";
-import { postCoreApiPublic } from "@/lib/apiHelpers";
+import { postCoreApi, postCoreApiPublic } from "@/lib/apiHelpers";
 
 interface SessionState {
   token: string | null;
@@ -34,67 +34,16 @@ export const useSessionStorage = create<SessionState>((set) => ({
   restoreSession: async () => {
     try {
       const sessionData = await db.getSessionData();
-      if (!sessionData?.token) return;
-      const payload = await verifyToken(sessionData.token);
+      if (!sessionData) throw Error('Invalid session or session not found');
       set({
         token: sessionData.token,
-        user: {
-          id: payload.sub,
-          email: payload.email as string,
-          name: payload.name as string,
-          sessionId: payload.sessionId as string,
-        },
-        session: {
-          id: payload.sessionId as string,
-          user: {
-            id: payload.sub,
-            email: payload.email as string,
-            name: payload.name as string,
-            sessionId: payload.sessionId as string,
-          },
-          token: sessionData.token,
-          productId: payload.productId as string,
-        },
+        user: sessionData.user,
+        session: sessionData,
         isAuthenticated: true,
       });
     } catch (error) {
-      try {
-        const { refreshData } = await postCoreApiPublic(
-          "/api/core/v1/refresh",
-          {},
-          {
-            withCredentials: true,
-          },
-        );
-
-        const newAccessToken = refreshData.data.accessToken;
-        const payload = await verifyToken(newAccessToken);
-        const session: Session = {
-          id: payload.sessionId as string,
-          user: {
-            id: payload.sub as string,
-            name: payload.name as string,
-            email: payload.email as string,
-            sessionId: payload.sessionId as string,
-          },
-          token: newAccessToken,
-          productId: payload.productId as string,
-        };
-        set({
-          token: payload.token as string,
-          user: {
-            id: payload.sub,
-            email: payload.email as string,
-            name: payload.name as string,
-            sessionId: payload.sessionId as string,
-          },
-          session: session,
-          isAuthenticated: true,
-        });
-        await db.updateSessionData(session);
-      } catch (error) {
-        await cleanWorkspaceData();
-      }
+      console.error(error);
+      await cleanWorkspaceData();
     }
   },
 
