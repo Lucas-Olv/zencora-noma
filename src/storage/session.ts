@@ -32,7 +32,7 @@ export const useSessionStorage = create<SessionState>((set) => ({
   restoreSession: async () => {
     try {
       const sessionData = await db.getSessionData();
-      if (!sessionData) throw Error("Invalid session or session not found");
+      if (!sessionData) return;
       set({
         token: sessionData.token,
         user: sessionData.user,
