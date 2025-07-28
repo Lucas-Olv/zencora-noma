@@ -67,10 +67,13 @@ import { useSubscriptionStorage } from "@/storage/subscription";
 interface ReportData {
   totalOrders: number;
   totalRevenue: number;
+  canceledRevenue: number;
   completedOrders: number;
   pendingOrders: number;
   dailyRevenue: { day: string; Total: number; Encomendas: number }[];
   categoryData: { name: string; value: number }[];
+  canceledOrders: number;
+  readyForDelivery: number;
   // paymentMethodData removido, agora é calculado localmente
 }
 
@@ -83,15 +86,16 @@ const MonthlyReports = () => {
   const [reportData, setReportData] = useState<ReportData>({
     totalOrders: 0,
     totalRevenue: 0,
+    canceledRevenue: 0,
     completedOrders: 0,
     pendingOrders: 0,
     dailyRevenue: [],
     categoryData: [],
+    canceledOrders: 0,
+    readyForDelivery: 0,
     // paymentMethodData: [] // não usado, manter vazio
   });
-  const isMobile = useIsMobile();
   const { tenant } = useTenantStorage();
-  const navigate = useNavigate();
   const { subscription } = useSubscriptionStorage();
 
   const formatCurrency = (value: number) => {
@@ -191,15 +195,32 @@ const MonthlyReports = () => {
         // Process data for reports
         const processedData: ReportData = {
           totalOrders: filteredOrders.length,
-          totalRevenue: filteredOrders.reduce(
-            (sum: number, order: Order) => sum + (parseFloat(order.price) || 0),
-            0,
-          ),
-          completedOrders: filteredOrders.filter(
+          canceledOrders: filteredOrders.filter(
+            (order: Order) => order.status === "canceled",
+          ).length,
+          readyForDelivery: filteredOrders.filter(
             (order: Order) => order.status === "done",
           ).length,
+          totalRevenue: filteredOrders
+            .filter((order: Order) => order.status !== "canceled")
+            .reduce(
+              (sum: number, order: Order) =>
+                sum + (parseFloat(order.price) || 0),
+              0,
+            ),
+          canceledRevenue: filteredOrders
+            .filter((order: Order) => order.status === "canceled")
+            .reduce(
+              (sum: number, order: Order) =>
+                sum + (parseFloat(order.price) || 0),
+              0,
+            ),
+          completedOrders: filteredOrders.filter(
+            (order: Order) =>
+              order.status === "delivered" || order.status === "canceled",
+          ).length,
           pendingOrders: filteredOrders.filter(
-            (order: Order) => order.status !== "done",
+            (order: Order) => order.status !== "delivered" || "canceled",
           ).length,
           dailyRevenue: [],
           categoryData: [],
@@ -281,7 +302,7 @@ const MonthlyReports = () => {
         ["Total de Encomendas", reportData.totalOrders.toString()],
         ["Faturamento Total", formatCurrency(reportData.totalRevenue)],
         [
-          "Encomendas Concluídas",
+          "Encomendas Finalizadas",
           `${reportData.completedOrders} (${completionRate}%)`,
         ],
         ["Encomendas Pendentes", reportData.pendingOrders.toString()],
@@ -494,7 +515,7 @@ const MonthlyReports = () => {
         Valor: formatCurrency(reportData.totalRevenue),
       },
       {
-        Métrica: "Encomendas Concluídas",
+        Métrica: "Encomendas Finalizadas",
         Valor: `${reportData.completedOrders} (${completionRate}%)`,
       },
       { Métrica: "Encomendas Pendentes", Valor: reportData.pendingOrders },
@@ -639,7 +660,7 @@ const MonthlyReports = () => {
         value: reportData.totalRevenue,
       },
       {
-        metric: "Encomendas Concluídas",
+        metric: "Encomendas Finalizadas",
         value: `${reportData.completedOrders} (${completionRate}%)`,
       },
       {
@@ -855,13 +876,16 @@ const MonthlyReports = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{reportData.totalOrders}</div>
+            <CardDescription>
+              {reportData.canceledOrders} canceladas
+            </CardDescription>
           </CardContent>
         </Card>
 
         <Card className="overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Faturamento Total
+              Faturamento Total Líquido
             </CardTitle>
             <div className="h-8 w-8 rounded-full bg-secondary/10 flex items-center justify-center">
               <Calendar className="h-4 w-4 text-secondary" />
@@ -871,13 +895,17 @@ const MonthlyReports = () => {
             <div className="text-2xl font-bold">
               {formatCurrency(reportData.totalRevenue)}
             </div>
+            <CardDescription>
+              - {formatCurrency(reportData.canceledRevenue)} em encomendas
+              canceladas
+            </CardDescription>
           </CardContent>
         </Card>
 
         <Card className="overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Encomendas Concluídas
+              Encomendas Finalizadas
             </CardTitle>
             <div className="h-8 w-8 rounded-full bg-green-500/10 flex items-center justify-center">
               <Check className="h-4 w-4 text-green-500" />
@@ -888,7 +916,7 @@ const MonthlyReports = () => {
               {reportData.completedOrders}
             </div>
             <CardDescription className="mt-1">
-              {completionRate}% do total
+              <div>{completionRate}% do total</div>
             </CardDescription>
           </CardContent>
         </Card>
@@ -904,6 +932,9 @@ const MonthlyReports = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{reportData.pendingOrders}</div>
+            <CardDescription>
+              {reportData.readyForDelivery} prontas para entrega
+            </CardDescription>
           </CardContent>
         </Card>
       </div>

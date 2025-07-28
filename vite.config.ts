@@ -18,12 +18,8 @@ export default defineConfig(({ mode }) => ({
       includeAssets: [
         "favicon.ico",
         "apple-touch-icon.png",
-        "android-chrome-192x192.png",
-        "android-chrome-512x512.png",
-        "maskable-icon.png",
-        "splash-640x1136.png",
-        "splash-750x1334.png",
-        "splash-1242x2208.png"
+        "android-launchericon-192-192.png",
+        "android-launchericon-512-512.png"
       ],
       manifest: {
         name: "Zencora Noma",
@@ -33,49 +29,35 @@ export default defineConfig(({ mode }) => ({
         background_color: "#ffffff",
         display: "standalone",
         orientation: "portrait",
-        icons: [
+        "icons": [
           {
-            src: "android-chrome-192x192.png",
-            sizes: "192x192",
-            type: "image/png",
-            purpose: "any"
+            "src": "android-launchericon-192-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
           },
           {
-            src: "android-chrome-512x512.png",
-            sizes: "512x512",
-            type: "image/png",
-            purpose: "any"
+            "src": "android-launchericon-512-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
           },
           {
-            src: "maskable-icon.png",
-            sizes: "512x512",
-            type: "image/png",
-            purpose: "maskable",
+            "src": "android-launchericon-512-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable",
           },
           {
-            src: "apple-touch-icon.png",
-            sizes: "180x180",
-            type: "image/png"
-          }
-        ],
-        screenshots: [
-          {
-            src: "splash-640x1136.png",
-            sizes: "640x1136",
-            type: "image/png",
-            form_factor: "narrow"
+            "src": "android-launchericon-192-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable",
           },
           {
-            src: "splash-750x1334.png",
-            sizes: "750x1334",
-            type: "image/png",
-            form_factor: "narrow"
-          },
-          {
-            src: "splash-1242x2208.png",
-            sizes: "1242x2208",
-            type: "image/png",
-            form_factor: "narrow"
+            "src": "apple-touch-icon.png",
+            "sizes": "180x180",
+            "type": "image/png"
           }
         ]
       },
