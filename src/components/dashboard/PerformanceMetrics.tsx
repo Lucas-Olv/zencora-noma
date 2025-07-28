@@ -163,8 +163,8 @@ const getPaymentMethodData = (orders: Order[]) => {
   });
   // Traduzir os labels
   const labelMap: Record<string, string> = {
-    credit_card: "Cartão de Crédito",
-    debit_card: "Cartão de Débito",
+    credit_card: "Crédito",
+    debit_card: "Débito",
     pix: "Pix",
     cash: "Dinheiro",
   };
