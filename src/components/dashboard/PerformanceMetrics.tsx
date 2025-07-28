@@ -156,11 +156,13 @@ const getDailyData = (orders: Order[]) => {
 // Função utilitária para contar métodos de pagamento
 const getPaymentMethodData = (orders: Order[]) => {
   const counts: Record<string, number> = {};
-  orders.forEach((order) => {
-    if (order.paymentMethod) {
-      counts[order.paymentMethod] = (counts[order.paymentMethod] || 0) + 1;
-    }
-  });
+  orders
+    .filter((order: Order) => order.status !== "canceled")
+    .forEach((order) => {
+      if (order.paymentMethod) {
+        counts[order.paymentMethod] = (counts[order.paymentMethod] || 0) + 1;
+      }
+    });
   // Traduzir os labels
   const labelMap: Record<string, string> = {
     credit_card: "Crédito",
@@ -193,8 +195,12 @@ export default function PerformanceMetrics({
     );
   }
 
-  const revenueData = calculateRevenueVariation(orders);
+  const revenueData = calculateRevenueVariation(
+    orders.filter((order: Order) => order.status !== "canceled"),
+  );
   const ordersData = calculateOrdersVariation(orders);
+  const canceledOrdersAmount =
+    orders.filter((order: Order) => order.status === "canceled").length || 0;
   const dailyData = getDailyData(orders);
   // Filtrar encomendas dos últimos 7 dias
   const today = dayjs().endOf("day").toDate();
@@ -256,10 +262,11 @@ export default function PerformanceMetrics({
             </div>
             <div className="flex flex-col gap-4">
               <div className="flex flex-col items-start justify-start">
-                <h3 className="text-lg font-medium">Variação de Encomendas</h3>
+                <h3 className="text-lg font-medium">Vriação de Encomendas</h3>
                 <p className="text-2xl font-bold">
                   {ordersData.currentWeekOrders}
                 </p>
+                <p className=" text-sm">{canceledOrdersAmount} canceladas</p>
                 <p
                   className={`text-sm ${ordersData.variation >= 0 ? "text-green-600" : "text-red-600"}`}
                 >

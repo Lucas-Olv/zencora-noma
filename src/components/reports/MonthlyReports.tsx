@@ -126,7 +126,9 @@ const MonthlyReports = () => {
     }));
   };
 
-  const paymentMethodData = getPaymentMethodData(orders);
+  const paymentMethodData = getPaymentMethodData(
+    orders.filter((order: Order) => order.status !== "canceled"),
+  );
 
   // Função para traduzir estado do pagamento
   const translatePaymentStatus = (status?: string) => {
@@ -220,7 +222,8 @@ const MonthlyReports = () => {
               order.status === "delivered" || order.status === "canceled",
           ).length,
           pendingOrders: filteredOrders.filter(
-            (order: Order) => order.status !== "delivered" || "canceled",
+            (order: Order) =>
+              order.status !== "delivered" && order.status !== "canceled",
           ).length,
           dailyRevenue: [],
           categoryData: [],
@@ -239,14 +242,19 @@ const MonthlyReports = () => {
               if (!orderDate) return false;
               return isSameDay(orderDate, day);
             });
+            const revenueDayOrders = filteredOrders.filter((order: Order) => {
+              const orderDate = parseDate(order.dueDate);
+              if (!orderDate) return false;
+              return isSameDay(orderDate, day) && order.status != "canceled";
+            });
             return {
               day: format(day, "dd/MM"),
-              Total: dayOrders.reduce(
+              Total: revenueDayOrders.reduce(
                 (sum: number, order: Order) =>
                   sum + (parseFloat(order.price) || 0),
                 0,
               ),
-              Encomendas: dayOrders.length,
+              Encomendas: revenueDayOrders.length,
             };
           });
         }
@@ -767,7 +775,8 @@ const MonthlyReports = () => {
       <div>
         <h2 className="text-2xl font-bold tracking-tight">Relatórios</h2>
         <p className="text-muted-foreground">
-          Acompanhe o desempenho do seu negócio através de gráficos e análises
+          Acompanhe detalhadamente o desempenho do seu negócio através de
+          gráficos e análises
         </p>
       </div>
 

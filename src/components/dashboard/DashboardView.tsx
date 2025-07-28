@@ -77,7 +77,7 @@ const DashboardView = () => {
       const activeOrders =
         orders.filter(
           (order: Order) =>
-            order.status !== "done" && order.status !== "canceled",
+            order.status !== "canceled" && order.status !== "delivered",
         ).length || 0;
 
       const inProduction =
@@ -87,27 +87,42 @@ const DashboardView = () => {
       const scheduled =
         orders.filter((order: Order) => {
           const dueDate = parseDate(order.dueDate);
-          return dueDate && dueDate > today;
+          return (
+            dueDate &&
+            dueDate > today &&
+            order.status !== "canceled" &&
+            order.status !== "delivered"
+          );
         }).length || 0;
 
       const todayDeliveries =
         orders.filter((order: Order) => {
           const dueDate = parseDate(order.dueDate);
-          return dueDate && dueDate.toDateString() === today.toDateString();
+          return (
+            dueDate &&
+            dueDate.toDateString() === today.toDateString() &&
+            order.status !== "canceled" &&
+            order.status !== "delivered"
+          );
         }).length || 0;
 
       const monthlyRevenue =
-        orders.reduce(
-          (sum: number, order: Order) => sum + (parseFloat(order.price) || 0),
-          0,
-        ) || 0;
+        orders
+          .filter((order: Order) => order.status !== "canceled")
+          .reduce(
+            (sum: number, order: Order) => sum + (parseFloat(order.price) || 0),
+            0,
+          ) || 0;
 
       const weeklyRevenue =
         orders
           .filter((order: Order) => {
             const orderDate = parseDate(order.createdAt);
             return (
-              orderDate && orderDate >= startOfWeek && orderDate <= endOfWeek
+              orderDate &&
+              orderDate >= startOfWeek &&
+              orderDate <= endOfWeek &&
+              order.status !== "canceled"
             );
           })
           .reduce(
