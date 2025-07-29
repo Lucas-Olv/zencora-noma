@@ -1,5 +1,6 @@
 import { LoginForm } from "@/components/auth/LoginForm";
 import ThemeToggle from "@/components/layout/ThemeToggle";
+import { Nav } from "@/components/ui/nav";
 import { Link } from "react-router-dom";
 
 export default function Login() {
@@ -40,23 +41,13 @@ export default function Login() {
 
       {/* Right side - Login form */}
       <div className="flex flex-col p-4">
-        <div className="flex justify-between items-center">
-          <Link
-            to="/"
-            className="flex items-center justify-center text-lg font-bold zencora-gradient-text md:hidden ml-3"
-          >
-            <img
-              src="/zencora-noma-logo.png"
-              alt="Zencora Noma Logo"
-              className="h-6 mr-2"
-            />
-            Zencora Noma
-          </Link>
-          <div className="ml-auto">
-            <ThemeToggle />
-          </div>
-        </div>
+        <section className="md:hidden">
+          <Nav />
+        </section>
 
+        <div className="w-full hidden md:flex items-center justify-end p-2">
+          <ThemeToggle />
+        </div>
         <div className="flex-1 flex items-center justify-center">
           <LoginForm />
         </div>

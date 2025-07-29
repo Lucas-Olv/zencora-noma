@@ -89,7 +89,7 @@ export const Nav = () => {
             : "bg-transparent",
         )}
       >
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+        <div className="container mx-auto p-4 flex justify-between items-center">
           <div className="flex items-center">
             <img
               src="zencora-noma-logo.png"
@@ -165,7 +165,7 @@ export const Nav = () => {
 
           {/* Mobile menu button */}
           <button
-            className="md:hidden p-2"
+            className="md:hidden "
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label="Toggle menu"
           >
