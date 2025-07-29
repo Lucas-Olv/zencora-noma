@@ -43,7 +43,7 @@ export default function Login() {
         <div className="flex justify-between items-center">
           <Link
             to="/"
-            className="flex items-center justify-center text-lg font-bold zencora-gradient-text md:hidden"
+            className="flex items-center justify-center text-lg font-bold zencora-gradient-text md:hidden ml-3"
           >
             <img
               src="/zencora-noma-logo.png"
