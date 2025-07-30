@@ -40,7 +40,7 @@ function ReportOrdersList({
         <LoadingState
           loading={loading}
           empty={!orders.length}
-          emptyText="Nenhuma encomenda encontrada"
+          emptyText="Nenhuma encomenda encontrada no período"
           emptyIcon={<FileText className="h-12 w-12 text-muted-foreground" />}
         >
           <div className="space-y-2">

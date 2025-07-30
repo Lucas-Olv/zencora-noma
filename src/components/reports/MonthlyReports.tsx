@@ -238,7 +238,7 @@ const MonthlyReports = () => {
                   sum + (parseFloat(order.price) || 0),
                 0,
               ),
-              Encomendas: revenueDayOrders.length,
+              Encomendas: dayOrders.length,
             };
           });
         }
@@ -721,6 +721,32 @@ const MonthlyReports = () => {
     document.body.removeChild(link);
   };
 
+  const totalOrdersDescription =
+    reportData.totalOrders === 0
+      ? "Nenhuma encomenda no período"
+      : reportData.canceledOrders === 0
+        ? "Nenhuma encomenda cancelada"
+        : `${reportData.canceledOrders} canceladas`;
+
+  const totalRevenueDescription =
+    reportData.totalRevenue === 0
+      ? "Nenhum faturamento no período"
+      : reportData.canceledRevenue > 0
+        ? `- ${formatCurrency(reportData.canceledRevenue)} em encomendas canceladas`
+        : "Nenhum faturamento cancelado";
+
+  const completedOrdersDescription =
+    reportData.completedOrders === 0
+      ? "Nenhuma encomenda finalizada"
+      : `${completionRate}% do total`;
+
+  const pendingOrdersDescription =
+    reportData.pendingOrders === 0
+      ? "Nenhuma encomenda pendente"
+      : reportData.readyForDelivery === 0
+        ? "Nenhuma pronta para entrega"
+        : `${reportData.readyForDelivery} prontas para entrega`;
+
   if (isOrdersLoading) {
     return (
       <div className="flex items-center justify-center h-[50dvh]">
@@ -836,9 +862,7 @@ const MonthlyReports = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{reportData.totalOrders}</div>
-            <CardDescription>
-              {reportData.canceledOrders} canceladas
-            </CardDescription>
+            <CardDescription>{totalOrdersDescription}</CardDescription>
           </CardContent>
         </Card>
 
@@ -855,10 +879,7 @@ const MonthlyReports = () => {
             <div className="text-2xl font-bold">
               {formatCurrency(reportData.totalRevenue)}
             </div>
-            <CardDescription>
-              - {formatCurrency(reportData.canceledRevenue)} em encomendas
-              canceladas
-            </CardDescription>
+            <CardDescription>{totalRevenueDescription}</CardDescription>
           </CardContent>
         </Card>
 
@@ -876,7 +897,7 @@ const MonthlyReports = () => {
               {reportData.completedOrders}
             </div>
             <CardDescription className="mt-1">
-              <div>{completionRate}% do total</div>
+              <div>{completedOrdersDescription}</div>
             </CardDescription>
           </CardContent>
         </Card>
@@ -892,9 +913,7 @@ const MonthlyReports = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{reportData.pendingOrders}</div>
-            <CardDescription>
-              {reportData.readyForDelivery} prontas para entrega
-            </CardDescription>
+            <CardDescription>{pendingOrdersDescription}</CardDescription>
           </CardContent>
         </Card>
       </div>

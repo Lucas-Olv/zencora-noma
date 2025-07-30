@@ -289,7 +289,7 @@ const OrdersList = () => {
               {searchTerm ? (
                 <>
                   <p className="text-muted-foreground">
-                    Nenhuma encomenda encontrada para "{searchTerm}"
+                    Nenhuma encomenda encontrada com o termo "{searchTerm}"
                   </p>
                   <Button
                     variant="link"
@@ -303,7 +303,7 @@ const OrdersList = () => {
                 <>
                   <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                   <h3 className="text-lg font-medium mb-2">
-                    Nenhuma encomenda
+                    Nenhuma encomenda cadastrada
                   </h3>
                   <p className="text-muted-foreground mb-4">
                     Comece registrando sua primeira encomenda.

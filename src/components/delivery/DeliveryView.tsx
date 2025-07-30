@@ -283,7 +283,8 @@ const DeliveryView = () => {
               {searchTerm ? (
                 <>
                   <p className="text-muted-foreground">
-                    Nenhuma encomenda encontrada para "{searchTerm}"
+                    Nenhuma encomenda para entrega encontrada com o termo "
+                    {searchTerm}"
                   </p>
                   <Button
                     variant="link"
@@ -297,10 +298,10 @@ const DeliveryView = () => {
                 <>
                   <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                   <h3 className="text-lg font-medium mb-2">
-                    Nenhuma encomenda
+                    Nenhuma encomenda para entrega
                   </h3>
                   <p className="text-muted-foreground mb-4">
-                    Nenhuma encomenda pronta para entrega encontrada
+                    Quando uma encomenda for concluída, ela aparecerá aqui.
                   </p>
                 </>
               )}
@@ -471,7 +472,6 @@ const DeliveryView = () => {
         />
       )}
 
-      {/* Hidden print content */}
       <div className="hidden">
         {selectedOrder && (
           <div ref={printRef}>

@@ -33,7 +33,7 @@ function RecentOrders({ orders, loading = false }: RecentOrdersProps) {
         <LoadingState
           loading={loading}
           empty={!orders.length}
-          emptyText="Nenhuma encomenda encontrada"
+          emptyText="Nenhuma encomenda recente encontrada"
           emptyIcon={<FileText className="h-12 w-12 text-muted-foreground" />}
         >
           <div className="space-y-4">

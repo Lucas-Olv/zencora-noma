@@ -65,7 +65,6 @@ const DashboardView = () => {
       }),
   });
 
-  // Lógica de stats e dados
   useEffect(() => {
     if (ordersData) {
       const today = dayjs();
@@ -156,6 +155,21 @@ const DashboardView = () => {
     }
   }, [ordersData, remindersData]);
 
+  const todayDeliveriesText =
+    stats.todayDeliveries === 0
+      ? "Nenhuma entrega para hoje"
+      : `${stats.todayDeliveries} para entrega hoje`;
+
+  const weeklyRevenueText =
+    stats.weeklyRevenue === 0
+      ? "Nenhum faturamento esta semana"
+      : `${formatCurrency(stats.weeklyRevenue)} esta semana`;
+
+  const inProductionText =
+    stats.inProduction === 0
+      ? "Nenhuma em produção"
+      : `${stats.inProduction} em produção`;
+
   return (
     <>
       <PWAInstallPrompt />
@@ -172,16 +186,14 @@ const DashboardView = () => {
             title="Encomendas Ativas"
             value={isOrdersLoading ? "-" : stats.activeOrders.toString()}
             description={
-              isOrdersLoading
-                ? "Carregando..."
-                : `${stats.todayDeliveries} para entrega hoje`
+              isOrdersLoading ? "Carregando..." : todayDeliveriesText
             }
             icon={<ClipboardList className="h-5 w-5 text-primary" />}
           />
           <StatsCard
             title="Produção"
             value={isOrdersLoading ? "-" : stats.inProduction.toString()}
-            description={isOrdersLoading ? "Carregando..." : "Produção"}
+            description={isOrdersLoading ? "Carregando..." : inProductionText}
             icon={<Users className="h-5 w-5 text-secondary" />}
           />
           <StatsCard
@@ -195,11 +207,7 @@ const DashboardView = () => {
           <StatsCard
             title="Faturamento (Mês)"
             value={isOrdersLoading ? "-" : formatCurrency(stats.monthlyRevenue)}
-            description={
-              isOrdersLoading
-                ? "Carregando..."
-                : `${formatCurrency(stats.weeklyRevenue)} esta semana`
-            }
+            description={isOrdersLoading ? "Carregando..." : weeklyRevenueText}
             icon={<FileText className="h-5 w-5 text-green-600" />}
           />
         </div>

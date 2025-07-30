@@ -127,11 +127,10 @@ const getDailyData = (orders: Order[]) => {
   const today = dayjs().startOf("day");
   const lastWeekStart = today.subtract(6, "day");
 
-  // Cria array de 7 dias (de 6 dias atrás até hoje)
   const dailyData = Array.from({ length: 7 }, (_, i) => {
     const date = lastWeekStart.add(i, "day");
     return {
-      date: date.format("ddd"), // agora em português
+      date: date.format("ddd"),
       Receita: 0,
       Encomendas: 0,
       _date: date,
@@ -149,11 +148,9 @@ const getDailyData = (orders: Order[]) => {
     }
   });
 
-  // Remove _date antes de retornar
   return dailyData.map(({ _date, ...rest }) => rest);
 };
 
-// Função utilitária para contar métodos de pagamento
 const getPaymentMethodData = (orders: Order[]) => {
   const counts: Record<string, number> = {};
   orders
@@ -163,7 +160,6 @@ const getPaymentMethodData = (orders: Order[]) => {
         counts[order.paymentMethod] = (counts[order.paymentMethod] || 0) + 1;
       }
     });
-  // Traduzir os labels
   const labelMap: Record<string, string> = {
     credit_card: "Crédito",
     debit_card: "Débito",
@@ -202,7 +198,6 @@ export default function PerformanceMetrics({
   const canceledOrdersAmount =
     orders.filter((order: Order) => order.status === "canceled").length || 0;
   const dailyData = getDailyData(orders);
-  // Filtrar encomendas dos últimos 7 dias
   const today = dayjs().endOf("day").toDate();
   const sevenDaysAgo = dayjs().subtract(6, "day").startOf("day").toDate();
   const last7DaysOrders = orders.filter((order) => {
@@ -223,7 +218,7 @@ export default function PerformanceMetrics({
         <LoadingState
           loading={loading}
           empty={!orders.length}
-          emptyText="Nenhuma encomenda encontrada"
+          emptyText="Nenhuma encomenda encontrada no período"
           emptyIcon={
             <ChartBarIcon className="h-12 w-12 text-muted-foreground" />
           }
