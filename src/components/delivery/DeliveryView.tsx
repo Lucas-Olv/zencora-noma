@@ -13,7 +13,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Search, X, Loader2, Package } from "lucide-react";
+import {
+  Search,
+  X,
+  Loader2,
+  Package,
+  ChevronUp,
+  ChevronDown,
+} from "lucide-react";
 import {
   formatDate,
   usePrint,
@@ -43,6 +50,10 @@ const DeliveryView = () => {
   const printRef = useRef<HTMLDivElement>(null);
   const [deliveryDialogOpen, setDeliveryDialogOpen] = useState(false);
   const [deliveryOrder, setDeliveryOrder] = useState<Order | null>(null);
+  const [sortConfig, setSortConfig] = useState<{
+    key: string;
+    direction: "asc" | "desc";
+  } | null>(null);
   const { trackEvent } = useAnalytics();
 
   const {
@@ -211,6 +222,44 @@ const DeliveryView = () => {
     </div>
   );
 
+  const SortableHeader = ({
+    children,
+    sortKey,
+    className,
+  }: {
+    children: React.ReactNode;
+    sortKey: string;
+    className?: string;
+  }) => (
+    <div
+      className={cn(
+        "flex items-center gap-1 cursor-pointer hover:text-foreground transition-colors select-none",
+        className,
+      )}
+      onClick={() => handleSort(sortKey)}
+    >
+      {children}
+      <div className="flex flex-col">
+        <ChevronUp
+          className={cn(
+            "h-3 w-3",
+            sortConfig?.key === sortKey && sortConfig?.direction === "asc"
+              ? "text-foreground"
+              : "text-muted-foreground",
+          )}
+        />
+        <ChevronDown
+          className={cn(
+            "h-3 w-3 -mt-1",
+            sortConfig?.key === sortKey && sortConfig?.direction === "desc"
+              ? "text-foreground"
+              : "text-muted-foreground",
+          )}
+        />
+      </div>
+    </div>
+  );
+
   useEffect(() => {
     if (ordersData) {
       const fetchedOrders = ordersData.data as Order[];
@@ -222,8 +271,66 @@ const DeliveryView = () => {
     refetch();
   };
 
+  const handleSort = (key: string) => {
+    let direction: "asc" | "desc" = "asc";
+    if (
+      sortConfig &&
+      sortConfig.key === key &&
+      sortConfig.direction === "asc"
+    ) {
+      direction = "desc";
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const sortOrders = (orders: Order[]) => {
+    if (!sortConfig) return orders;
+
+    return [...orders].sort((a, b) => {
+      let aValue: string | number;
+      let bValue: string | number;
+
+      switch (sortConfig.key) {
+        case "code":
+          aValue = getOrderCode(a.id);
+          bValue = getOrderCode(b.id);
+          break;
+        case "client":
+          aValue = a.clientName.toLowerCase();
+          bValue = b.clientName.toLowerCase();
+          break;
+        case "dueDate":
+          aValue = dayjs(a.dueDate).valueOf();
+          bValue = dayjs(b.dueDate).valueOf();
+          break;
+        case "price":
+          aValue = parseFloat(a.price);
+          bValue = parseFloat(b.price);
+          break;
+        case "amountPaid":
+          aValue = parseFloat(a.amountPaid || "0");
+          bValue = parseFloat(b.amountPaid || "0");
+          break;
+        case "paymentStatus":
+          aValue = a.paymentStatus;
+          bValue = b.paymentStatus;
+          break;
+        default:
+          return 0;
+      }
+
+      if (aValue < bValue) {
+        return sortConfig.direction === "asc" ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return sortConfig.direction === "asc" ? 1 : -1;
+      }
+      return 0;
+    });
+  };
+
   const doneOrders = orders.filter((order) => order.status === "done");
-  const filteredOrders =
+  const filteredOrders = sortOrders(
     searchTerm.trim() === ""
       ? doneOrders
       : doneOrders.filter(
@@ -236,7 +343,8 @@ const DeliveryView = () => {
               order.description
                 .toLowerCase()
                 .includes(searchTerm.toLowerCase())),
-        );
+        ),
+  );
 
   return (
     <div className="space-y-6">
@@ -313,12 +421,32 @@ const DeliveryView = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Código</TableHead>
-                      <TableHead>Cliente</TableHead>
-                      <TableHead>Data de Entrega</TableHead>
-                      <TableHead>Preço</TableHead>
-                      <TableHead>Quantia Paga</TableHead>
-                      <TableHead>Estado do Pagamento</TableHead>
+                      <TableHead>
+                        <SortableHeader sortKey="code">Código</SortableHeader>
+                      </TableHead>
+                      <TableHead>
+                        <SortableHeader sortKey="client">
+                          Cliente
+                        </SortableHeader>
+                      </TableHead>
+                      <TableHead>
+                        <SortableHeader sortKey="dueDate">
+                          Data de Entrega
+                        </SortableHeader>
+                      </TableHead>
+                      <TableHead>
+                        <SortableHeader sortKey="price">Preço</SortableHeader>
+                      </TableHead>
+                      <TableHead>
+                        <SortableHeader sortKey="amountPaid">
+                          Quantia Paga
+                        </SortableHeader>
+                      </TableHead>
+                      <TableHead>
+                        <SortableHeader sortKey="paymentStatus">
+                          Estado do Pagamento
+                        </SortableHeader>
+                      </TableHead>
                       <TableHead className="text-right"></TableHead>
                     </TableRow>
                   </TableHeader>

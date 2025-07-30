@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import {
-  CheckCircle2,
   Eye,
   Plus,
   Search,
@@ -25,6 +24,8 @@ import {
   Printer,
   StretchVertical,
   CheckIcon,
+  ChevronUp,
+  ChevronDown,
 } from "lucide-react";
 import {
   formatDate,
@@ -61,9 +62,12 @@ const OrdersView = () => {
   const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
   const [dialogOrderId, setDialogOrderId] = useState<string | undefined>();
   const printRef = useRef<HTMLDivElement>(null);
-  const { settings } = useSettingsStorage();
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [cancelOrderId, setCancelOrderId] = useState<string | null>(null);
+  const [sortConfig, setSortConfig] = useState<{
+    key: string;
+    direction: "asc" | "desc";
+  } | null>(null);
   const { trackEvent } = useAnalytics();
 
   const {
@@ -189,6 +193,44 @@ const OrdersView = () => {
     </div>
   );
 
+  const SortableHeader = ({
+    children,
+    sortKey,
+    className,
+  }: {
+    children: React.ReactNode;
+    sortKey: string;
+    className?: string;
+  }) => (
+    <div
+      className={cn(
+        "flex items-center gap-1 cursor-pointer hover:text-foreground transition-colors select-none",
+        className,
+      )}
+      onClick={() => handleSort(sortKey)}
+    >
+      {children}
+      <div className="flex flex-col">
+        <ChevronUp
+          className={cn(
+            "h-3 w-3",
+            sortConfig?.key === sortKey && sortConfig?.direction === "asc"
+              ? "text-foreground"
+              : "text-muted-foreground",
+          )}
+        />
+        <ChevronDown
+          className={cn(
+            "h-3 w-3 -mt-1",
+            sortConfig?.key === sortKey && sortConfig?.direction === "desc"
+              ? "text-foreground"
+              : "text-muted-foreground",
+          )}
+        />
+      </div>
+    </div>
+  );
+
   useEffect(() => {
     document.title = "Encomendas | Zencora Noma";
     if (ordersData) {
@@ -260,6 +302,73 @@ const OrdersView = () => {
     setCancelOrderId(null);
   };
 
+  const handleSort = (key: string) => {
+    let direction: "asc" | "desc" = "asc";
+    if (
+      sortConfig &&
+      sortConfig.key === key &&
+      sortConfig.direction === "asc"
+    ) {
+      direction = "desc";
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const sortOrders = (orders: Order[]) => {
+    if (!sortConfig)
+      return orders.sort((a: Order, b: Order) => {
+        const dateA = dayjs(a.dueDate);
+        const dateB = dayjs(b.dueDate);
+        return dateB.valueOf() - dateA.valueOf();
+      });
+
+    return [...orders].sort((a: Order, b: Order) => {
+      let aValue: string | number;
+      let bValue: string | number;
+
+      switch (sortConfig.key) {
+        case "code":
+          aValue = getOrderCode(a.id);
+          bValue = getOrderCode(b.id);
+          break;
+        case "client":
+          aValue = a.clientName.toLowerCase();
+          bValue = b.clientName.toLowerCase();
+          break;
+        case "dueDate":
+          aValue = dayjs(a.dueDate).valueOf();
+          bValue = dayjs(b.dueDate).valueOf();
+          break;
+        case "price":
+          aValue = parseFloat(a.price);
+          bValue = parseFloat(b.price);
+          break;
+        case "status":
+          aValue = a.status;
+          bValue = b.status;
+          break;
+        case "paymentStatus":
+          aValue = a.paymentStatus;
+          bValue = b.paymentStatus;
+          break;
+        case "paymentMethod":
+          aValue = a.paymentMethod || "";
+          bValue = b.paymentMethod || "";
+          break;
+        default:
+          return 0;
+      }
+
+      if (aValue < bValue) {
+        return sortConfig.direction === "asc" ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return sortConfig.direction === "asc" ? 1 : -1;
+      }
+      return 0;
+    });
+  };
+
   const filteredOrders =
     searchTerm.trim() === ""
       ? orders
@@ -275,21 +384,19 @@ const OrdersView = () => {
                 .includes(searchTerm.toLowerCase())),
         );
 
-  const inProgressOrders = filteredOrders.filter(
-    (order) =>
-      order.status === "pending" ||
-      order.status === "production" ||
-      order.status === "done",
+  const inProgressOrders = sortOrders(
+    filteredOrders.filter(
+      (order) =>
+        order.status === "pending" ||
+        order.status === "production" ||
+        order.status === "done",
+    ),
   );
-  const finishedOrders = filteredOrders
-    .filter(
+  const finishedOrders = sortOrders(
+    filteredOrders.filter(
       (order) => order.status === "canceled" || order.status === "delivered",
-    )
-    .sort((a, b) => {
-      const dateA = dayjs(a.dueDate);
-      const dateB = dayjs(b.dueDate);
-      return dateB.valueOf() - dateA.valueOf();
-    });
+    ),
+  );
 
   return (
     <div className="space-y-6">
@@ -359,13 +466,41 @@ const OrdersView = () => {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Código</TableHead>
-                          <TableHead>Cliente</TableHead>
-                          <TableHead>Data de Entrega</TableHead>
-                          <TableHead>Preço</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Estado do Pagamento</TableHead>
-                          <TableHead>Método de Pagamento</TableHead>
+                          <TableHead>
+                            <SortableHeader sortKey="code">
+                              Código
+                            </SortableHeader>
+                          </TableHead>
+                          <TableHead>
+                            <SortableHeader sortKey="client">
+                              Cliente
+                            </SortableHeader>
+                          </TableHead>
+                          <TableHead>
+                            <SortableHeader sortKey="dueDate">
+                              Data de Entrega
+                            </SortableHeader>
+                          </TableHead>
+                          <TableHead>
+                            <SortableHeader sortKey="price">
+                              Preço
+                            </SortableHeader>
+                          </TableHead>
+                          <TableHead>
+                            <SortableHeader sortKey="status">
+                              Status
+                            </SortableHeader>
+                          </TableHead>
+                          <TableHead>
+                            <SortableHeader sortKey="paymentStatus">
+                              Estado do Pagamento
+                            </SortableHeader>
+                          </TableHead>
+                          <TableHead>
+                            <SortableHeader sortKey="paymentMethod">
+                              Método de Pagamento
+                            </SortableHeader>
+                          </TableHead>
                           <TableHead className="text-right">Ações</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -711,13 +846,41 @@ const OrdersView = () => {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Código</TableHead>
-                          <TableHead>Cliente</TableHead>
-                          <TableHead>Data de Entrega</TableHead>
-                          <TableHead>Preço</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Estado do Pagamento</TableHead>
-                          <TableHead>Método de Pagamento</TableHead>
+                          <TableHead>
+                            <SortableHeader sortKey="code">
+                              Código
+                            </SortableHeader>
+                          </TableHead>
+                          <TableHead>
+                            <SortableHeader sortKey="client">
+                              Cliente
+                            </SortableHeader>
+                          </TableHead>
+                          <TableHead>
+                            <SortableHeader sortKey="dueDate">
+                              Data de Entrega
+                            </SortableHeader>
+                          </TableHead>
+                          <TableHead>
+                            <SortableHeader sortKey="price">
+                              Preço
+                            </SortableHeader>
+                          </TableHead>
+                          <TableHead>
+                            <SortableHeader sortKey="status">
+                              Status
+                            </SortableHeader>
+                          </TableHead>
+                          <TableHead>
+                            <SortableHeader sortKey="paymentStatus">
+                              Estado do Pagamento
+                            </SortableHeader>
+                          </TableHead>
+                          <TableHead>
+                            <SortableHeader sortKey="paymentMethod">
+                              Método de Pagamento
+                            </SortableHeader>
+                          </TableHead>
                           <TableHead className="text-right">Ações</TableHead>
                         </TableRow>
                       </TableHeader>
