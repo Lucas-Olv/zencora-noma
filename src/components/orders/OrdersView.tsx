@@ -281,9 +281,15 @@ const OrdersView = () => {
       order.status === "production" ||
       order.status === "done",
   );
-  const finishedOrders = filteredOrders.filter(
-    (order) => order.status === "canceled" || order.status === "delivered",
-  );
+  const finishedOrders = filteredOrders
+    .filter(
+      (order) => order.status === "canceled" || order.status === "delivered",
+    )
+    .sort((a, b) => {
+      const dateA = dayjs(a.dueDate);
+      const dateB = dayjs(b.dueDate);
+      return dateB.valueOf() - dateA.valueOf();
+    });
 
   return (
     <div className="space-y-6">
