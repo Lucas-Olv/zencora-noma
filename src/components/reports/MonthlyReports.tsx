@@ -998,6 +998,11 @@ const MonthlyReports = () => {
                         <Tooltip
                           formatter={(value: number) => formatCurrency(value)}
                           labelStyle={{ fontSize: 12 }}
+                          contentStyle={{
+                            backgroundColor: "hsl(var(--accent))",
+                            border: "1px solid hsl(var(--border))",
+                            color: "hsl(var(--foreground))",
+                          }}
                         />
                         <Line
                           type="monotone"
@@ -1037,6 +1042,11 @@ const MonthlyReports = () => {
                         />
                         <Tooltip
                           labelStyle={{ fontSize: 12 }}
+                          contentStyle={{
+                            backgroundColor: "hsl(var(--accent))",
+                            border: "1px solid hsl(var(--border))",
+                            color: "hsl(var(--foreground))",
+                          }}
                           formatter={(value: number, name: string) => [
                             `${value} encomenda${value !== 1 ? "s" : ""}`,
                             name,
@@ -1107,6 +1117,11 @@ const MonthlyReports = () => {
                           <XAxis dataKey="metodo" />
                           <Tooltip
                             formatter={(value) => `${value} encomenda(s)`}
+                            contentStyle={{
+                              backgroundColor: "hsl(var(--accent))",
+                              border: "1px solid hsl(var(--border))",
+                              color: "hsl(var(--foreground))",
+                            }}
                           />
                           <Bar
                             dataKey="quantidade"

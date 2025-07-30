@@ -202,7 +202,7 @@ export default function PerformanceMetrics({
   const sevenDaysAgo = dayjs().subtract(6, "day").startOf("day").toDate();
   const last7DaysOrders = orders.filter((order) => {
     const orderDate = parseDate(order.dueDate);
-    return orderDate && orderDate >= sevenDaysAgo && orderDate <= today;
+    return orderDate && orderDate.isSameOrAfter(dayjs(sevenDaysAgo)) && orderDate.isSameOrBefore(dayjs(today));
   });
   const paymentMethodData = getPaymentMethodData(last7DaysOrders);
 
@@ -245,6 +245,11 @@ export default function PerformanceMetrics({
 
                     <Tooltip
                       formatter={(value) => formatCurrency(Number(value))}
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--accent))",
+                        border: "1px solid hsl(var(--border))",
+                        color: "hsl(var(--foreground))",
+                      }}
                     />
                     <Line
                       type="monotone"
@@ -274,7 +279,13 @@ export default function PerformanceMetrics({
                   <BarChart data={dailyData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="date" />
-                    <Tooltip />
+                    <Tooltip 
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--accent))",
+                        border: "1px solid hsl(var(--border))",
+                        color: "hsl(var(--foreground))",
+                      }}
+                    />
                     <Bar dataKey="Encomendas" fill="hsl(var(--primary))" />
                   </BarChart>
                 </ResponsiveContainer>
@@ -290,7 +301,14 @@ export default function PerformanceMetrics({
                     <BarChart data={paymentMethodData}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="method" />
-                      <Tooltip formatter={(value) => `${value} encomenda(s)`} />
+                      <Tooltip 
+                        formatter={(value) => `${value} encomenda(s)`}
+                        contentStyle={{
+                          backgroundColor: "hsl(var(--accent))",
+                          border: "1px solid hsl(var(--border))",
+                          color: "hsl(var(--foreground))",
+                        }}
+                      />
                       <Bar dataKey="quantity" fill="hsl(var(--primary))" />
                     </BarChart>
                   </ResponsiveContainer>
