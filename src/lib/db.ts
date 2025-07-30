@@ -1,5 +1,6 @@
 import Dexie, { Table } from "dexie";
 import { Product, Session, Tenant, Settings, Subscription } from "@/lib/types";
+import dayjs from "@/lib/dayjs";
 
 interface workspaceData {
   id?: number;
@@ -30,7 +31,7 @@ export class ZencoraNomaDB extends Dexie {
     if (count === 0) {
       await this.saveWorkspaceDataData({
         initialized: false,
-        initializedAt: new Date().toISOString(),
+        initializedAt: dayjs().toISOString(),
         initializedBy: "system",
         session: undefined,
         product: undefined,

@@ -29,6 +29,7 @@ import { getNomaApi, patchNomaApi } from "@/lib/apiHelpers";
 import { useSettingsStorage } from "@/storage/settings";
 import { DeliveryDialog } from "./DeliveryDialog";
 import { useAnalytics } from "@/contexts/AnalyticsProviderContext";
+import dayjs from "@/lib/dayjs";
 
 const DeliveryView = () => {
   const { toast } = useToast();
@@ -105,7 +106,6 @@ const DeliveryView = () => {
   });
   const { tenant } = useTenantStorage();
 
-  // Mutation para marcar como entregue
   const { mutate: deliverOrder, isPending: isDeliveringOrder } = useMutation({
     mutationFn: ({
       orderId,
@@ -150,7 +150,7 @@ const DeliveryView = () => {
   });
 
   const OrderLabel = ({ order }: { order: Order }) => {
-    const isOverdue = new Date(order.dueDate) < new Date();
+    const isOverdue = dayjs(order.dueDate).isBefore(dayjs());
     const status =
       isOverdue && order.status === "pending" ? "overdue" : order.status;
     const statusDisplay = getStatusDisplay(status, order.dueDate);
@@ -158,7 +158,6 @@ const DeliveryView = () => {
     return (
       <div className="w-[100mm] h-[150mm] bg-white text-black p-6">
         <div className="border border-gray-300 rounded-xl shadow-sm h-full flex flex-col justify-between p-6 space-y-4">
-          {/* Bloco do código da encomenda */}
           <div className="text-center py-4">
             <p className="text-[10px] uppercase font-medium text-zinc-400 tracking-wide">
               Código
@@ -168,7 +167,6 @@ const DeliveryView = () => {
             </h1>
           </div>
 
-          {/* Informações principais */}
           <div className="flex-1 flex flex-col gap-4 text-zinc-800">
             <div className="grid grid-cols-2 gap-4">
               <LabelItem title="Cliente" content={order.clientName} />
@@ -189,12 +187,8 @@ const DeliveryView = () => {
             />
           </div>
 
-          {/* Rodapé */}
           <div className="text-center text-[10px] text-zinc-400 border-t pt-2">
-            <p>
-              Gerado em{" "}
-              {formatDate(new Date().toISOString(), "dd/MM/yyyy 'às' HH:mm")}
-            </p>
+            <p>Gerado em {dayjs().format("DD/MM/YYYY [às] HH:mm")}</p>
             <p className="mt-0.5">Por Zencora Noma</p>
           </div>
         </div>
@@ -228,7 +222,6 @@ const DeliveryView = () => {
     refetch();
   };
 
-  // Filtrar apenas encomendas marcadas como 'done' e aplicar busca
   const doneOrders = orders.filter((order) => order.status === "done");
   const filteredOrders =
     searchTerm.trim() === ""
@@ -456,7 +449,6 @@ const DeliveryView = () => {
         onSuccess={handleListUpdate}
       />
 
-      {/* Delivery Dialog */}
       {deliveryOrder && (
         <DeliveryDialog
           open={deliveryDialogOpen}

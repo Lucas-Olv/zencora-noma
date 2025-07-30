@@ -29,14 +29,6 @@ import {
 } from "recharts";
 import { formatDate, parseDate } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
-import {
-  format,
-  startOfMonth,
-  endOfMonth,
-  eachDayOfInterval,
-  isSameDay,
-} from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { DateRange } from "react-day-picker";
 import jsPDF from "jspdf";
@@ -63,6 +55,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useSubscriptionStorage } from "@/storage/subscription";
+import dayjs from "@/lib/dayjs";
 
 interface ReportData {
   totalOrders: number;
@@ -74,13 +67,12 @@ interface ReportData {
   categoryData: { name: string; value: number }[];
   canceledOrders: number;
   readyForDelivery: number;
-  // paymentMethodData removido, agora é calculado localmente
 }
 
 const MonthlyReports = () => {
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
-    from: startOfMonth(new Date()),
-    to: endOfMonth(new Date()),
+    from: dayjs().startOf("month").toDate(),
+    to: dayjs().endOf("month").toDate(),
   });
   const [orders, setOrders] = useState<Order[]>([]);
   const [reportData, setReportData] = useState<ReportData>({
@@ -93,7 +85,6 @@ const MonthlyReports = () => {
     categoryData: [],
     canceledOrders: 0,
     readyForDelivery: 0,
-    // paymentMethodData: [] // não usado, manter vazio
   });
   const { tenant } = useTenantStorage();
   const { subscription } = useSubscriptionStorage();
@@ -105,7 +96,6 @@ const MonthlyReports = () => {
     });
   };
 
-  // Função utilitária para contar métodos de pagamento
   const getPaymentMethodData = (orders: Order[]) => {
     const counts: Record<string, number> = {};
     orders.forEach((order) => {
@@ -113,7 +103,6 @@ const MonthlyReports = () => {
         counts[order.paymentMethod] = (counts[order.paymentMethod] || 0) + 1;
       }
     });
-    // Traduzir os labels
     const labelMap: Record<string, string> = {
       credit_card: "Crédito",
       debit_card: "Débito",
@@ -130,7 +119,6 @@ const MonthlyReports = () => {
     orders.filter((order: Order) => order.status !== "canceled"),
   );
 
-  // Função para traduzir estado do pagamento
   const translatePaymentStatus = (status?: string) => {
     if (status === "pending") return "Pendente";
     if (status === "paid") return "Efetuado";
@@ -138,7 +126,6 @@ const MonthlyReports = () => {
     return "Não informado";
   };
 
-  // Função para traduzir método de pagamento
   const translatePaymentMethod = (method?: string) => {
     if (method === "credit_card") return "Cartão de Crédito";
     if (method === "debit_card") return "Cartão de Débito";
@@ -158,8 +145,12 @@ const MonthlyReports = () => {
       getNomaApi(`/api/noma/v1/orders/tenant`, {
         params: {
           tenantId: tenant?.id,
-          periodStart: dateRange?.from?.toISOString(),
-          periodEnd: dateRange?.to?.toISOString(),
+          periodStart: dateRange?.from
+            ? dayjs(dateRange.from).toISOString()
+            : undefined,
+          periodEnd: dateRange?.to
+            ? dayjs(dateRange.to).toISOString()
+            : undefined,
         },
       }),
   });
@@ -167,34 +158,28 @@ const MonthlyReports = () => {
   useEffect(() => {
     if (ordersData) {
       if (dateRange?.from && dateRange?.to) {
-        // Ajusta as datas para o início e fim do dia
-        const startDate = new Date(dateRange.from);
-        startDate.setHours(0, 0, 0, 0);
+        const startDate = dayjs(dateRange.from).startOf("day");
+        const endDate = dayjs(dateRange.to).endOf("day");
 
-        const endDate = new Date(dateRange.to);
-        endDate.setHours(23, 59, 59, 999);
-
-        // Filtra as encomendas no lado do cliente para garantir precisão
         const filteredOrders =
           ordersData.data
             ?.filter((order: Order) => {
               const orderDate = parseDate(order.dueDate);
               if (!orderDate) return false;
-
-              // Verifica se a data está dentro do intervalo
-              return orderDate >= startDate && orderDate <= endDate;
+              return (
+                orderDate.isSameOrAfter(startDate) &&
+                orderDate.isSameOrBefore(endDate)
+              );
             })
             .sort((a: Order, b: Order) => {
-              // Ordena por data de entrega em ordem crescente
               const dateA = parseDate(a.dueDate);
               const dateB = parseDate(b.dueDate);
               if (!dateA || !dateB) return 0;
-              return dateA.getTime() - dateB.getTime();
+              return dateA.diff(dateB);
             }) || [];
 
         setOrders(filteredOrders);
 
-        // Process data for reports
         const processedData: ReportData = {
           totalOrders: filteredOrders.length,
           canceledOrders: filteredOrders.filter(
@@ -227,28 +212,27 @@ const MonthlyReports = () => {
           ).length,
           dailyRevenue: [],
           categoryData: [],
-          // paymentMethodData: [] // não usado, manter vazio
         };
 
-        // Process daily revenue
         if (dateRange?.from && dateRange?.to) {
-          const days = eachDayOfInterval({
-            start: dateRange.from,
-            end: dateRange.to,
-          });
+          const days = [];
+          let currentDay = dayjs(dateRange.from);
+          while (currentDay.isSameOrBefore(dayjs(dateRange.to), "day")) {
+            days.push(currentDay);
+            currentDay = currentDay.add(1, "day");
+          }
+
           processedData.dailyRevenue = days.map((day) => {
             const dayOrders = filteredOrders.filter((order: Order) => {
               const orderDate = parseDate(order.dueDate);
               if (!orderDate) return false;
-              return isSameDay(orderDate, day);
+              return orderDate.isSame(day, "day");
             });
-            const revenueDayOrders = filteredOrders.filter((order: Order) => {
-              const orderDate = parseDate(order.dueDate);
-              if (!orderDate) return false;
-              return isSameDay(orderDate, day) && order.status != "canceled";
-            });
+            const revenueDayOrders = dayOrders.filter(
+              (order: Order) => order.status !== "canceled",
+            );
             return {
-              day: format(day, "dd/MM"),
+              day: day.format("DD/MM"),
               Total: revenueDayOrders.reduce(
                 (sum: number, order: Order) =>
                   sum + (parseFloat(order.price) || 0),
@@ -261,7 +245,7 @@ const MonthlyReports = () => {
         setReportData(processedData);
       }
     }
-  }, [ordersData, isOrdersLoading]);
+  }, [ordersData, isOrdersLoading, dateRange]);
 
   const completionRate =
     reportData.totalOrders > 0
@@ -272,37 +256,30 @@ const MonthlyReports = () => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
 
-    // Use theme colors
-    const primaryColor: [number, number, number] = [140, 82, 255]; // #8C52FF
-    const secondaryColor: [number, number, number] = [81, 112, 255]; // #5170FF
-    const complementaryColor: [number, number, number] = [255, 102, 196]; // #FF66C4
+    const primaryColor: [number, number, number] = [140, 82, 255];
+    const secondaryColor: [number, number, number] = [81, 112, 255];
     const mutedColor: [number, number, number] = [100, 100, 100];
 
-    // Title with custom styling
     doc.setFontSize(24);
     doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
     doc.text("Zencora Noma", pageWidth / 2, 20, { align: "center" });
 
-    // Subtitle
     doc.setFontSize(16);
     doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
     doc.text("Relatório de Vendas", pageWidth / 2, 30, { align: "center" });
 
-    // Period with custom styling
     doc.setFontSize(12);
     doc.setTextColor(mutedColor[0], mutedColor[1], mutedColor[2]);
     const periodText =
       dateRange?.from && dateRange?.to
-        ? `Período: ${formatDate(dateRange.from.toISOString(), "dd/MM/yyyy")} - ${formatDate(dateRange.to.toISOString(), "dd/MM/yyyy")}`
+        ? `Período: ${dayjs(dateRange.from).format("DD/MM/YYYY")} - ${dayjs(dateRange.to).format("DD/MM/YYYY")}`
         : "Período: Todo o mês";
     doc.text(periodText, pageWidth / 2, 40, { align: "center" });
 
-    // Summary section with custom styling
     doc.setFontSize(14);
     doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
     doc.text("Resumo", 14, 55);
 
-    // Summary table with custom styling
     autoTable(doc, {
       startY: 60,
       head: [["Métrica", "Valor"]],
@@ -336,7 +313,6 @@ const MonthlyReports = () => {
       tableLineColor: [240, 240, 240],
     });
 
-    // Payment Methods section
     doc.setFontSize(14);
     doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
     doc.text(
@@ -369,12 +345,10 @@ const MonthlyReports = () => {
       tableLineColor: [240, 240, 240],
     });
 
-    // Daily Revenue section
     doc.setFontSize(14);
     doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
     doc.text("Receita Diária", 14, (doc as any).lastAutoTable.finalY + 15);
 
-    // Daily revenue table with custom styling
     autoTable(doc, {
       startY: (doc as any).lastAutoTable.finalY + 20,
       head: [["Data", "Receita"]],
@@ -403,7 +377,6 @@ const MonthlyReports = () => {
       tableLineColor: [240, 240, 240],
     });
 
-    // Orders List section
     doc.setFontSize(14);
     doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
     doc.text(
@@ -412,7 +385,6 @@ const MonthlyReports = () => {
       (doc as any).lastAutoTable.finalY + 15,
     );
 
-    // Orders table with custom styling
     autoTable(doc, {
       startY: (doc as any).lastAutoTable.finalY + 20,
       head: [
@@ -428,7 +400,7 @@ const MonthlyReports = () => {
         ],
       ],
       body: orders.map((order) => {
-        const isOverdue = new Date(order.dueDate) < new Date();
+        const isOverdue = dayjs(order.dueDate).isBefore(dayjs());
         const status =
           isOverdue &&
           (order.status === "pending" || order.status === "production")
@@ -475,18 +447,17 @@ const MonthlyReports = () => {
       styles: { lineWidth: 0.2, lineColor: [220, 220, 220] },
       tableLineColor: [240, 240, 240],
       columnStyles: {
-        0: { cellWidth: 28 }, // Cliente
-        1: { cellWidth: 40 }, // Descrição
-        2: { cellWidth: 20 }, // Valor
-        3: { cellWidth: 20 }, // Valor Pago
-        4: { cellWidth: 18 }, // Pagamento
-        5: { cellWidth: 24 }, // Método
-        6: { cellWidth: 16 }, // Data
-        7: { cellWidth: 16 }, // Status
+        0: { cellWidth: 28 },
+        1: { cellWidth: 40 },
+        2: { cellWidth: 20 },
+        3: { cellWidth: 20 },
+        4: { cellWidth: 18 },
+        5: { cellWidth: 24 },
+        6: { cellWidth: 16 },
+        7: { cellWidth: 16 },
       },
     });
 
-    // Footer
     const totalPages = (doc as any).internal.pages.length - 1;
     for (let i = 1; i <= totalPages; i++) {
       doc.setPage(i);
@@ -499,23 +470,19 @@ const MonthlyReports = () => {
         { align: "center" },
       );
       doc.text(
-        `Gerado em ${formatDate(new Date().toISOString(), "dd/MM/yyyy 'às' HH:mm")}`,
+        `Gerado em ${dayjs().format("DD/MM/YYYY [às] HH:mm")}`,
         pageWidth / 2,
         doc.internal.pageSize.getHeight() - 5,
         { align: "center" },
       );
     }
 
-    // Save the PDF
-    doc.save(
-      `relatorio-zencora-${formatDate(new Date().toISOString(), "yyyy-MM-dd")}.pdf`,
-    );
+    doc.save(`relatorio-zencora-${dayjs().format("YYYY-MM-DD")}.pdf`);
   };
 
   const handleExportCSV = () => {
     let csvContent = "";
 
-    // 1. Resumo
     const summaryData = [
       { Métrica: "Total de Encomendas", Valor: reportData.totalOrders },
       {
@@ -532,7 +499,6 @@ const MonthlyReports = () => {
     csvContent += Papa.unparse(summaryData);
     csvContent += "\n\n";
 
-    // 2. Relação de Pagamentos
     csvContent += "Relação de Pagamentos\n";
     csvContent += Papa.unparse(
       paymentMethodData.map((item) => ({
@@ -542,7 +508,6 @@ const MonthlyReports = () => {
     );
     csvContent += "\n\n";
 
-    // 3. Receita Diária
     csvContent += "Receita Diária\n";
     csvContent += Papa.unparse(
       reportData.dailyRevenue.map((item) => ({
@@ -552,10 +517,9 @@ const MonthlyReports = () => {
     );
     csvContent += "\n\n";
 
-    // 4. Encomendas
     csvContent += "Encomendas do Período\n";
     const ordersData = orders.map((order) => {
-      const isOverdue = new Date(order.dueDate) < new Date();
+      const isOverdue = dayjs(order.dueDate).isBefore(dayjs());
       const status =
         isOverdue &&
         (order.status === "pending" || order.status === "production")
@@ -592,7 +556,7 @@ const MonthlyReports = () => {
     link.setAttribute("href", url);
     link.setAttribute(
       "download",
-      `relatorio-zencora-${formatDate(new Date().toISOString(), "yyyy-MM-dd")}.csv`,
+      `relatorio-zencora-${dayjs().format("YYYY-MM-DD")}.csv`,
     );
     link.style.visibility = "hidden";
     document.body.appendChild(link);
@@ -603,7 +567,7 @@ const MonthlyReports = () => {
   const handleExportXLSX = async () => {
     const workbook = new ExcelJS.Workbook();
     workbook.creator = "Zencora Noma";
-    workbook.created = new Date();
+    workbook.created = dayjs().toDate();
 
     const headerStyle: Partial<ExcelJS.Style> = {
       font: { bold: true, color: { argb: "FFFFFFFF" } },
@@ -633,11 +597,11 @@ const MonthlyReports = () => {
     const evenRowFill: ExcelJS.Fill = {
       type: "pattern",
       pattern: "solid",
-      fgColor: { argb: "FFFAFAFF" }, // Cor clara para linhas pares
+      fgColor: { argb: "FFFAFAFF" },
     };
 
     const applySheetStyling = (worksheet: ExcelJS.Worksheet) => {
-      worksheet.getRow(1).height = 30; // Aumenta a altura do cabeçalho
+      worksheet.getRow(1).height = 30;
 
       worksheet.eachRow((row, rowNumber) => {
         if (rowNumber === 1) {
@@ -655,7 +619,6 @@ const MonthlyReports = () => {
       });
     };
 
-    // --- Planilha de Resumo ---
     const summaryWS = workbook.addWorksheet("Resumo");
     summaryWS.columns = [
       { header: "Métrica", key: "metric", width: 25 },
@@ -679,7 +642,6 @@ const MonthlyReports = () => {
     summaryWS.getCell("B3").numFmt = '"R$"#,##0.00';
     applySheetStyling(summaryWS);
 
-    // --- Planilha de Pagamentos ---
     const paymentsWS = workbook.addWorksheet("Pagamentos");
     paymentsWS.columns = [
       { header: "Método de Pagamento", key: "method", width: 25 },
@@ -690,7 +652,6 @@ const MonthlyReports = () => {
     });
     applySheetStyling(paymentsWS);
 
-    // --- Planilha de Receita Diária ---
     const dailyRevenueWS = workbook.addWorksheet("Receita Diária");
     dailyRevenueWS.columns = [
       { header: "Data", key: "day", width: 15 },
@@ -705,7 +666,6 @@ const MonthlyReports = () => {
     dailyRevenueWS.getColumn("B").numFmt = '"R$"#,##0.00';
     applySheetStyling(dailyRevenueWS);
 
-    // --- Planilha de Encomendas ---
     const ordersWS = workbook.addWorksheet("Encomendas");
     ordersWS.columns = [
       { header: "Cliente", key: "client", width: 30 },
@@ -718,7 +678,7 @@ const MonthlyReports = () => {
       { header: "Status", key: "status", width: 15 },
     ];
     orders.forEach((order) => {
-      const isOverdue = new Date(order.dueDate) < new Date();
+      const isOverdue = dayjs(order.dueDate).isBefore(dayjs());
       const status =
         isOverdue &&
         (order.status === "pending" || order.status === "production")
@@ -749,14 +709,13 @@ const MonthlyReports = () => {
     ordersWS.getColumn("D").numFmt = '"R$"#,##0.00';
     applySheetStyling(ordersWS);
 
-    // Salva o arquivo
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `relatorio-zencora-${formatDate(new Date().toISOString(), "yyyy-MM-dd")}.xlsx`;
+    link.download = `relatorio-zencora-${dayjs().format("YYYY-MM-DD")}.xlsx`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -784,11 +743,12 @@ const MonthlyReports = () => {
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <div className="flex flex-col sm:flex-row gap-4">
             <Select
-              value={dateRange?.from ? format(dateRange.from, "yyyy-MM") : ""}
+              value={
+                dateRange?.from ? dayjs(dateRange.from).format("YYYY-MM") : ""
+              }
               onValueChange={(value) => {
-                const [year, month] = value.split("-");
-                const start = new Date(parseInt(year), parseInt(month) - 1, 1);
-                const end = new Date(parseInt(year), parseInt(month), 0);
+                const start = dayjs(value, "YYYY-MM").startOf("month").toDate();
+                const end = dayjs(value, "YYYY-MM").endOf("month").toDate();
                 setDateRange({ from: start, to: end });
               }}
             >
@@ -797,23 +757,14 @@ const MonthlyReports = () => {
               </SelectTrigger>
               <SelectContent>
                 {Array.from({ length: 12 }, (_, i) => {
-                  const date = new Date();
-                  date.setMonth(date.getMonth() - i);
-                  const monthYear = format(date, "yyyy-MM");
+                  const date = dayjs().subtract(i, "month");
+                  const monthYear = date.format("YYYY-MM");
                   return (
                     <SelectItem key={monthYear} value={monthYear}>
-                      {format(date, "MMMM yyyy", { locale: ptBR }).replace(
-                        /^\w/,
-                        (c) => c.toUpperCase(),
-                      )}
+                      {date
+                        .format("MMMM YYYY")
+                        .replace(/^\w/, (c) => c.toUpperCase())}
                     </SelectItem>
-                  );
-                }).filter((_, i, arr) => {
-                  // Remove duplicatas verificando se é a primeira ocorrência do mês/ano
-                  const monthYear = arr[i].props.value;
-                  return (
-                    arr.findIndex((item) => item.props.value === monthYear) ===
-                    i
                   );
                 })}
               </SelectContent>
@@ -979,10 +930,6 @@ const MonthlyReports = () => {
                           tick={{ fontSize: 12 }}
                           interval="preserveStartEnd"
                         />
-                        {/* <YAxis
-                          tick={{ fontSize: 12 }}
-                          tickFormatter={(value) => formatCurrency(value)}
-                        /> */}
                         <Tooltip
                           formatter={(value: number) => formatCurrency(value)}
                           labelStyle={{ fontSize: 12 }}
@@ -1023,7 +970,6 @@ const MonthlyReports = () => {
                           tick={{ fontSize: 12 }}
                           interval="preserveStartEnd"
                         />
-                        {/* <YAxis tick={{ fontSize: 12 }} /> */}
                         <Tooltip labelStyle={{ fontSize: 12 }} />
                         <Bar
                           dataKey="Encomendas"

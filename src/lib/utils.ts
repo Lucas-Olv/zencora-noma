@@ -1,12 +1,11 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { format, parseISO } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { useReactToPrint, type UseReactToPrintOptions } from "react-to-print";
 import { useSubscriptionStorage } from "@/storage/subscription";
 import { useTenantStorage } from "@/storage/tenant";
 import { useSettingsStorage } from "@/storage/settings";
 import { useSessionStorage } from "@/storage/session";
+import dayjs, { Dayjs } from "dayjs";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -14,33 +13,25 @@ export function cn(...inputs: ClassValue[]) {
 
 export function formatDate(
   date: string | null | undefined,
-  formatStr: string = "dd 'de' MMMM 'às' HH:mm",
+  formatStr: string = "DD [de] MMMM [às] HH:mm",
 ): string {
   if (!date) return "Data não definida";
 
-  try {
-    const parsedDate = parseISO(date);
-    if (isNaN(parsedDate.getTime())) {
-      return "Data inválida";
-    }
-    return format(parsedDate, formatStr, { locale: ptBR });
-  } catch (error) {
+  const dayjsDate = dayjs(date);
+  if (!dayjsDate.isValid()) {
     return "Data inválida";
   }
+  return dayjsDate.format(formatStr);
 }
 
-export function parseDate(date: string | null | undefined): Date | null {
+export function parseDate(date: string | null | undefined): Dayjs | null {
   if (!date) return null;
 
-  try {
-    const parsedDate = parseISO(date);
-    if (isNaN(parsedDate.getTime())) {
-      return null;
-    }
-    return parsedDate;
-  } catch (error) {
+  const dayjsDate = dayjs(date);
+  if (!dayjsDate.isValid()) {
     return null;
   }
+  return dayjsDate;
 }
 
 export async function cleanWorkspaceData() {
@@ -52,7 +43,6 @@ export async function cleanWorkspaceData() {
 }
 
 export function getOrderCode(id: string): string {
-  // Pega os últimos 6 caracteres do UUID
   return id.slice(-6).toUpperCase();
 }
 
@@ -84,11 +74,10 @@ export function getStatusDisplay(
   status: string | null,
   dueDate?: string | null,
 ) {
-  // Verifica se está atrasado (apenas para status pendente ou produção)
   const isOverdue =
     dueDate &&
     ["pending", "production"].includes(status || "") &&
-    new Date(dueDate) < new Date();
+    dayjs(dueDate).isBefore(dayjs());
 
   if (isOverdue) {
     return {

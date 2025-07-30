@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
-import { useToast } from "@/components/ui/use-toast";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
@@ -12,9 +11,10 @@ import { useTenantStorage } from "@/storage/tenant";
 import { getNomaApi } from "@/lib/apiHelpers";
 import { useQuery } from "@tanstack/react-query";
 import { Order } from "@/lib/types";
+import dayjs from "@/lib/dayjs";
 
 const getStatusClasses = (status: string | null, dueDate: string) => {
-  const isOverdue = new Date(dueDate) < new Date();
+  const isOverdue = dayjs(dueDate).isBefore(dayjs());
   const effectiveStatus =
     isOverdue && status === "pending" ? "overdue" : status;
 
@@ -36,7 +36,7 @@ const getStatusClasses = (status: string | null, dueDate: string) => {
 };
 
 const getEventColor = (status: string | null, dueDate: string) => {
-  const isOverdue = new Date(dueDate) < new Date();
+  const isOverdue = dayjs(dueDate).isBefore(dayjs());
   const effectiveStatus =
     isOverdue && status === "pending" ? "overdue" : status;
 
@@ -45,42 +45,41 @@ const getEventColor = (status: string | null, dueDate: string) => {
       return {
         backgroundColor: "rgb(254 226 226 / 0.8)",
         borderColor: "rgb(153 27 27)",
-      }; // red-100/80 and red-800
+      };
     case "pending":
       return {
         backgroundColor: "rgb(254 240 138 / 0.8)",
         borderColor: "rgb(133 77 14)",
-      }; // yellow-100/80 and yellow-800
+      };
     case "production":
       return {
         backgroundColor: "rgb(233 213 255 / 0.8)",
         borderColor: "rgb(107 33 168)",
-      }; // purple-100/80 and purple-800
+      };
     case "delivered":
       return {
-        backgroundColor: "rgb(187 247 208 / 0.8)", // green-100/80
-        borderColor: "rgb(22 101 52)", // green-800
+        backgroundColor: "rgb(187 247 208 / 0.8)",
+        borderColor: "rgb(22 101 52)",
       };
     case "canceled":
       return {
         backgroundColor: "rgb(254 226 226 / 0.8)",
         borderColor: "rgb(153 27 27)",
-      }; //
+      };
     case "done":
       return {
-        backgroundColor: "rgb(191 219 254 / 0.8)", // blue-100/80
-        borderColor: "rgb(30 64 175)", // blue-800
+        backgroundColor: "rgb(191 219 254 / 0.8)",
+        borderColor: "rgb(30 64 175)",
       };
     default:
       return {
         backgroundColor: "rgb(254 240 138 / 0.8)",
         borderColor: "rgb(133 77 14)",
-      }; // yellow-100/80 and yellow-800
+      };
   }
 };
 
 const CalendarPage = () => {
-  const { toast } = useToast();
   const navigate = useNavigate();
   const { tenant } = useTenantStorage();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -89,7 +88,6 @@ const CalendarPage = () => {
     data: ordersData,
     isLoading: isOrdersLoading,
     isError: isOrdersError,
-    refetch,
   } = useQuery({
     queryKey: ["calendarOrders", tenant?.id],
     queryFn: () =>
@@ -138,7 +136,6 @@ const CalendarPage = () => {
     const observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
         if (mutation.attributeName === "class") {
-          // Força uma atualização do calendário quando o tema muda
           const calendar = document.querySelector(".fc");
           if (calendar) {
             calendar.classList.add("theme-updated");

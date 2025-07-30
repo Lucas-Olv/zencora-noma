@@ -9,7 +9,6 @@ import { LoadingState } from "@/components/ui/loading-state";
 import {
   cn,
   formatDate,
-  parseDate,
   getOrderCode,
   usePrint,
   getStatusDisplay,
@@ -23,6 +22,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { getNomaApi, patchNomaApi } from "@/lib/apiHelpers";
 import { useSessionStorage } from "@/storage/session";
 import { useAnalytics } from "@/contexts/AnalyticsProviderContext";
+import dayjs from "@/lib/dayjs";
 
 function ConnectionStatus({
   isConnected,
@@ -147,7 +147,6 @@ export function ProductionView() {
     if (!session.token || !tenant?.id) return;
 
     console.log("[SocketIO] Tentando conectar...");
-    // Desconecta se já existir um socket
     if (socketRef.current) {
       socketRef.current.disconnect();
     }
@@ -159,7 +158,6 @@ export function ProductionView() {
 
     socketRef.current = socket;
 
-    // Eventos de conexão
     socket.on("connect", () => {
       console.log("[SocketIO] Conectado!");
       setIsConnected(true);
@@ -187,7 +185,6 @@ export function ProductionView() {
       });
     });
 
-    // Listeners de pedidos
     socket.on("order_created", (order) => {
       console.log("[SocketIO] Pedido criado:", order);
       setOrders((current) => [...current, order]);
@@ -214,13 +211,11 @@ export function ProductionView() {
     };
   }, [session.token, tenant.id]);
 
-  // Handler para reconectar
   const handleReconnect = () => {
     if (socketRef.current) {
       console.log("[SocketIO] Forçando reconexão...");
       socketRef.current.connect();
     } else {
-      // Se não houver socket, tenta criar um novo disparando o useEffect
       setIsConnected(undefined);
     }
   };
@@ -230,12 +225,9 @@ export function ProductionView() {
       (order) => order.status === "pending" || order.status === "production",
     )
     .sort((a, b) => {
-      // Primeiro, ordena por status (production vem antes de pending)
       if (a.status === "production" && b.status !== "production") return -1;
       if (a.status !== "production" && b.status === "production") return 1;
-
-      // Se o status for igual, ordena por data de entrega
-      return parseDate(a.dueDate).getTime() - parseDate(b.dueDate).getTime();
+      return dayjs(a.dueDate).diff(dayjs(b.dueDate));
     });
 
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -258,7 +250,7 @@ export function ProductionView() {
   const isMobile = useMediaQuery("(max-width: 640px)");
 
   const OrderCard = ({ order }: { order: Order }) => {
-    const isOverdue = new Date(order.dueDate) < new Date();
+    const isOverdue = dayjs(order.dueDate).isBefore(dayjs());
     const status =
       isOverdue && order.status === "pending" ? "overdue" : order.status;
 
@@ -434,7 +426,7 @@ export function ProductionView() {
   };
 
   const OrderLabel = ({ order }: { order: Order }) => {
-    const isOverdue = new Date(order.dueDate) < new Date();
+    const isOverdue = dayjs(order.dueDate).isBefore(dayjs());
     const status =
       isOverdue && order.status === "pending" ? "overdue" : order.status;
     const statusDisplay = getStatusDisplay(status, order.dueDate);
@@ -442,7 +434,6 @@ export function ProductionView() {
     return (
       <div className="w-[100mm] h-[150mm] bg-white text-black p-6">
         <div className="border border-gray-300 rounded-xl shadow-sm h-full flex flex-col justify-between p-6 space-y-4">
-          {/* Bloco do código da encomenda */}
           <div className="text-center py-4">
             <p className="text-[10px] uppercase font-medium text-zinc-400 tracking-wide">
               Código
@@ -452,7 +443,6 @@ export function ProductionView() {
             </h1>
           </div>
 
-          {/* Informações principais */}
           <div className="flex-1 flex flex-col gap-4 text-zinc-800">
             <div className="grid grid-cols-2 gap-4">
               <LabelItem title="Cliente" content={order.clientName} />
@@ -473,12 +463,8 @@ export function ProductionView() {
             />
           </div>
 
-          {/* Rodapé */}
           <div className="text-center text-[10px] text-zinc-400 border-t pt-2">
-            <p>
-              Gerado em{" "}
-              {formatDate(new Date().toISOString(), "dd/MM/yyyy 'às' HH:mm")}
-            </p>
+            <p>Gerado em {dayjs().format("DD/MM/YYYY [às] HH:mm")}</p>
             <p className="mt-0.5">Por Zencora Noma</p>
           </div>
         </div>
@@ -563,7 +549,6 @@ export function ProductionView() {
         </CardContent>
       </Card>
 
-      {/* Hidden print content */}
       <div className="hidden">
         {selectedOrder && (
           <div ref={printRef}>

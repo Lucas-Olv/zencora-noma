@@ -36,6 +36,7 @@ import {
   postNomaApi,
 } from "@/lib/apiHelpers";
 import { useAnalytics } from "@/contexts/AnalyticsProviderContext";
+import dayjs from "@/lib/dayjs";
 const RemindersView = () => {
   const { toast } = useToast();
   const { tenant } = useTenantStorage();
@@ -200,7 +201,7 @@ const RemindersView = () => {
           id: reminder.id,
           tenantId: reminder.tenantId,
           isDone: !reminder.isDone,
-          updatedAt: new Date().toISOString(),
+          updatedAt: dayjs().toISOString(),
         },
       },
       {

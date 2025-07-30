@@ -1,6 +1,5 @@
-import { format, addDays, isSameDay, isAfter, isBefore } from "date-fns";
 import { Calendar } from "lucide-react";
-import { cn, formatDate, parseDate, getOrderCode } from "@/lib/utils";
+import { cn, formatDate, getOrderCode } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,6 +12,7 @@ import {
 import { LoadingState } from "@/components/ui/loading-state";
 import { Badge } from "@/components/ui/badge";
 import { Order } from "@/lib/types";
+import dayjs from "@/lib/dayjs";
 
 interface DeliveryCalendarProps {
   orders: Order[];
@@ -21,42 +21,36 @@ interface DeliveryCalendarProps {
 
 function DeliveryCalendar({ orders, loading = false }: DeliveryCalendarProps) {
   const navigate = useNavigate();
-  const today = new Date();
-  const tomorrow = addDays(today, 1);
+  const today = dayjs().startOf("day");
+  const tomorrow = today.add(1, "day");
 
-  // Filter out canceled and delivered orders
   const activeOrders =
     orders?.filter(
       (order) => order.status !== "canceled" && order.status !== "delivered",
     ) || [];
 
   const overdueOrders = activeOrders.filter((order) => {
-    const orderDate = parseDate(order.dueDate);
-    return orderDate && isBefore(orderDate, today) && order.status !== "done";
+    const orderDate = dayjs(order.dueDate);
+    return orderDate.isBefore(today) && order.status !== "done";
   });
 
   const todayOrders = activeOrders.filter((order) => {
-    const orderDate = parseDate(order.dueDate);
-    return orderDate && isSameDay(orderDate, today);
+    const orderDate = dayjs(order.dueDate);
+    return orderDate.isSame(today, "day");
   });
 
   const tomorrowOrders = activeOrders.filter((order) => {
-    const orderDate = parseDate(order.dueDate);
-    return orderDate && isSameDay(orderDate, tomorrow);
+    const orderDate = dayjs(order.dueDate);
+    return orderDate.isSame(tomorrow, "day");
   });
 
   const futureOrders = activeOrders
     .filter((order) => {
-      const orderDate = parseDate(order.dueDate);
-      return orderDate && isAfter(orderDate, tomorrow);
+      const orderDate = dayjs(order.dueDate);
+      return orderDate.isAfter(tomorrow);
     })
-    .sort((a, b) => {
-      const dateA = parseDate(a.dueDate);
-      const dateB = parseDate(b.dueDate);
-      return dateA.getTime() - dateB.getTime();
-    });
+    .sort((a, b) => dayjs(a.dueDate).diff(dayjs(b.dueDate)));
 
-  // Limit each section to 5 orders
   const overdueOrdersLimited = overdueOrders.slice(0, 5);
   const todayOrdersLimited = todayOrders.slice(0, 5);
   const tomorrowOrdersLimited = tomorrowOrders.slice(0, 5);
@@ -74,7 +68,7 @@ function DeliveryCalendar({ orders, loading = false }: DeliveryCalendarProps) {
       <div className="space-y-2">
         <h3 className={`text-sm font-medium ${titleColor}`}>{title}</h3>
         {orders.map((order) => {
-          const isOverdue = new Date(order.dueDate) < new Date();
+          const isOverdue = dayjs(order.dueDate).isBefore(dayjs());
           const status =
             isOverdue && order.status === "pending" ? "overdue" : order.status;
           return (

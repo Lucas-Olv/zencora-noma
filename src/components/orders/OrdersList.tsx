@@ -37,8 +37,9 @@ import { Order } from "@/lib/types";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { getNomaApi, patchNomaApi } from "@/lib/apiHelpers";
 import { useSettingsStorage } from "@/storage/settings";
+import dayjs from "@/lib/dayjs";
 
-const OrdersView = () => {
+const OrdersList = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -112,7 +113,7 @@ const OrdersView = () => {
   const { tenant } = useTenantStorage();
 
   const OrderLabel = ({ order }: { order: Order }) => {
-    const isOverdue = new Date(order.dueDate) < new Date();
+    const isOverdue = dayjs(order.dueDate).isBefore(dayjs());
     const status =
       isOverdue && order.status === "pending" ? "overdue" : order.status;
     const statusDisplay = getStatusDisplay(status, order.dueDate);
@@ -120,7 +121,6 @@ const OrdersView = () => {
     return (
       <div className="w-[100mm] h-[150mm] bg-white text-black p-6">
         <div className="border border-gray-300 rounded-xl shadow-sm h-full flex flex-col justify-between p-6 space-y-4">
-          {/* Bloco do código da encomenda */}
           <div className="text-center py-4">
             <p className="text-[10px] uppercase font-medium text-zinc-400 tracking-wide">
               Código
@@ -130,7 +130,6 @@ const OrdersView = () => {
             </h1>
           </div>
 
-          {/* Informações principais */}
           <div className="flex-1 flex flex-col gap-4 text-zinc-800">
             <div className="grid grid-cols-2 gap-4">
               <LabelItem title="Cliente" content={order.clientName} />
@@ -151,12 +150,8 @@ const OrdersView = () => {
             />
           </div>
 
-          {/* Rodapé */}
           <div className="text-center text-[10px] text-zinc-400 border-t pt-2">
-            <p>
-              Gerado em{" "}
-              {formatDate(new Date().toISOString(), "dd/MM/yyyy 'às' HH:mm")}
-            </p>
+            <p>Gerado em {dayjs().format("DD/MM/YYYY [às] HH:mm")}</p>
             <p className="mt-0.5">Por Zencora Noma</p>
           </div>
         </div>
@@ -335,7 +330,7 @@ const OrdersView = () => {
                   </TableHeader>
                   <TableBody>
                     {filteredOrders.map((order) => {
-                      const isOverdue = new Date(order.dueDate) < new Date();
+                      const isOverdue = dayjs(order.dueDate).isBefore(dayjs());
                       const status =
                         isOverdue && order.status === "pending"
                           ? "overdue"
@@ -374,7 +369,6 @@ const OrdersView = () => {
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            {/* Estado do Pagamento como Badge colorida */}
                             <Badge
                               variant="outline"
                               className={cn(
@@ -396,7 +390,6 @@ const OrdersView = () => {
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            {/* Método de Pagamento traduzido ou Não informado */}
                             {order.paymentMethod === "credit_card" &&
                               "Cartão de Crédito"}
                             {order.paymentMethod === "debit_card" &&
@@ -483,10 +476,9 @@ const OrdersView = () => {
                 </Table>
               </div>
 
-              {/* Mobile Card View */}
               <div className="md:hidden space-y-4">
                 {filteredOrders.map((order) => {
-                  const isOverdue = new Date(order.dueDate) < new Date();
+                  const isOverdue = dayjs(order.dueDate).isBefore(dayjs());
                   const status =
                     isOverdue && order.status === "pending"
                       ? "overdue"
@@ -508,7 +500,6 @@ const OrdersView = () => {
                               <p className="text-sm text-muted-foreground">
                                 {formatDate(order.dueDate)}
                               </p>
-                              {/* Estado do Pagamento e Método de Pagamento */}
                               <div className="flex flex-col mt-1 text-xs text-muted-foreground gap-0.5">
                                 <span>
                                   <strong>Pagamento:</strong>{" "}
@@ -636,7 +627,6 @@ const OrdersView = () => {
         onSuccess={handleListUpdate}
       />
 
-      {/* Hidden print content */}
       <div className="hidden">
         {selectedOrder && (
           <div ref={printRef}>
@@ -648,4 +638,4 @@ const OrdersView = () => {
   );
 };
 
-export default OrdersView;
+export default OrdersList;

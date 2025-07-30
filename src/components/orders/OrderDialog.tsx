@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { format } from "date-fns";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -27,7 +26,7 @@ import { useTenantStorage } from "@/storage/tenant";
 import { useSettingsStorage } from "@/storage/settings";
 import { Order } from "@/lib/types";
 import { patchNomaApi, postNomaApi } from "@/lib/apiHelpers";
-import dayjs from "dayjs";
+import dayjs from "@/lib/dayjs";
 import {
   Select,
   SelectTrigger,
@@ -59,15 +58,7 @@ const formSchema = z.object({
     .string()
     .min(1, "Por favor, selecione a data de entrega")
     .refine((date) => {
-      // Criar as datas no fuso horário local
-      const today = new Date();
-      const selectedDate = new Date(date + "T00:00:00");
-
-      // Reset hours to 0 for both dates to compare only the dates
-      today.setHours(0, 0, 0, 0);
-      selectedDate.setHours(0, 0, 0, 0);
-
-      return selectedDate.getTime() >= today.getTime();
+      return dayjs(date).isSameOrAfter(dayjs(), "day");
     }, "A data de entrega não pode ser anterior a hoje"),
   dueTime: z.string().min(1, "Por favor, selecione a hora de entrega"),
   paymentStatus: z
@@ -115,6 +106,7 @@ const OrderDialog = ({
       amountPaid: "",
     },
   });
+
   const {
     mutate: createOrder,
     error: createOrderError,
@@ -188,13 +180,12 @@ const OrderDialog = ({
   useEffect(() => {
     if (open) {
       if (mode === "edit" && orderData) {
-        const date = new Date(orderData.dueDate);
         form.reset({
           clientName: orderData.clientName,
           clientPhone: orderData.clientPhone || "",
           description: orderData.description || "",
-          dueDate: format(date, "yyyy-MM-dd"),
-          dueTime: format(date, "HH:mm"),
+          dueDate: dayjs(orderData.dueDate).format("YYYY-MM-DD"),
+          dueTime: dayjs(orderData.dueDate).format("HH:mm"),
           price: orderData.price.replace(".", ","),
           paymentStatus: orderData.paymentStatus || "",
           paymentMethod: orderData.paymentMethod || "",
@@ -214,7 +205,6 @@ const OrderDialog = ({
     }
   }, [open, mode, orderData, form]);
 
-  // Formata o telefone enquanto digita e limita a 11 dígitos
   const formatPhone = (value: string) => {
     const numbers = value.replace(/\D/g, "").slice(0, 11);
     if (numbers.length <= 11) {
@@ -228,18 +218,10 @@ const OrderDialog = ({
     return value;
   };
 
-  // Formata o valor enquanto digita
   const formatPrice = (value: string) => {
-    // Remove tudo que não é número
     const numbers = value.replace(/\D/g, "");
-
-    // Se não houver números, retorna vazio
     if (numbers.length === 0) return "";
-
-    // Converte para número e divide por 100 para ter os centavos
     const amount = parseInt(numbers) / 100;
-
-    // Formata o número com 2 casas decimais
     return amount.toLocaleString("pt-BR", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
@@ -249,10 +231,11 @@ const OrderDialog = ({
   const onSubmit = async (data: FormValues) => {
     if (!tenant) return;
     const [hours, minutes] = data.dueTime.split(":");
-    const dueDate = new Date(data.dueDate + "T00:00:00");
-    dueDate.setHours(parseInt(hours), parseInt(minutes));
+    const dueDate = dayjs(data.dueDate)
+      .hour(parseInt(hours))
+      .minute(parseInt(minutes));
 
-    const orderData = {
+    const orderPayload = {
       clientName: data.clientName,
       clientPhone: data.clientPhone || null,
       description: data.description,
@@ -276,18 +259,18 @@ const OrderDialog = ({
     if (mode === "create") {
       if (
         settings?.enablePartialPaymentAmount &&
-        orderData.paymentStatus === "partially_paid"
+        orderPayload.paymentStatus === "partially_paid"
       ) {
         const amountPaid =
           (parseInt(settings?.partialPaymentPercentage) / 100) *
-          parseFloat(orderData.price);
-        orderData.amountPaid = amountPaid.toFixed(2);
-      } else if (orderData.paymentStatus === "paid") {
-        orderData.amountPaid = orderData.price;
+          parseFloat(orderPayload.price);
+        orderPayload.amountPaid = amountPaid.toFixed(2);
+      } else if (orderPayload.paymentStatus === "paid") {
+        orderPayload.amountPaid = orderPayload.price;
       }
-      createOrder({ orderData });
+      createOrder({ orderData: orderPayload });
     } else {
-      updateOrder({ orderData });
+      updateOrder({ orderData: orderPayload });
     }
   };
 
@@ -372,7 +355,7 @@ const OrderDialog = ({
                       <Input
                         {...field}
                         type="date"
-                        min={dayjs().toISOString().split("T")[0]}
+                        min={dayjs().format("YYYY-MM-DD")}
                       />
                     </FormControl>
                     <FormMessage />
@@ -416,7 +399,6 @@ const OrderDialog = ({
               )}
             />
 
-            {/* Agrupar selects de pagamento em grid para garantir alinhamento lado a lado */}
             <div
               className={cn(
                 mode === "create"
@@ -424,7 +406,6 @@ const OrderDialog = ({
                   : "grid grid-cols-1 gap-4",
               )}
             >
-              {/* Estado do Pagamento */}
               {mode === "create" && (
                 <FormField
                   control={form.control}
@@ -460,7 +441,6 @@ const OrderDialog = ({
                 />
               )}
 
-              {/* Tipo de Pagamento */}
               <FormField
                 control={form.control}
                 name="paymentMethod"

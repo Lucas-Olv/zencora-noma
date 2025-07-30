@@ -9,9 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { formatDate, parseDate } from "@/lib/utils";
+import { formatDate, getStatusDisplay } from "@/lib/utils";
 import {
   ArrowLeft,
   Calendar,
@@ -43,63 +41,6 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { delNomaAPi, getNomaApi, patchNomaApi } from "@/lib/apiHelpers";
 import { useTenantStorage } from "@/storage/tenant";
 import { useAnalytics } from "@/contexts/AnalyticsProviderContext";
-
-const getStatusDisplay = (status: string | null, dueDate?: string | null) => {
-  switch (status) {
-    case "pending":
-      // Verifica se está atrasado
-      if (dueDate && new Date(dueDate) < new Date()) {
-        return {
-          label: "Atrasado",
-          className:
-            "bg-red-100/80 text-red-800 dark:bg-red-900/30 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-900/50",
-        };
-      }
-      return {
-        label: "Pendente",
-        className:
-          "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50",
-      };
-    case "production":
-      // Verifica se está atrasado
-      if (dueDate && new Date(dueDate) < new Date()) {
-        return {
-          label: "Atrasado",
-          className:
-            "bg-red-100/80 text-red-800 dark:bg-red-900/30 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-900/50",
-        };
-      }
-      return {
-        label: "Produção",
-        className:
-          "bg-purple-100/80 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200 hover:bg-purple-200 dark:hover:bg-purple-900/50",
-      };
-    case "done":
-      return {
-        label: "Concluído",
-        className:
-          "bg-blue-100/80 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200 hover:bg-blue-200 dark:hover:bg-blue-900/50",
-      };
-    case "delivered":
-      return {
-        label: "Entregue",
-        className:
-          "bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-900/50",
-      };
-    case "canceled":
-      return {
-        label: "Cancelado",
-        className:
-          "bg-gray-100/80 text-gray-800 dark:bg-gray-900/30 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-900/50",
-      };
-    default:
-      return {
-        label: "Pendente",
-        className:
-          "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-900/50",
-      };
-  }
-};
 
 const AutoResizeTextarea = ({
   value,
@@ -314,7 +255,7 @@ const OrderDetail = () => {
                 <div>
                   <p className="text-sm text-muted-foreground">Criada em</p>
                   <p className="font-medium">
-                    {formatDate(order.createdAt, "dd/MM/yyyy")}
+                    {formatDate(order.createdAt, "DD/MM/YYYY")}
                   </p>
                 </div>
               </div>
@@ -369,7 +310,6 @@ const OrderDetail = () => {
     );
   }
 
-  // Caso não seja finalizada, retorna layout completo
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
@@ -434,7 +374,7 @@ const OrderDetail = () => {
               <div>
                 <p className="text-sm text-muted-foreground">Criada em</p>
                 <p className="font-medium">
-                  {formatDate(order.createdAt, "dd/MM/yyyy")}
+                  {formatDate(order.createdAt, "DD/MM/YYYY")}
                 </p>
               </div>
             </div>

@@ -2,6 +2,7 @@ import { LoginForm } from "@/components/auth/LoginForm";
 import ThemeToggle from "@/components/layout/ThemeToggle";
 import { Nav } from "@/components/ui/nav";
 import { Link } from "react-router-dom";
+import dayjs from "@/lib/dayjs";
 
 export default function Login() {
   return (
@@ -35,7 +36,7 @@ export default function Login() {
         </div>
 
         <div className="relative z-10 p-8 text-white/60 text-sm">
-          © {new Date().getFullYear()} Zencora. Todos os direitos reservados.
+          © {dayjs().year()} Zencora. Todos os direitos reservados.
         </div>
       </div>
 

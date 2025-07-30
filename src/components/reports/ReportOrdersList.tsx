@@ -11,6 +11,7 @@ import { LoadingState } from "@/components/ui/loading-state";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { Order } from "@/lib/types";
+import dayjs from "@/lib/dayjs";
 
 interface ReportOrdersListProps {
   orders: Order[];
@@ -44,7 +45,7 @@ function ReportOrdersList({
         >
           <div className="space-y-2">
             {orders.map((order) => {
-              const isOverdue = new Date(order.dueDate) < new Date();
+              const isOverdue = dayjs(order.dueDate).isBefore(dayjs());
               const status =
                 isOverdue && order.status === "pending"
                   ? "overdue"

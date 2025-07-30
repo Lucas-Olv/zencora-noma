@@ -11,6 +11,7 @@ import {
 import { LoadingState } from "@/components/ui/loading-state";
 import { Badge } from "@/components/ui/badge";
 import { Order } from "@/lib/types";
+import dayjs from "@/lib/dayjs";
 
 interface RecentOrdersProps {
   orders: Order[];
@@ -37,7 +38,7 @@ function RecentOrders({ orders, loading = false }: RecentOrdersProps) {
         >
           <div className="space-y-4">
             {orders.map((order) => {
-              const isOverdue = new Date(order.dueDate) < new Date();
+              const isOverdue = dayjs(order.dueDate).isBefore(dayjs());
               const status =
                 isOverdue && order.status === "pending"
                   ? "overdue"

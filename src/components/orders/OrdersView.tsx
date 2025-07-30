@@ -48,7 +48,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import dayjs from "dayjs";
+import dayjs from "@/lib/dayjs";
 import { useAnalytics } from "@/contexts/AnalyticsProviderContext";
 
 const OrdersView = () => {
@@ -128,7 +128,7 @@ const OrdersView = () => {
   const { tenant } = useTenantStorage();
 
   const OrderLabel = ({ order }: { order: Order }) => {
-    const isOverdue = new Date(order.dueDate) < new Date();
+    const isOverdue = dayjs(order.dueDate).isBefore(dayjs());
     const status =
       isOverdue && order.status === "pending" ? "overdue" : order.status;
     const statusDisplay = getStatusDisplay(status, order.dueDate);
@@ -136,7 +136,6 @@ const OrdersView = () => {
     return (
       <div className="w-[100mm] h-[150mm] bg-white text-black p-6">
         <div className="border border-gray-300 rounded-xl shadow-sm h-full flex flex-col justify-between p-6 space-y-4">
-          {/* Bloco do código da encomenda */}
           <div className="text-center py-4">
             <p className="text-[10px] uppercase font-medium text-zinc-400 tracking-wide">
               Código
@@ -146,7 +145,6 @@ const OrdersView = () => {
             </h1>
           </div>
 
-          {/* Informações principais */}
           <div className="flex-1 flex flex-col gap-4 text-zinc-800">
             <div className="grid grid-cols-2 gap-4">
               <LabelItem title="Cliente" content={order.clientName} />
@@ -167,12 +165,8 @@ const OrdersView = () => {
             />
           </div>
 
-          {/* Rodapé */}
           <div className="text-center text-[10px] text-zinc-400 border-t pt-2">
-            <p>
-              Gerado em{" "}
-              {formatDate(new Date().toISOString(), "dd/MM/yyyy 'às' HH:mm")}
-            </p>
+            <p>Gerado em {dayjs().format("DD/MM/YYYY [às] HH:mm")}</p>
             <p className="mt-0.5">Por Zencora Noma</p>
           </div>
         </div>
@@ -248,13 +242,11 @@ const OrdersView = () => {
     refetch();
   };
 
-  // Função para abrir o dialog de cancelamento
   const handleOpenCancelDialog = (orderId: string) => {
     setCancelOrderId(orderId);
     setCancelDialogOpen(true);
   };
 
-  // Função para confirmar o cancelamento
   const handleConfirmCancel = () => {
     if (cancelOrderId) {
       handleStatusChange(cancelOrderId, "canceled");
@@ -263,7 +255,6 @@ const OrdersView = () => {
     setCancelOrderId(null);
   };
 
-  // Função para fechar o dialog
   const handleCloseCancelDialog = () => {
     setCancelDialogOpen(false);
     setCancelOrderId(null);
@@ -284,7 +275,6 @@ const OrdersView = () => {
                 .includes(searchTerm.toLowerCase())),
         );
 
-  // Filtragem para as abas
   const inProgressOrders = filteredOrders.filter(
     (order) =>
       order.status === "pending" ||
@@ -375,8 +365,9 @@ const OrdersView = () => {
                       </TableHeader>
                       <TableBody>
                         {inProgressOrders.map((order) => {
-                          const isOverdue =
-                            new Date(order.dueDate) < new Date();
+                          const isOverdue = dayjs(order.dueDate).isBefore(
+                            dayjs(),
+                          );
                           const status =
                             isOverdue && order.status === "pending"
                               ? "overdue"
@@ -539,7 +530,7 @@ const OrdersView = () => {
                   {/* Mobile Card View */}
                   <div className="md:hidden space-y-4">
                     {inProgressOrders.map((order) => {
-                      const isOverdue = new Date(order.dueDate) < new Date();
+                      const isOverdue = dayjs(order.dueDate).isBefore(dayjs());
                       const status =
                         isOverdue && order.status === "pending"
                           ? "overdue"
@@ -580,7 +571,6 @@ const OrdersView = () => {
                                   {!order.paymentMethod && "Não informado"}
                                 </span>
                               </div>
-                              {/* Badge no canto superior direito */}
                               <Badge
                                 variant="outline"
                                 className={cn(
@@ -600,7 +590,6 @@ const OrdersView = () => {
                                 {status === "production" && "Produção"}
                                 {status === "done" && "Concluído"}
                               </Badge>
-                              {/* Fileira de botões de ação (mantida para em progresso) */}
                               <div className="flex items-center justify-between mt-2">
                                 <Button
                                   variant="ghost"
@@ -712,7 +701,6 @@ const OrdersView = () => {
                 </div>
               ) : (
                 <div className="overflow-x-auto">
-                  {/* Desktop Table View */}
                   <div className="hidden md:block">
                     <Table>
                       <TableHeader>
@@ -808,7 +796,6 @@ const OrdersView = () => {
                       </TableBody>
                     </Table>
                   </div>
-                  {/* Mobile Card View */}
                   <div className="md:hidden space-y-4">
                     {finishedOrders.map((order) => {
                       const status = order.status;
@@ -851,7 +838,6 @@ const OrdersView = () => {
                                   {!order.paymentMethod && "Não informado"}
                                 </span>
                               </div>
-                              {/* Badge no canto superior direito */}
                               <Badge
                                 variant="outline"
                                 className={cn(
@@ -887,7 +873,6 @@ const OrdersView = () => {
         onSuccess={handleListUpdate}
       />
 
-      {/* Dialog de confirmação de cancelamento */}
       <Dialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -919,7 +904,6 @@ const OrdersView = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Hidden print content */}
       <div className="hidden">
         {selectedOrder && (
           <div ref={printRef}>

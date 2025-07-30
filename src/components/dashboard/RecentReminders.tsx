@@ -23,6 +23,7 @@ import { useMutation } from "@tanstack/react-query";
 import { patchNomaApi } from "@/lib/apiHelpers";
 import { useTenantStorage } from "@/storage/tenant";
 import { useAnalytics } from "@/contexts/AnalyticsProviderContext";
+import dayjs from "@/lib/dayjs";
 
 interface RecentRemindersProps {
   reminders: Reminder[];
@@ -65,9 +66,8 @@ function RecentReminders({
   });
 
   useEffect(() => {
-    const sortedReminders = initialReminders.sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    const sortedReminders = [...initialReminders].sort((a, b) =>
+      dayjs(b.createdAt).diff(dayjs(a.createdAt)),
     );
     const slicedReminders = sortedReminders.slice(0, 5);
     setReminders(slicedReminders);
