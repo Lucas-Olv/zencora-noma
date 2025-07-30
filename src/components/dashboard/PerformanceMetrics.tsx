@@ -202,7 +202,11 @@ export default function PerformanceMetrics({
   const sevenDaysAgo = dayjs().subtract(6, "day").startOf("day").toDate();
   const last7DaysOrders = orders.filter((order) => {
     const orderDate = parseDate(order.dueDate);
-    return orderDate && orderDate.isSameOrAfter(dayjs(sevenDaysAgo)) && orderDate.isSameOrBefore(dayjs(today));
+    return (
+      orderDate &&
+      orderDate.isSameOrAfter(dayjs(sevenDaysAgo)) &&
+      orderDate.isSameOrBefore(dayjs(today))
+    );
   });
   const paymentMethodData = getPaymentMethodData(last7DaysOrders);
 
@@ -279,7 +283,7 @@ export default function PerformanceMetrics({
                   <BarChart data={dailyData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="date" />
-                    <Tooltip 
+                    <Tooltip
                       contentStyle={{
                         backgroundColor: "hsl(var(--accent))",
                         border: "1px solid hsl(var(--border))",
@@ -301,7 +305,7 @@ export default function PerformanceMetrics({
                     <BarChart data={paymentMethodData}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="method" />
-                      <Tooltip 
+                      <Tooltip
                         formatter={(value) => `${value} encomenda(s)`}
                         contentStyle={{
                           backgroundColor: "hsl(var(--accent))",

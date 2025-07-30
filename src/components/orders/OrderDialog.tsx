@@ -356,6 +356,7 @@ const OrderDialog = ({
                         {...field}
                         type="date"
                         min={dayjs().format("YYYY-MM-DD")}
+                        className="w-full [&::-webkit-datetime-edit-fields-wrapper]:p-0 [&::-webkit-date-and-time-value]:text-left [&::-webkit-calendar-picker-indicator]:ml-auto"
                       />
                     </FormControl>
                     <FormMessage />
@@ -370,7 +371,11 @@ const OrderDialog = ({
                   <FormItem className="w-full">
                     <FormLabel>Hora de Entrega *</FormLabel>
                     <FormControl>
-                      <Input {...field} type="time" />
+                      <Input
+                        {...field}
+                        type="time"
+                        className="w-full [&::-webkit-datetime-edit-fields-wrapper]:p-0 [&::-webkit-date-and-time-value]:text-left [&::-webkit-calendar-picker-indicator]:ml-auto"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
