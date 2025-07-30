@@ -26,6 +26,7 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
+  Legend,
 } from "recharts";
 import { formatDate, parseDate } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -63,7 +64,16 @@ interface ReportData {
   canceledRevenue: number;
   completedOrders: number;
   pendingOrders: number;
-  dailyRevenue: { day: string; Total: number; Encomendas: number }[];
+  dailyRevenue: {
+    day: string;
+    Total: number;
+    Pendentes: number;
+    Produção: number;
+    Concluídas: number;
+    Entregues: number;
+    Canceladas: number;
+    Atrasadas: number;
+  }[];
   categoryData: { name: string; value: number }[];
   canceledOrders: number;
   readyForDelivery: number;
@@ -231,6 +241,37 @@ const MonthlyReports = () => {
             const revenueDayOrders = dayOrders.filter(
               (order: Order) => order.status !== "canceled",
             );
+
+            // Contagem de encomendas por status
+            const pendingOrders = dayOrders.filter(
+              (order) => order.status === "pending",
+            ).length;
+
+            const productionOrders = dayOrders.filter(
+              (order) => order.status === "production",
+            ).length;
+
+            const doneOrders = dayOrders.filter(
+              (order) => order.status === "done",
+            ).length;
+
+            const deliveredOrders = dayOrders.filter(
+              (order) => order.status === "delivered",
+            ).length;
+
+            const canceledOrders = dayOrders.filter(
+              (order) => order.status === "canceled",
+            ).length;
+
+            const overdueOrders = dayOrders.filter((order) => {
+              const dueDate = parseDate(order.dueDate);
+              return (
+                dueDate &&
+                dueDate.isBefore(dayjs(), "day") &&
+                (order.status === "pending" || order.status === "production")
+              );
+            }).length;
+
             return {
               day: day.format("DD/MM"),
               Total: revenueDayOrders.reduce(
@@ -238,7 +279,12 @@ const MonthlyReports = () => {
                   sum + (parseFloat(order.price) || 0),
                 0,
               ),
-              Encomendas: dayOrders.length,
+              Pendentes: pendingOrders,
+              Produção: productionOrders,
+              Concluídas: doneOrders,
+              Entregues: deliveredOrders,
+              Canceladas: canceledOrders,
+              Atrasadas: overdueOrders,
             };
           });
         }
@@ -967,19 +1013,19 @@ const MonthlyReports = () => {
                 </div>
               </div>
 
-              <div className="space-y-2 sm:space-y-3">
+              <div className="space-y-2 sm:space-y-4">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <h3 className="text-lg font-semibold">
                       Encomendas por Dia
                     </h3>
                     <p className="text-sm text-muted-foreground">
-                      Quantidade de encomendas por dia no período
+                      Distribuição de encomendas por status em cada dia
                     </p>
                   </div>
                 </div>
 
-                <div className="w-full overflow-x-auto">
+                <div className="w-full h-[30dvh] overflow-x-auto">
                   <div className="min-w-[280px] h-[25dvh] sm:min-w-[600px] sm:h-[30dvh]">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={reportData.dailyRevenue}>
@@ -989,11 +1035,56 @@ const MonthlyReports = () => {
                           tick={{ fontSize: 12 }}
                           interval="preserveStartEnd"
                         />
-                        <Tooltip labelStyle={{ fontSize: 12 }} />
+                        <Tooltip
+                          labelStyle={{ fontSize: 12 }}
+                          formatter={(value: number, name: string) => [
+                            `${value} encomenda${value !== 1 ? "s" : ""}`,
+                            name,
+                          ]}
+                        />
                         <Bar
-                          dataKey="Encomendas"
-                          fill="hsl(var(--primary))"
-                          radius={[4, 4, 0, 0]}
+                          dataKey="Pendentes"
+                          stackId="status"
+                          fill="rgb(202 138 4)"
+                          name="Pendentes"
+                        />
+                        <Bar
+                          dataKey="Produção"
+                          stackId="status"
+                          fill="rgb(147 51 234)"
+                          name="Em Produção"
+                        />
+                        <Bar
+                          dataKey="Concluídas"
+                          stackId="status"
+                          fill="rgb(30 64 175)"
+                          name="Concluídas"
+                        />
+                        <Bar
+                          dataKey="Entregues"
+                          stackId="status"
+                          fill="rgb(22 163 74)"
+                          name="Entregues"
+                        />
+                        <Bar
+                          dataKey="Canceladas"
+                          stackId="status"
+                          fill="rgb(82 82 91)"
+                          name="Canceladas"
+                        />
+                        <Bar
+                          dataKey="Atrasadas"
+                          stackId="status"
+                          fill="rgb(153 27 27)"
+                          name="Atrasadas"
+                        />
+                        <Legend
+                          verticalAlign="bottom"
+                          height={36}
+                          iconType="circle"
+                          formatter={(value) => (
+                            <span className="text-sm">{value}</span>
+                          )}
                         />
                       </BarChart>
                     </ResponsiveContainer>
