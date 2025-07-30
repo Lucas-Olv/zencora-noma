@@ -86,7 +86,7 @@ export const patchNomaApi = <T = any>(
     .then((res) => res.data);
 };
 
-export const delNomaAPi = <T = any>(
+export const delNomaApi = <T = any>(
   url: string,
   config: CustomAxiosConfig = {},
 ): Promise<T> => {

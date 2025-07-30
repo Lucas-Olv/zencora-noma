@@ -62,7 +62,7 @@ export type Tenant = {
 export type Settings = {
   id: string;
   tenantId: string;
-  enableRoles: boolean;
+  enableCollaborators: boolean;
   lockReportsByPassword: boolean;
   requirePasswordToSwitchRole: boolean;
   lockSettingsByPassword: boolean;

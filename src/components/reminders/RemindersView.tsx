@@ -30,7 +30,7 @@ import { useTenantStorage } from "@/storage/tenant";
 import { Reminder } from "@/lib/types";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
-  delNomaAPi,
+  delNomaApi,
   getNomaApi,
   patchNomaApi,
   postNomaApi,
@@ -70,7 +70,7 @@ const RemindersView = () => {
     isPending: isDeleteReminderPending,
   } = useMutation({
     mutationFn: ({ reminderId }: { reminderId: string }) =>
-      delNomaAPi(`/api/noma/v1/reminders/delete`, {
+      delNomaApi(`/api/noma/v1/reminders/delete`, {
         params: { tenantId: tenant?.id, reminderId: reminderId },
       }),
     onSuccess: () => {

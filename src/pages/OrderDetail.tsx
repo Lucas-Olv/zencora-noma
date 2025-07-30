@@ -38,7 +38,7 @@ import OrderDialog from "@/components/orders/OrderDialog";
 import { SettingsGate } from "@/components/settings/SettingsGate";
 import { Order } from "@/lib/types";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { delNomaAPi, getNomaApi, patchNomaApi } from "@/lib/apiHelpers";
+import { delNomaApi, getNomaApi, patchNomaApi } from "@/lib/apiHelpers";
 import { useTenantStorage } from "@/storage/tenant";
 import { useAnalytics } from "@/contexts/AnalyticsProviderContext";
 
@@ -143,7 +143,7 @@ const OrderDetail = () => {
     error: isDeleteOrderError,
   } = useMutation({
     mutationFn: () =>
-      delNomaAPi(`/api/noma/v1/orders/delete`, {
+      delNomaApi(`/api/noma/v1/orders/delete`, {
         params: { tenantId: tenant?.id, orderId: id },
       }),
     onSuccess: () => {
