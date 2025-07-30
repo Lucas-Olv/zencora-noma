@@ -10,6 +10,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { useState } from "react";
 
 interface DateRangePickerProps {
   value?: DateRange;
@@ -22,6 +23,19 @@ export function DateRangePicker({
   onChange,
   className,
 }: DateRangePickerProps) {
+  const [tempRange, setTempRange] = useState<DateRange | undefined>(value);
+
+  const handleSelect = (range: DateRange | undefined) => {
+    setTempRange(range);
+    // Só chama o onChange quando tiver tanto from quanto to selecionados
+    if (range?.from && range?.to) {
+      onChange?.(range);
+    } else if (!range) {
+      // Ou quando limpar a seleção
+      onChange?.(undefined);
+    }
+  };
+
   return (
     <div className={cn("grid gap-2", className)}>
       <Popover>
@@ -54,8 +68,8 @@ export function DateRangePicker({
             initialFocus
             mode="range"
             defaultMonth={value?.from}
-            selected={value}
-            onSelect={onChange}
+            selected={tempRange}
+            onSelect={handleSelect}
             numberOfMonths={2}
             locale={ptBR}
           />
