@@ -81,12 +81,12 @@ export default function SettingsView() {
         },
       ),
     onSuccess: async (updateCollaboratorData) => {
-      setCollaborators(updateCollaboratorData.data);
-      toast({
-        title: "Colaborador atualizado",
-        description:
-          "As informações do colaborador foram atualizadas com sucesso.",
-      });
+      // Refetch para buscar a lista atualizada de colaboradores
+      refetch();
+      // Fechar modal após sucesso
+      setCollaboratorDialogOpen(false);
+      // Limpar colaborador selecionado
+      setSelectedCollaborator(undefined);
     },
     onError: (error) => {
       toast({
@@ -114,11 +114,12 @@ export default function SettingsView() {
         },
       ),
     onSuccess: async (createCollaboratorData) => {
-      setCollaborators(createCollaboratorData.data);
-      toast({
-        title: "Colaborador criado",
-        description: "O colaborador foi criado com sucesso.",
-      });
+      // Refetch para buscar a lista atualizada de colaboradores
+      refetch();
+      // Fechar modal após sucesso
+      setCollaboratorDialogOpen(false);
+      // Limpar colaborador selecionado
+      setSelectedCollaborator(undefined);
     },
     onError: (error) => {
       toast({
@@ -141,10 +142,8 @@ export default function SettingsView() {
         params: { tenantId: tenant?.id, collaboratorId: collaboratorId },
       }),
     onSuccess: async (deleteCollaboratorData) => {
-      toast({
-        title: "Colaborador excluído",
-        description: "O colaborador foi excluído com sucesso.",
-      });
+      // Refetch para buscar a lista atualizada de colaboradores
+      refetch();
     },
     onError: (error) => {
       toast({
@@ -208,8 +207,25 @@ export default function SettingsView() {
   useEffect(() => {
     if (collaboratorsData?.data && settings?.enableCollaborators) {
       setCollaborators(collaboratorsData.data);
+
+      // Se há um colaborador selecionado, atualizar sua referência com os dados mais recentes
+      if (selectedCollaborator) {
+        const updatedCollaborator = collaboratorsData.data.find(
+          (c) => c.id === selectedCollaborator.id,
+        );
+        if (updatedCollaborator) {
+          setSelectedCollaborator(updatedCollaborator);
+        } else {
+          // Se o colaborador não foi encontrado (pode ter sido deletado), limpar a seleção
+          setSelectedCollaborator(undefined);
+        }
+      }
     }
-  }, [collaboratorsData?.data, settings?.enableCollaborators]);
+  }, [
+    collaboratorsData?.data,
+    settings?.enableCollaborators,
+    selectedCollaborator,
+  ]);
 
   // Debounce para salvar porcentagem do pagamento parcial
   const debouncedUpdatePartialPayment = useDebouncedCallback(
@@ -240,16 +256,73 @@ export default function SettingsView() {
     collaboratorId: string,
     status: "active" | "revoked",
   ) => {
-    const collaborator = collaborators.find((c) => c.id === collaboratorId);
+    // Garantir que collaborators seja sempre um array
+    const safeCollaborators = Array.isArray(collaborators) ? collaborators : [];
+    const collaborator = safeCollaborators.find((c) => c.id === collaboratorId);
     if (collaborator) {
-      const updatedCollaborator = { ...collaborator, status };
-      updateCollaborator({ collaboratorData: updatedCollaborator });
+      // Atualizar estado local imediatamente para manter a ordem
+      setCollaborators((prevCollaborators) =>
+        prevCollaborators.map((c) =>
+          c.id === collaboratorId ? { ...c, status } : c,
+        ),
+      );
 
-      toast({
-        title: `Colaborador ${status === "active" ? "habilitado" : "desabilitado"}`,
-        description: `${collaborator.name} foi ${status === "active" ? "habilitado" : "desabilitado"} com sucesso.`,
+      // Enviar apenas o ID e o status alterado
+      const updatedCollaborator = {
+        id: collaborator.id,
+        status,
+      };
+      updateCollaborator({
+        collaboratorData: updatedCollaborator as Collaborator,
       });
     }
+  };
+
+  // Função para identificar apenas os campos alterados
+  const getChangedFields = (
+    original: Collaborator,
+    updated: any,
+  ): Partial<Collaborator> => {
+    const changedFields: Partial<Collaborator> = {};
+
+    // Campos básicos
+    if (original.name !== updated.name) changedFields.name = updated.name;
+    if (original.email !== updated.email) changedFields.email = updated.email;
+
+    // Senha (só incluir se foi fornecida e é diferente)
+    if (
+      updated.password &&
+      updated.password !== "" &&
+      updated.password !== original.password
+    ) {
+      changedFields.password = updated.password;
+    }
+
+    // Permissões
+    if (original.canAccessReports !== updated.canAccessReports)
+      changedFields.canAccessReports = updated.canAccessReports;
+    if (original.canAccessCalendar !== updated.canAccessCalendar)
+      changedFields.canAccessCalendar = updated.canAccessCalendar;
+    if (original.canAccessProduction !== updated.canAccessProduction)
+      changedFields.canAccessProduction = updated.canAccessProduction;
+    if (original.canAccessOrders !== updated.canAccessOrders)
+      changedFields.canAccessOrders = updated.canAccessOrders;
+    if (original.canAccessReminders !== updated.canAccessReminders)
+      changedFields.canAccessReminders = updated.canAccessReminders;
+    if (original.canAccessSettings !== updated.canAccessSettings)
+      changedFields.canAccessSettings = updated.canAccessSettings;
+    if (original.canAccessDashboard !== updated.canAccessDashboard)
+      changedFields.canAccessDashboard = updated.canAccessDashboard;
+    if (original.canAccessDelivery !== updated.canAccessDelivery)
+      changedFields.canAccessDelivery = updated.canAccessDelivery;
+    if (original.canCreateOrders !== updated.canCreateOrders)
+      changedFields.canCreateOrders = updated.canCreateOrders;
+    if (original.canDeleteOrders !== updated.canDeleteOrders)
+      changedFields.canDeleteOrders = updated.canDeleteOrders;
+    if (original.canEditOrders !== updated.canEditOrders)
+      changedFields.canEditOrders = updated.canEditOrders;
+
+    return changedFields;
   };
 
   const handleCollaboratorSubmit = (data: any) => {
@@ -261,15 +334,32 @@ export default function SettingsView() {
       };
       createCollaborator({ collaboratorData: newCollaborator as Collaborator });
     } else if (selectedCollaborator) {
+      // Identificar apenas os campos que foram alterados
+      const changedFields = getChangedFields(selectedCollaborator, data);
+
+      // Se não há mudanças, não fazer update
+      if (Object.keys(changedFields).length === 0) {
+        toast({
+          title: "Nenhuma alteração",
+          description: "Nenhum campo foi alterado.",
+        });
+        return;
+      }
+
+      // Criar objeto com apenas os campos alterados + ID
       const updatedCollaborator = {
-        ...selectedCollaborator,
-        ...data,
-        // Se a senha não foi fornecida, manter a atual
-        password: data.password || selectedCollaborator.password,
+        id: selectedCollaborator.id,
+        ...changedFields,
       };
-      updateCollaborator({ collaboratorData: updatedCollaborator });
+
+      // Log para debug (remover em produção)
+      console.log("Campos alterados:", Object.keys(changedFields));
+      console.log("Dados enviados:", updatedCollaborator);
+
+      updateCollaborator({
+        collaboratorData: updatedCollaborator as Collaborator,
+      });
     }
-    setCollaboratorDialogOpen(false);
   };
 
   return (
@@ -392,6 +482,7 @@ export default function SettingsView() {
           <CollaboratorsList
             collaborators={collaborators}
             isLoading={isCollaboratorsLoading}
+            tenantId={tenant?.id}
             onEdit={handleEditCollaborator}
             onDelete={handleDeleteCollaborator}
             onToggleStatus={handleToggleCollaboratorStatus}
@@ -403,7 +494,13 @@ export default function SettingsView() {
       {/* Dialog de Colaborador */}
       <CollaboratorDialog
         open={collaboratorDialogOpen}
-        onOpenChange={setCollaboratorDialogOpen}
+        onOpenChange={(open) => {
+          setCollaboratorDialogOpen(open);
+          // Se o modal está fechando, limpar o colaborador selecionado
+          if (!open) {
+            setSelectedCollaborator(undefined);
+          }
+        }}
         mode={collaboratorDialogMode}
         collaborator={selectedCollaborator}
         onSubmit={handleCollaboratorSubmit}

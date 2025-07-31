@@ -9,7 +9,11 @@ import {
   FileText,
   Lock,
   PackageCheck,
-  NotepadText,
+  Bell,
+  ListCheck,
+  ListTodo,
+  BarChart3,
+  PackageOpen,
 } from "lucide-react";
 import { cleanWorkspaceData, cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -63,12 +67,12 @@ const mainNavItems: NavItem[] = [
   {
     title: "Encomendas",
     href: "/orders",
-    icon: ClipboardList,
+    icon: FileText,
   },
   {
     title: "Produção",
     href: "/production",
-    icon: Users,
+    icon: PackageOpen,
     proOnly: true,
   },
   {
@@ -79,12 +83,12 @@ const mainNavItems: NavItem[] = [
   {
     title: "Relatórios",
     href: "/reports",
-    icon: FileText,
+    icon: BarChart3,
   },
   {
     title: "Lembretes",
     href: "/reminders",
-    icon: NotepadText,
+    icon: Bell,
   },
   {
     title: "Calendário",

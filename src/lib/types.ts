@@ -102,6 +102,7 @@ export type Collaborator = {
   canAccessReminders: boolean;
   canAccessSettings: boolean;
   canAccessDashboard: boolean;
+  canAccessDelivery: boolean;
   canCreateOrders: boolean;
   canDeleteOrders: boolean;
   canEditOrders: boolean;
