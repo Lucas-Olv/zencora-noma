@@ -5,6 +5,10 @@ import DeliveryCalendar from "@/components/dashboard/DeliveryCalendar";
 import { Calendar, ClipboardList, FileText, Users } from "lucide-react";
 import { parseDate } from "@/lib/utils";
 import RecentReminders from "@/components/dashboard/RecentReminders";
+import StatsCardSkeleton from "@/components/dashboard/StatsCardSkeleton";
+import PerformanceMetricsSkeleton from "@/components/dashboard/PerformanceMetricsSkeleton";
+import DeliveryCalendarSkeleton from "@/components/dashboard/DeliveryCalendarSkeleton";
+import RecentRemindersSkeleton from "@/components/dashboard/RecentRemindersSkeleton";
 import { PWAInstallPrompt } from "@/components/pwa/PWAInstallPrompt";
 import { useTenantStorage } from "@/storage/tenant";
 import { Order } from "@/lib/types";
@@ -12,6 +16,7 @@ import { Reminder } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
 import { getNomaApi } from "@/lib/apiHelpers";
 import dayjs from "@/lib/dayjs";
+import { Skeleton } from "../ui/skeleton";
 
 interface DashboardStats {
   activeOrders: number;
@@ -174,54 +179,80 @@ const DashboardView = () => {
     <>
       <PWAInstallPrompt />
       <div className="space-y-6">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Dashboard</h2>
-          <p className="text-muted-foreground">
-            Bem-vindo(a) ao Zencora Noma. Veja um resumo de suas encomendas.
-          </p>
-        </div>
+        {isOrdersLoading ? (
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-40" />
+            <Skeleton className="h-4 w-72 mt-2" />
+          </div>
+        ) : (
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight">Dashboard</h2>
+            <p className="text-muted-foreground">
+              Bem-vindo(a) ao Zencora Noma. Veja um resumo de suas encomendas.
+            </p>
+          </div>
+        )}
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <StatsCard
-            title="Encomendas Ativas"
-            value={isOrdersLoading ? "-" : stats.activeOrders.toString()}
-            description={
-              isOrdersLoading ? "Carregando..." : todayDeliveriesText
-            }
-            icon={<ClipboardList className="h-5 w-5 text-primary" />}
-          />
-          <StatsCard
-            title="Produção"
-            value={isOrdersLoading ? "-" : stats.inProduction.toString()}
-            description={isOrdersLoading ? "Carregando..." : inProductionText}
-            icon={<Users className="h-5 w-5 text-secondary" />}
-          />
-          <StatsCard
-            title="Programadas"
-            value={isOrdersLoading ? "-" : stats.scheduled.toString()}
-            description={
-              isOrdersLoading ? "Carregando..." : "Para os próximos dias"
-            }
-            icon={<Calendar className="h-5 w-5 text-complementary" />}
-          />
-          <StatsCard
-            title="Faturamento (Mês)"
-            value={isOrdersLoading ? "-" : formatCurrency(stats.monthlyRevenue)}
-            description={isOrdersLoading ? "Carregando..." : weeklyRevenueText}
-            icon={<FileText className="h-5 w-5 text-green-600" />}
-          />
+          {isOrdersLoading ? (
+            <>
+              <StatsCardSkeleton />
+              <StatsCardSkeleton />
+              <StatsCardSkeleton />
+              <StatsCardSkeleton />
+            </>
+          ) : (
+            <>
+              <StatsCard
+                title="Encomendas Ativas"
+                value={stats.activeOrders.toString()}
+                description={todayDeliveriesText}
+                icon={<ClipboardList className="h-5 w-5 text-primary" />}
+              />
+              <StatsCard
+                title="Produção"
+                value={stats.inProduction.toString()}
+                description={inProductionText}
+                icon={<Users className="h-5 w-5 text-secondary" />}
+              />
+              <StatsCard
+                title="Programadas"
+                value={stats.scheduled.toString()}
+                description="Para os próximos dias"
+                icon={<Calendar className="h-5 w-5 text-complementary" />}
+              />
+              <StatsCard
+                title="Faturamento (Mês)"
+                value={formatCurrency(stats.monthlyRevenue)}
+                description={weeklyRevenueText}
+                icon={<FileText className="h-5 w-5 text-green-600" />}
+              />
+            </>
+          )}
         </div>
 
         <div className="grid gap-4 grid-cols-1 lg:grid-cols-4">
           <div className="lg:col-span-3">
-            <PerformanceMetrics orders={orders} loading={isOrdersLoading} />
+            {isOrdersLoading ? (
+              <PerformanceMetricsSkeleton />
+            ) : (
+              <PerformanceMetrics orders={orders} loading={isOrdersLoading} />
+            )}
           </div>
           <div className="lg:col-span-1 flex flex-col space-y-6">
-            <RecentReminders
-              reminders={reminders}
-              loading={isRemindersLoading}
-            />
-            <DeliveryCalendar orders={orders} loading={isOrdersLoading} />
+            {isRemindersLoading ? (
+              <RecentRemindersSkeleton />
+            ) : (
+              <RecentReminders
+                reminders={reminders}
+                loading={isRemindersLoading}
+              />
+            )}
+            {isOrdersLoading ? (
+              <DeliveryCalendarSkeleton />
+            ) : (
+              <DeliveryCalendar orders={orders} loading={isOrdersLoading} />
+            )}
           </div>
         </div>
       </div>

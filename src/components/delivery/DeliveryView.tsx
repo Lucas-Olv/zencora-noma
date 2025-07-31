@@ -37,6 +37,8 @@ import { useSettingsStorage } from "@/storage/settings";
 import { DeliveryDialog } from "./DeliveryDialog";
 import { useAnalytics } from "@/contexts/AnalyticsProviderContext";
 import dayjs from "@/lib/dayjs";
+import OrdersTableSkeleton from "../orders/OrdersTableSkeleton";
+import { Skeleton } from "../ui/skeleton";
 
 const DeliveryView = () => {
   const { toast } = useToast();
@@ -348,44 +350,55 @@ const DeliveryView = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Entregas</h2>
-          <p className="text-muted-foreground">
-            Gerencie suas encomendas prontas para entrega.
-          </p>
+      {isOrdersLoading ? (
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-40" />
+          <Skeleton className="h-4 w-72 mt-2" />
         </div>
-      </div>
+      ) : (
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight">Entregas</h2>
+            <p className="text-muted-foreground">
+              Gerencie suas encomendas prontas para entrega.
+            </p>
+          </div>
+        </div>
+      )}
 
       <Card>
         <CardHeader className="pb-3">
           <div className="flex flex-col sm:flex-row justify-between gap-4">
-            <div className="relative w-full">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar encomendas..."
-                className="pl-8"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              {searchTerm && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3"
-                  onClick={() => setSearchTerm("")}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
+            {isOrdersLoading ? (
+              <div className="relative w-full">
+                <Skeleton className="h-12 w-full" />
+              </div>
+            ) : (
+              <div className="relative w-full">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar encomendas..."
+                  className="pl-8"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                {searchTerm && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3"
+                    onClick={() => setSearchTerm("")}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
         </CardHeader>
         <CardContent>
           {isOrdersLoading ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
+            <OrdersTableSkeleton />
           ) : filteredOrders.length === 0 ? (
             <div className="text-center py-6">
               {searchTerm ? (

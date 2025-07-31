@@ -41,6 +41,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { getNomaApi, patchNomaApi } from "@/lib/apiHelpers";
 import { useSettingsStorage } from "@/storage/settings";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import OrdersTableSkeleton from "./OrdersTableSkeleton";
 import {
   Dialog,
   DialogContent,
@@ -51,6 +52,7 @@ import {
 } from "@/components/ui/dialog";
 import dayjs from "@/lib/dayjs";
 import { useAnalytics } from "@/contexts/AnalyticsProviderContext";
+import { Skeleton } from "../ui/skeleton";
 
 const OrdersView = () => {
   const { toast } = useToast();
@@ -400,54 +402,76 @@ const OrdersView = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Encomendas</h2>
-          <p className="text-muted-foreground">
-            Gerencie todas as suas encomendas aqui.
-          </p>
+      {isOrdersLoading ? (
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-40" />
+            <Skeleton className="h-4 w-72 mt-2" />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-12 w-44" />
+          </div>
         </div>
+      ) : (
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight">Encomendas</h2>
+            <p className="text-muted-foreground">
+              Gerencie todas as suas encomendas aqui.
+            </p>
+          </div>
 
-        <Button onClick={handleNewOrder} className="shrink-0">
-          <Plus className="mr-2 h-4 w-4" /> Nova Encomenda
-        </Button>
-      </div>
-
+          <Button onClick={handleNewOrder} className="shrink-0">
+            <Plus className="mr-2 h-4 w-4" /> Nova Encomenda
+          </Button>
+        </div>
+      )}
       <Card>
         <CardHeader className="pb-3">
           <div className="flex flex-col sm:flex-row justify-between gap-4">
-            <div className="relative w-full">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar encomendas..."
-                className="pl-8"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              {searchTerm && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3"
-                  onClick={() => setSearchTerm("")}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
+            {isOrdersLoading ? (
+              <div className="relative w-full">
+                <Skeleton className="h-12 w-full" />
+              </div>
+            ) : (
+              <div className="relative w-full">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar encomendas..."
+                  className="pl-8"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                {searchTerm && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3"
+                    onClick={() => setSearchTerm("")}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="inprogress" className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-4">
-              <TabsTrigger value="inprogress">Em progresso</TabsTrigger>
-              <TabsTrigger value="finished">Finalizadas</TabsTrigger>
+              {isOrdersLoading ? (
+                <Skeleton className="h-8 w-24" />
+              ) : (
+                <>
+                  <TabsTrigger value="inprogress">Em progresso</TabsTrigger>
+                  <TabsTrigger value="finished">Finalizadas</TabsTrigger>
+                </>
+              )}
             </TabsList>
             <TabsContent value="inprogress">
               {isOrdersLoading ? (
-                <div className="flex justify-center py-8">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
+                <OrdersTableSkeleton />
               ) : inProgressOrders.length === 0 ? (
                 <div className="text-center py-6">
                   <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
@@ -827,9 +851,7 @@ const OrdersView = () => {
             </TabsContent>
             <TabsContent value="finished">
               {isOrdersLoading ? (
-                <div className="flex justify-center py-8">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
+                <OrdersTableSkeleton />
               ) : finishedOrders.length === 0 ? (
                 <div className="text-center py-6">
                   <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />

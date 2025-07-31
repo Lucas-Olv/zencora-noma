@@ -35,6 +35,7 @@ import {
   patchNomaApi,
   postNomaApi,
 } from "@/lib/apiHelpers";
+import RemindersViewSkeleton from "./RemindersViewSkeleton";
 import { useAnalytics } from "@/contexts/AnalyticsProviderContext";
 import dayjs from "@/lib/dayjs";
 const RemindersView = () => {
@@ -246,6 +247,10 @@ const RemindersView = () => {
 
   const pendingReminders = reminders.filter((r) => !r.isDone);
   const completedReminders = reminders.filter((r) => r.isDone);
+
+  if (isRemindersLoading) {
+    return <RemindersViewSkeleton />;
+  }
 
   return (
     <div>

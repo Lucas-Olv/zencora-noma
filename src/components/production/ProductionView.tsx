@@ -21,6 +21,7 @@ import { Order } from "@/lib/types";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { getNomaApi, patchNomaApi } from "@/lib/apiHelpers";
 import { useSessionStorage } from "@/storage/session";
+import ProductionViewSkeleton from "./ProductionViewSkeleton";
 import { useAnalytics } from "@/contexts/AnalyticsProviderContext";
 import dayjs from "@/lib/dayjs";
 
@@ -504,14 +505,7 @@ export function ProductionView() {
   };
 
   if (isOrdersLoading) {
-    return (
-      <div className="flex items-center justify-center h-[calc(100vh-200px)]">
-        <div className="flex flex-col items-center gap-2">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-muted-foreground">Carregando encomendas...</p>
-        </div>
-      </div>
-    );
+    return <ProductionViewSkeleton />;
   }
 
   return (

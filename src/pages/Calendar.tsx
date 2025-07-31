@@ -11,6 +11,7 @@ import { useTenantStorage } from "@/storage/tenant";
 import { getNomaApi } from "@/lib/apiHelpers";
 import { useQuery } from "@tanstack/react-query";
 import { Order } from "@/lib/types";
+import CalendarSkeleton from "@/components/calendar/CalendarSkeleton";
 import dayjs from "@/lib/dayjs";
 
 const getStatusClasses = (status: string | null, dueDate: string) => {
@@ -152,6 +153,10 @@ const CalendarPage = () => {
 
     return () => observer.disconnect();
   }, []);
+
+  if (isOrdersLoading) {
+    return <CalendarSkeleton />;
+  }
 
   return (
     <div className="space-y-6">

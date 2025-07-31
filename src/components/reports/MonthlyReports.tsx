@@ -55,6 +55,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import MonthlyReportsSkeleton from "./MonthlyReportsSkeleton";
 import { useSubscriptionStorage } from "@/storage/subscription";
 import dayjs from "@/lib/dayjs";
 
@@ -794,11 +795,7 @@ const MonthlyReports = () => {
         : `${reportData.readyForDelivery} prontas para entrega`;
 
   if (isOrdersLoading) {
-    return (
-      <div className="flex items-center justify-center h-[50dvh]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+    return <MonthlyReportsSkeleton />;
   }
 
   return (

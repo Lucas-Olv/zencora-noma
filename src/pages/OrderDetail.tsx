@@ -40,6 +40,7 @@ import { Order } from "@/lib/types";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { delNomaApi, getNomaApi, patchNomaApi } from "@/lib/apiHelpers";
 import { useTenantStorage } from "@/storage/tenant";
+import OrderDetailSkeleton from "@/components/orders/OrderDetailSkeleton";
 import { useAnalytics } from "@/contexts/AnalyticsProviderContext";
 
 const AutoResizeTextarea = ({
@@ -166,11 +167,7 @@ const OrderDetail = () => {
   };
 
   if (isOrderLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60dvh]">
-        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-      </div>
-    );
+    return <OrderDetailSkeleton />;
   }
 
   if (!order) {
