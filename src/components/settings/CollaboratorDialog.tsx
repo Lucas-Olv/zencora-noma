@@ -966,7 +966,7 @@ export default function CollaboratorDialog({
               </Button>
             </div>
           ) : (
-            <div className="flex gap-2">
+            <div className="flex justify-end items-center gap-2">
               <Button
                 type="button"
                 variant="outline"
