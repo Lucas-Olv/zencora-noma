@@ -76,6 +76,7 @@ const DashboardView = () => {
       const startOfMonth = today.startOf("month");
       const startOfWeek = today.startOf("week");
       const endOfWeek = today.endOf("week");
+      console.log(startOfWeek, endOfWeek);
       const orders = ordersData.data;
 
       const activeOrders =
@@ -113,7 +114,7 @@ const DashboardView = () => {
       const monthlyRevenue =
         orders
           .filter((order: Order) => {
-            const orderDate = parseDate(order.createdAt);
+            const orderDate = parseDate(order.dueDate);
             return (
               orderDate &&
               orderDate.isSame(startOfMonth, "month") &&
@@ -128,7 +129,7 @@ const DashboardView = () => {
       const weeklyRevenue =
         orders
           .filter((order: Order) => {
-            const orderDate = parseDate(order.createdAt);
+            const orderDate = parseDate(order.dueDate);
             return (
               orderDate &&
               orderDate.isAfter(startOfWeek.subtract(1, "day")) &&

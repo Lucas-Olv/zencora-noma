@@ -215,7 +215,7 @@ export default function PerformanceMetrics({
       <CardHeader>
         <CardTitle>Métricas de Performance</CardTitle>
         <CardDescription>
-          Acompanhe a performance geral diária e semanal
+          Acompanhe a performance geral dos últimos 7 dias
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -230,7 +230,7 @@ export default function PerformanceMetrics({
           <section className="flex flex-col gap-10">
             <div className="flex flex-col gap-4">
               <div className="flex flex-col items-start justify-start">
-                <h3 className="text-lg font-medium">Faturamento Semanal</h3>
+                <h3 className="text-lg font-medium">Faturamento Total</h3>
                 <p className="text-2xl font-bold">
                   {formatCurrency(revenueData.currentWeekRevenue)}
                 </p>
@@ -266,7 +266,7 @@ export default function PerformanceMetrics({
             </div>
             <div className="flex flex-col gap-4">
               <div className="flex flex-col items-start justify-start">
-                <h3 className="text-lg font-medium">Vriação de Encomendas</h3>
+                <h3 className="text-lg font-medium">Variação de Encomendas</h3>
                 <p className="text-2xl font-bold">
                   {ordersData.currentWeekOrders}
                 </p>
