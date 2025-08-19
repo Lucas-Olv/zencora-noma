@@ -54,29 +54,21 @@ export const setupAuthRefreshInterceptor = (api: AxiosInstance) => {
               withCredentials: true,
             },
           );
-          const newAccessToken = data.data.accessToken;
-          const payload = await verifyToken(newAccessToken);
           const session: Session = {
-            id: payload.sessionId as string,
+            id: data.data.sessionId as string,
             user: {
-              id: payload.sub as string,
-              name: payload.name as string,
-              email: payload.email as string,
-              sessionId: payload.sessionId as string,
+              id: data.data.sub as string,
+              name: data.data.name as string,
+              email: data.data.email as string,
+              sessionId: data.data.sessionId as string,
             },
-            token: newAccessToken,
-            productId: payload.productId as string,
+            productId: data.data.productId as string,
           };
 
-          await useSessionStorage
-            .getState()
-            .setSession(session, newAccessToken);
+          await useSessionStorage.getState().setSession(session);
           // Processa fila de requisições falhadas
-          failedQueue.forEach((p) => p.resolve(newAccessToken));
+          failedQueue.forEach((p) => p.resolve());
           failedQueue = [];
-
-          originalRequest.headers = originalRequest.headers || {};
-          originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
           return api(originalRequest);
         } catch (refreshError) {
           failedQueue.forEach((p) => p.reject(refreshError));

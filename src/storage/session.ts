@@ -4,24 +4,21 @@ import { Session, User } from "@/lib/types";
 import { cleanWorkspaceData } from "@/lib/utils";
 
 interface SessionState {
-  token: string | null;
   user: User | null;
   session: Session | null;
   isAuthenticated: boolean;
-  setSession: (session: Session, token: string) => Promise<void>;
+  setSession: (session: Session) => Promise<void>;
   restoreSession: () => Promise<void>;
   clearSession: () => Promise<void>;
 }
 
 export const useSessionStorage = create<SessionState>((set) => ({
-  token: null,
   user: null,
   session: null,
   isAuthenticated: false,
 
-  setSession: async (session, token) => {
+  setSession: async (session) => {
     set({
-      token,
       user: session.user,
       session,
       isAuthenticated: true,
@@ -34,7 +31,6 @@ export const useSessionStorage = create<SessionState>((set) => ({
       const sessionData = await db.getSessionData();
       if (!sessionData) return;
       set({
-        token: sessionData.token,
         user: sessionData.user,
         session: sessionData,
         isAuthenticated: true,
@@ -48,7 +44,6 @@ export const useSessionStorage = create<SessionState>((set) => ({
   clearSession: async () => {
     await db.clearSessionData();
     set({
-      token: null,
       user: null,
       session: null,
       isAuthenticated: false,

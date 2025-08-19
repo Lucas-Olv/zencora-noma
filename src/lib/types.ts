@@ -45,7 +45,6 @@ export type User = {
 export type Session = {
   id: string;
   user: User;
-  token: string;
   productId: string;
   subscription?: Subscription;
 };
