@@ -17,7 +17,7 @@ const SubscriptionInfo = () => {
   const isAboutToExpire =
     subscription?.expiresAt &&
     dayjs(subscription.expiresAt).diff(dayjs(), "day") <= 3 &&
-    subscription.status === "cancelled";
+    subscription.status === "canceled";
 
   // Verifica se a assinatura está próxima de renovar (3 dias)
   const isAboutToRenew =
