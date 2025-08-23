@@ -15,7 +15,7 @@ export default function Login() {
             className="flex items-center text-lg font-bold text-white"
           >
             <img
-              src="/zencora-noma-logo.svg"
+              src="/zencora-noma-logo-no-bg.svg"
               alt="Zencora Noma Logo"
               className="h-8 mr-2"
             />
