@@ -40,7 +40,7 @@ export const LoginForm = () => {
   const { mutate: requestAuthOtp, isPending: isRequestAuthPending } =
     useMutation({
       mutationFn: () =>
-        postCoreApiPublic("/api/core/v1/handle-authentication-request", {
+        postCoreApiPublic("/api/core/v1/signin", {
           email,
           productId: useProductStore.getState().product.id.toString(),
           sessionSystem: getPlatform(),
